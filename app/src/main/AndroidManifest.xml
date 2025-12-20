@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.mascotforge">
+
+    <!-- ネットワーク・位置情報・アラーム権限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+    <!-- ストレージ権限（キャラクターZIPインストール用） -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Homemascot"
+        android:requestLegacyExternalStorage="true">
+
+        <!-- 起動用 MainActivity -->
+        <activity
+            android:name="com.example.mascotforge.Karioki"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- メモ入力画面 -->
+        <activity
+            android:name="com.example.mascotforge.MemoInputActivity"
+            android:label="メモ入力"
+            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="unspecified"
+            android:exported="false" />
+
+        <!-- メモ一覧画面 -->
+        <activity
+            android:name="com.example.mascotforge.MemoFindActivity"
+            android:label="メモ一覧"
+            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:exported="false" />
+
+        <!-- キャラクター選択画面 -->
+        <activity
+            android:name="com.example.mascotforge.CharacterSelectorActivity"
+            android:label="キャラクター選択"
+            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:exported="false" />
+
+        <!-- キャラクター管理画面 -->
+        <activity
+            android:name="com.mascotforge.ui.CharacterInstallActivity"
+            android:label="キャラクター管理"
+            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:exported="true">
+            <!-- ZIPファイルを開く際のインテント -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/x-zip-compressed" />
+            </intent-filter>
+        </activity>
+
+        <!-- メインウィジェットプロバイダー -->
+        <receiver
+            android:name="widget.TimeWidgetProvider"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="widget.ClockUpdateReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.homemascot.UPDATE_CLOCK" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="widget.WeatherUpdateReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.homemascot.UPDATE_WEATHER" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="widget.SpeechUpdateReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.homemascot.UPDATE_SPEECH" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boot完了時の自動開始 -->
+        <receiver
+            android:name="com.example.mascotforge.widget.BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 画面ON/ユーザー操作時のウィジェット更新 -->
+        <receiver
+            android:name="com.example.mascotforge.widget.ScreenReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
