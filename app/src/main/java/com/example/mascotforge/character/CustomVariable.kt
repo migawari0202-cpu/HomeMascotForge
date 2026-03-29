@@ -11,6 +11,7 @@ data class CustomVariable(
     val initialValue: Any,         // 初期値
     val min: Int? = null,          // 最小値（number型のみ）
     val max: Int? = null,          // 最大値（number型のみ）
+    val options: List<String>? = null,  // 選択肢（string型のみ）← 追加！
     val changeRules: List<ChangeRule> = emptyList()  // 更新ルール
 ) {
     enum class VariableType {
@@ -32,7 +33,8 @@ data class CustomVariable(
             ON_LAUNCH,           // 起動時
             ON_SPEECH,           // セリフ表示時
             ON_CONSECUTIVE_DAYS, // 連続起動日数変化時
-            ON_TIME_SLOT_CHANGE  // 時間帯変化時（morning→afternoon等）
+            ON_TIME_SLOT_CHANGE, // 時間帯変化時（morning→afternoon等）
+            ON_TOUCH             // ウィジェットタッチ時
         }
 
         enum class Action {
@@ -64,6 +66,14 @@ fun parseCustomVariable(name: String, json: JSONObject): CustomVariable {
     val min = json.optInt("min", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }
     val max = json.optInt("max", Int.MAX_VALUE).takeIf { it != Int.MAX_VALUE }
 
+    // options のパース（string型の場合）
+    val options: List<String>? = if (type == CustomVariable.VariableType.STRING && json.has("options")) {
+        val optionsArray = json.getJSONArray("options")
+        List(optionsArray.length()) { i -> optionsArray.getString(i) }
+    } else {
+        null
+    }
+
     val changeRules = parseChangeRules(json.optJSONArray("onChange"))
 
     return CustomVariable(
@@ -72,6 +82,7 @@ fun parseCustomVariable(name: String, json: JSONObject): CustomVariable {
         initialValue = initialValue,
         min = min,
         max = max,
+        options = options,  // ← 追加！
         changeRules = changeRules
     )
 }
@@ -93,6 +104,7 @@ private fun parseChangeRules(rulesArray: org.json.JSONArray?): List<CustomVariab
             "onSpeech" -> CustomVariable.ChangeRule.Trigger.ON_SPEECH
             "onConsecutiveDays" -> CustomVariable.ChangeRule.Trigger.ON_CONSECUTIVE_DAYS
             "onTimeSlotChange" -> CustomVariable.ChangeRule.Trigger.ON_TIME_SLOT_CHANGE
+            "onTouch" -> CustomVariable.ChangeRule.Trigger.ON_TOUCH
             else -> CustomVariable.ChangeRule.Trigger.ON_LAUNCH
         }
 

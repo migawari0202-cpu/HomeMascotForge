@@ -3,7 +3,6 @@ package widget.cache
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager as SystemBatteryManager
-import android.os.Build
 import android.util.Log
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -47,20 +46,13 @@ class BatteryManager {
      */
     fun isCharging(context: Context): Boolean {
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as SystemBatteryManager
-                val status = batteryManager.getIntProperty(SystemBatteryManager.BATTERY_PROPERTY_STATUS)
-                status == SystemBatteryManager.BATTERY_STATUS_CHARGING
-                        || status == SystemBatteryManager.BATTERY_STATUS_FULL
-            } else {
-                val intent = context.registerReceiver(
-                    null,
-                    android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                )
-                val status = intent?.getIntExtra(SystemBatteryManager.EXTRA_STATUS, -1) ?: -1
-                status == SystemBatteryManager.BATTERY_STATUS_CHARGING
-                        || status == SystemBatteryManager.BATTERY_STATUS_FULL
-            }
+            val intent = context.registerReceiver(
+                null,
+                android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+            val status = intent?.getIntExtra(SystemBatteryManager.EXTRA_STATUS, -1) ?: -1
+            status == SystemBatteryManager.BATTERY_STATUS_CHARGING
+                    || status == SystemBatteryManager.BATTERY_STATUS_FULL
         } catch (e: Exception) {
             Log.e(TAG, "Failed to check charging status", e)
             false
@@ -81,22 +73,18 @@ class BatteryManager {
      */
     private fun fetchBatteryLevel(context: Context): Int {
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as SystemBatteryManager
-                batteryManager.getIntProperty(SystemBatteryManager.BATTERY_PROPERTY_CAPACITY)
-            } else {
-                val intent = context.registerReceiver(
-                    null,
-                    android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                )
-                val level = intent?.getIntExtra(SystemBatteryManager.EXTRA_LEVEL, -1) ?: -1
-                val scale = intent?.getIntExtra(SystemBatteryManager.EXTRA_SCALE, -1) ?: -1
+            // ACTION_BATTERY_CHANGED はエミュレータ・実機ともに信頼性が高い
+            val intent = context.registerReceiver(
+                null,
+                android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+            val level = intent?.getIntExtra(SystemBatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(SystemBatteryManager.EXTRA_SCALE, -1) ?: -1
 
-                if (level >= 0 && scale > 0) {
-                    (level * 100) / scale
-                } else {
-                    throw IllegalStateException("Invalid battery data: level=$level, scale=$scale")
-                }
+            if (level >= 0 && scale > 0) {
+                (level * 100) / scale
+            } else {
+                throw IllegalStateException("Invalid battery data: level=$level, scale=$scale")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch battery level", e)

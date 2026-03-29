@@ -1,5 +1,7 @@
 package com.mascotforge.speech
 
+import com.mascotforge.character.CharacterState
+
 /**
  * エンジンが「必ず知ってる」情報だけ渡す
  * → キャラパックはこれを元に「自分で拡張」
@@ -43,7 +45,7 @@ data class SpeechContext(
     val consecutiveDays: Int,    // 連続起動日数
 
     // === ユーザー情報 ===
-    val userName: String = "nagisa",
+    val userName: String = "ユーザー",
     val userGender: String? = null, // "male", "female", "other", null
 
     // === その他コンテキスト ===
@@ -55,12 +57,32 @@ data class SpeechContext(
     val wasTouched: Boolean,           // 今タッチされた
     val touchCount: Int,               // 累計タッチ回数
     val touchCountToday: Int,          // 今日のタッチ回数
-    val lastTouchMinutesAgo: Int       // 最後にタッチされてから何分
+    val lastTouchMinutesAgo: Int,      // 最後にタッチされてから何分
+
+    // === キャラクター状態（追加） ===
+    val characterState: CharacterState  // カスタム変数を含む状態
 
 ) {
     /**
      * キャラ作成者向けヘルパー関数
      */
+
+    // ===== カスタム変数アクセス =====
+
+    /**
+     * カスタム変数を名前で取得
+     */
+    fun getCustomVar(name: String): Int = characterState.getCustomVar(name)
+
+    /**
+     * カスタム変数を名前で設定
+     */
+    fun setCustomVar(name: String, value: Int) = characterState.setCustomVar(name, value)
+
+    /**
+     * カスタム変数を名前で調整（+5, -3, *2, /2, =50など）
+     */
+    fun adjustCustomVar(name: String, operation: String) = characterState.adjustCustomVar(name, operation)
 
     // ===== 挨拶関連 =====
 
@@ -161,8 +183,8 @@ data class SpeechContext(
     fun shouldCareAboutHealth(): Boolean =
         temperatureFeeling in listOf("暑い", "寒い") || (humidity ?: 0) >= 80
 
-    /** 熱中症警戒レベル */
-    fun isHeatStrokeRisk(): Boolean = temperature >= 30 && (humidity ?: 0) >= 60
+    /** 熱中症警戒レベル（湿度データがない場合は保守的にリスクありとみなす） */
+    fun isHeatStrokeRisk(): Boolean = temperature >= 30 && (humidity == null || humidity >= 60)
 
     /** 雨が降っている */
     fun isRaining(): Boolean = weatherCode.contains("雨") || weatherEmoji.contains("🌧")
@@ -176,8 +198,8 @@ data class SpeechContext(
     /** 曇り */
     fun isCloudy(): Boolean = weatherCode.contains("曇") || weatherEmoji.contains("☁")
 
-    /** 嵐・台風 */
-    fun isStormy(): Boolean = weatherCode.contains("嵐") || weatherCode.contains("台風")
+    /** 嵐・台風（雷雨も含む） */
+    fun isStormy(): Boolean = weatherCode.contains("嵐") || weatherCode.contains("台風") || weatherCode == "雷雨"
 
     /** 真夏日（30度以上） */
     fun isHotDay(): Boolean = temperature >= 30
@@ -276,7 +298,8 @@ data class SpeechContext(
         return when {
             range.contains("-") -> {
                 val (start, end) = range.split("-").map { it.toInt() }
-                hour in start..end
+                if (start <= end) hour in start..end
+                else hour >= start || hour <= end  // 日付またぎ (例: "22-6")
             }
             else -> hour == range.toIntOrNull()
         }
@@ -314,6 +337,7 @@ data class SpeechContext(
             "isValentine" -> isValentine() == value.toBoolean()
             "isHalloween" -> isHalloween() == value.toBoolean()
 
+
             // 天気
             "weatherCode" -> weatherCode == value
             "weatherEmoji" -> weatherEmoji == value
@@ -350,7 +374,19 @@ data class SpeechContext(
             "isFridayNight" -> isFridayNight() == value.toBoolean()
             "isSundayNight" -> isSundayNight() == value.toBoolean()
 
-            else -> false
+            // カスタム変数（customVars[varName]形式 — 例: customVars[favorability]）
+            else -> {
+                if (key.startsWith("customVars[") && key.endsWith("]")) {
+                    val varName = key.substring(11, key.length - 1)
+                    if (varName.isNotEmpty()) {
+                        checkNumberCondition(getCustomVar(varName), value)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
         }
     }
 
@@ -373,12 +409,6 @@ data class SpeechContext(
 
     /**
      * 複数条件をまとめてチェック
-     *
-     * 使用例:
-     * ```
-     * val conditions = mapOf("temperature" to ">=30", "humidity" to ">=60")
-     * if (ctx.matchesAll(conditions)) { ... }
-     * ```
      */
     fun matchesAll(conditions: Map<String, String>): Boolean {
         return conditions.all { (key, value) -> matches(key, value) }
@@ -408,5 +438,6 @@ data class SpeechContext(
         |起動: 今日${launchCount}回目 / 連続${consecutiveDays}日
         |前回: ${lastLaunchHoursAgo ?: "初回"}時間前
         |特殊: ${if (isSpecialDay) specialDayName else "なし"}
+        |カスタム変数: ${characterState.customVars.entries.take(5).joinToString { "${it.key}=${it.value}" }}
     """.trimMargin()
 }

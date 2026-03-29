@@ -12,178 +12,182 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:layout_toEndOf="@+id/widget_bottom_bar_compact"
-        android:orientation="vertical"
+        android:layout_alignParentStart="true"
+        android:orientation="horizontal"
+        android:weightSum="10"
         android:padding="4dp">
 
-        <!-- 吹き出しエリア -->
-        <FrameLayout
-            android:id="@+id/speech_bubble_area_compact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="4dp"
-            android:background="@drawable/speech_bubble_bg"
-            android:padding="9dp">
+        <!-- 吹き出しエリア（左60%） -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="6"
+            android:layout_marginEnd="4dp"
+            android:orientation="vertical"
+            android:weightSum="3">
 
+            <FrameLayout
+                android:id="@+id/speech_bubble_area_compact"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2.1"
+                android:background="@drawable/speech_bubble_bg"
+                android:padding="9dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- セリフ表示 -->
+                    <TextView
+                        android:id="@+id/widget_speech_compact"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="セリフ読み込み中.."
+                        android:textColor="#333333"
+                        android:textSize="11sp"
+                        android:lineSpacingExtra="2dp"
+                        android:maxLines="6"
+                        android:ellipsize="end" />
+
+                    <!-- デバッグ情報 -->
+                    <TextView
+                        android:id="@+id/text_debug_compact"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="#999999"
+                        android:textSize="9sp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- ボタンバー（コンパクト） -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="0dp"
+                android:layout_weight="0.9"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="bottom"
+                android:background="@drawable/widget_button_bar_bg"
+                android:weightSum="3">
 
-                <!-- セリフ表示 -->
-                <TextView
-                    android:id="@+id/widget_speech_compact"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="セリフ読み込み中.."
-                    android:textColor="#333333"
-                    android:textSize="11sp"
-                    android:lineSpacingExtra="2dp"
-                    android:maxLines="3"
-                    android:ellipsize="end"
-                    android:minLines="3" />
+                <!-- メモボタン -->
+                <LinearLayout
+                    android:id="@+id/memo_button_compact"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp">
 
-                <!-- デバッグ情報 -->
-                <TextView
-                    android:id="@+id/text_debug_compact"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="#999999"
-                    android:textSize="9sp"
-                    android:visibility="gone" />
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/button_bg_normal"
+                        android:contentDescription="メモ"/>
+                </LinearLayout>
 
+                <!-- バッテリー -->
+                <FrameLayout
+                    android:id="@+id/battery_area_compact"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                        <ImageView
+                            android:id="@+id/widget_battery_icon_compact"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="バッテリー"/>
+
+                        <TextView
+                            android:id="@+id/widget_battery_percent_compact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="100%"
+                            android:textColor="@android:color/white"
+                            android:textSize="9sp"/>
+                    </LinearLayout>
+                </FrameLayout>
+
+                <!-- 天気 -->
+                <LinearLayout
+                    android:id="@+id/weather_area_compact"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="2dp"
+                    android:weightSum="3">
+
+                    <!-- アイコン領域（上2/3） -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="2">
+
+                        <TextView
+                            android:id="@+id/weather_icon_compact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="☀️"
+                            android:textSize="18sp"/>
+                    </FrameLayout>
+
+                    <!-- テキスト領域（下1/3） -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+
+                        <TextView
+                            android:id="@+id/weather_temp_compact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="25℃"
+                            android:textColor="@android:color/white"
+                            android:textSize="9sp"/>
+                    </FrameLayout>
+                </LinearLayout>
             </LinearLayout>
-        </FrameLayout>
+        </LinearLayout>
 
-        <LinearLayout
+        <!-- キャラクターエリア（右40%） -->
+        <FrameLayout
             android:id="@+id/other_widget_area_compact"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="bottom|center_horizontal"
+            android:layout_weight="4"
             android:padding="0dp">
 
-            <!-- キャラクター画像 -->
             <ImageView
                 android:id="@+id/widget_character_image_compact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:scaleType="fitEnd"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal|bottom"
+                android:scaleType="fitCenter"
                 android:adjustViewBounds="true"
                 android:contentDescription="キャラクター画像" />
-        </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- 縦向きバー（FrameLayout でラップ） -->
-    <FrameLayout
-        android:id="@+id/widget_bottom_bar_compact"
-        android:layout_width="65dp"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:clipToOutline="true"
-        android:background="#AA000000">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:weightSum="4"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
-
-            <!-- バッテリーエリア -->
-            <LinearLayout
-                android:id="@+id/battery_area_compact"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="2dp">
-
-                <ImageView
-                    android:id="@+id/widget_battery_icon_compact"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_marginBottom="2dp"
-                    android:contentDescription="バッテリーアイコン" />
-
-                <TextView
-                    android:id="@+id/widget_battery_percent_compact"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="100%"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp"/>
-            </LinearLayout>
-
-            <!-- ゲームボタン -->
-            <LinearLayout
-                android:id="@+id/game_button_compact"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="4dp">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/game_b"
-                    android:contentDescription="ゲームボタン"/>
-            </LinearLayout>
-
-            <!-- 天気エリア -->
-            <LinearLayout
-                android:id="@+id/weather_area_compact"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="2dp">
-
-                <TextView
-                    android:id="@+id/weather_icon_compact"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="☀️"
-                    android:textSize="12sp"/>
-                <TextView
-                    android:id="@+id/weather_temp_compact"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="25℃"
-                    android:textColor="@android:color/white"
-                    android:textSize="10sp"/>
-            </LinearLayout>
-
-            <!-- メモボタン -->
-            <LinearLayout
-                android:id="@+id/memo_button_compact"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="4dp">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:src="@drawable/button_bg_normal"
-                    android:contentDescription="メモボタン"/>
-            </LinearLayout>
-        </LinearLayout>
-    </FrameLayout>
 
     <!-- 🍀 追加：時計（右下固定） -->
     <ImageView
@@ -195,6 +199,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:scaleType="centerInside"
-        android:contentDescription="時計" />
+        android:contentDescription="時計"
+        android:visibility="gone" />
 
 </RelativeLayout>

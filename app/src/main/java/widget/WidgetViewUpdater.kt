@@ -8,25 +8,19 @@ import android.widget.RemoteViews
 import com.example.mascotforge.R
 import java.util.*
 import widget.cache.ClockCache
+import widget.cache.UserWeatherCache
 
 /**
  * WidgetViewUpdater - レイアウトタイプ対応版（修正版）
- * ✅ COMPACT モードのView IDを正しく設定
+ * COMPACT モードのView IDを正しく設定
  */
 class WidgetViewUpdater(private val context: Context) {
 
     companion object {
         private const val TAG = "WidgetViewUpdater"
-        private const val WEATHER_PREFS = "user_weather_prefs"
-        private const val KEY_LAST_WEATHER_EMOJI = "current_weather_emoji"
-        private const val KEY_LAST_TEMP = "current_temp"
-        private const val KEY_LAST_WEATHER_CODE = "current_weather_code"
-        private const val KEY_LAST_DESCRIPTION = "lastDescription"
-        private const val KEY_LAST_CITY_NAME = "lastCityName"
     }
 
     enum class LayoutType {
-        MINI,
         COMPACT,
         NORMAL
     }
@@ -39,43 +33,41 @@ class WidgetViewUpdater(private val context: Context) {
 
         fun batteryIcon(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_battery_icon_normal
-            LayoutType.COMPACT -> R.id.widget_battery_icon_compact  // 🔧 修正
+            LayoutType.COMPACT -> R.id.widget_battery_icon_compact
             else -> null
         }
 
         fun batteryPercent(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_battery_percent_normal
-            LayoutType.COMPACT -> R.id.widget_battery_percent_compact  // 🔧 修正
+            LayoutType.COMPACT -> R.id.widget_battery_percent_compact
             else -> null
         }
 
         fun weatherIcon(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.weather_icon_normal
-            LayoutType.COMPACT -> R.id.weather_icon_compact  // 🔧 修正
+            LayoutType.COMPACT -> R.id.weather_icon_compact
             else -> null
         }
 
         fun weatherTemp(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.weather_temp_normal
-            LayoutType.COMPACT -> R.id.weather_temp_compact  // 🔧 修正
+            LayoutType.COMPACT -> R.id.weather_temp_compact
             else -> null
         }
 
         fun speech(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_speech_normal
-            LayoutType.COMPACT -> R.id.widget_speech_compact  // 🔧 修正
-            else -> R.id.widget_speech_normal
+            LayoutType.COMPACT -> R.id.widget_speech_compact
         }
 
         fun characterImage(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_character_image
-            LayoutType.COMPACT -> R.id.widget_character_image_compact  // 🔧 修正
-            else -> R.id.widget_character_image
+            LayoutType.COMPACT -> R.id.widget_character_image_compact
         }
 
         fun clock(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_clock_normal
-            LayoutType.COMPACT -> R.id.widget_clock_compact  // 🔧 修正
+            LayoutType.COMPACT -> R.id.widget_clock_compact
             else -> null
         }
     }
@@ -154,22 +146,12 @@ class WidgetViewUpdater(private val context: Context) {
             val iconViewId = ViewIds.weatherIcon(layoutType) ?: return
             val tempViewId = ViewIds.weatherTemp(layoutType) ?: return
 
-            val prefs = context.getSharedPreferences(WEATHER_PREFS, Context.MODE_PRIVATE)
-            val emojiFromPrefs = prefs.getString(KEY_LAST_WEATHER_EMOJI, null)
-            val tempFromPrefs = prefs.getFloat(KEY_LAST_TEMP, Float.NaN)
-
-            val emojiFromObject = tryExtractEmojiFromObject(weather)
-            val tempFromObject = tryExtractTempFromObject(weather)
-
-            val emoji = emojiFromPrefs ?: emojiFromObject ?: "☀️"
-            val tempStr = if (!tempFromPrefs.isNaN()) {
-                "${formatTemp(tempFromPrefs)}°C"
-            } else {
-                tempFromObject ?: "25°C"
-            }
+            val cached = UserWeatherCache(context).getCurrentWeather()
+            val emoji = cached?.weatherEmoji ?: "--"
+            val tempStr = if (cached != null) "${formatTemp(cached.temperature)}°C" else "--"
 
             views.safeSetText(iconViewId, emoji)
-            views.safeSetTextSizeSp(iconViewId, if (layoutType == LayoutType.COMPACT) 23f else 23f)  // 🔧 COMPACTも20spに
+            views.safeSetTextSizeSp(iconViewId, if (layoutType == LayoutType.COMPACT) 23f else 23f)
             views.safeSetText(tempViewId, tempStr)
             views.safeSetTextSizeSp(tempViewId, if (layoutType == LayoutType.COMPACT) 10f else 14f)
 
@@ -220,9 +202,8 @@ class WidgetViewUpdater(private val context: Context) {
                 views.safeSetText(speechViewId, speech)
 
                 val textSize = when (layoutType) {
-                    LayoutType.COMPACT -> 11f  // 🔧 XMLの設定に合わせる
+                    LayoutType.COMPACT -> 11f
                     LayoutType.NORMAL -> 12f
-                    else -> 14f
                 }
                 views.safeSetTextSizeSp(speechViewId, textSize)
 
@@ -307,38 +288,6 @@ class WidgetViewUpdater(private val context: Context) {
             setImageViewResource(viewId, resId)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to set image resource for view $viewId", e)
-        }
-    }
-
-    private fun tryExtractEmojiFromObject(weather: Any?): String? {
-        if (weather == null) return null
-        return try {
-            val method = weather::class.java.getMethod("getEmoji")
-            method.invoke(weather) as? String
-        } catch (_: Exception) {
-            try {
-                val field = weather::class.java.getDeclaredField("emoji")
-                field.isAccessible = true
-                field.get(weather) as? String
-            } catch (_: Exception) {
-                null
-            }
-        }
-    }
-
-    private fun tryExtractTempFromObject(weather: Any?): String? {
-        if (weather == null) return null
-        return try {
-            try {
-                val method = weather::class.java.getMethod("getTemperature")
-                "${method.invoke(weather)}°C"
-            } catch (_: NoSuchMethodException) {
-                val field = weather::class.java.getDeclaredField("temperature")
-                field.isAccessible = true
-                "${field.get(weather)}°C"
-            }
-        } catch (_: Exception) {
-            null
         }
     }
 

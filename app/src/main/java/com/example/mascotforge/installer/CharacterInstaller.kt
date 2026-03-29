@@ -154,10 +154,10 @@ class CharacterInstaller(private val context: Context) {
 
         return CharacterMetadata(
             id = id,
-            name = json.getString("name"),
+            name = json.getString("name").sanitizeLogField(),
             version = json.optString("version", "1.0.0"),
-            author = json.optString("author", "Unknown"),
-            description = json.optString("description", "")
+            author = json.optString("author", "Unknown").sanitizeLogField(),
+            description = json.optString("description", "").sanitizeLogField()
         )
     }
 
@@ -200,7 +200,7 @@ class CharacterInstaller(private val context: Context) {
         return try {
             val validator = ZipSecurityValidator(installedCharDir)
 
-            // 🚨 修正箇所: 静的メソッドとしてクラス名で呼び出す
+            // 静的メソッドとしてクラス名で呼び出す
             if (!ZipSecurityValidator.isValidCharacterId(charId)) {
                 return Result.failure(SecurityException("INVALID_CHARACTER_ID_FORMAT"))
             }
@@ -276,6 +276,9 @@ class CharacterInstaller(private val context: Context) {
             } ?: emptyList()
     }
 }
+
+private fun String.sanitizeLogField(): String =
+    this.replace(Regex("[\n\r\t\u0000-\u001F]"), " ").trim()
 
 data class CharacterInstallInfo(
     val id: String,

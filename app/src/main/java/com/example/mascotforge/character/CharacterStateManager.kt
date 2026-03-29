@@ -20,50 +20,39 @@ data class CharacterState(
     var touchCount: Int = 0,
     var touchCountToday: Int = 0,
     var lastTouchTime: Long = 0L,
-    val customVars: IntArray = IntArray(20) { 0 }  // Semantic-Free Variables
+    val customVars: MutableMap<String, Int> = mutableMapOf()  // 名前ベースのカスタム変数
 ) {
     /**
-     * 特定のカスタム変数を取得
+     * カスタム変数を名前で取得（未設定の場合は 0 を返す）
      */
-    fun getCustomVar(index: Int): Int {
-        require(index in 0..19) { "Index must be 0-19, got $index" }
-        return customVars[index]
+    fun getCustomVar(name: String): Int = customVars[name] ?: 0
+
+    /**
+     * カスタム変数を名前で設定
+     */
+    fun setCustomVar(name: String, value: Int) {
+        customVars[name] = value
     }
 
     /**
-     * 特定のカスタム変数を設定
+     * カスタム変数を名前で調整（+, -, *, /, = 演算）
+     * 範囲制限は CustomVariableManager が担当する
      */
-    fun setCustomVar(index: Int, value: Int) {
-        require(index in 0..19) { "Index must be 0-19, got $index" }
-        require(value in 0..100) { "Value must be 0-100, got $value" }
-        customVars[index] = value
-    }
-
-    /**
-     * カスタム変数を調整（+, -, *, /, = 演算）
-     */
-    fun adjustCustomVar(index: Int, operation: String) {
-        require(index in 0..19) { "Index must be 0-19, got $index" }
-
-        val current = customVars[index]
+    fun adjustCustomVar(name: String, operation: String) {
+        val current = customVars[name] ?: 0
         val newValue = when {
-            operation.startsWith("+") -> current + operation.substring(1).toIntOrNull().orZero()
-            operation.startsWith("-") -> current - operation.substring(1).toIntOrNull().orZero()
-            operation.startsWith("*") -> current * operation.substring(1).toIntOrNull().orOne()
+            operation.startsWith("+") -> current + (operation.substring(1).toIntOrNull() ?: 0)
+            operation.startsWith("-") -> current - (operation.substring(1).toIntOrNull() ?: 0)
+            operation.startsWith("*") -> current * (operation.substring(1).toIntOrNull() ?: 1)
             operation.startsWith("/") -> {
-                val divisor = operation.substring(1).toIntOrNull().orOne()
+                val divisor = operation.substring(1).toIntOrNull() ?: 1
                 if (divisor != 0) current / divisor else current
             }
-            operation.startsWith("=") -> operation.substring(1).toIntOrNull().orZero()
+            operation.startsWith("=") -> operation.substring(1).toIntOrNull() ?: 0
             else -> current
-        }.coerceIn(0, 100)  // 範囲制限
-
-        customVars[index] = newValue
+        }
+        customVars[name] = newValue
     }
-
-    private fun String.toIntOrNull(): Int? = this.toIntOrNull()
-    private fun Int?.orZero(): Int = this ?: 0
-    private fun Int?.orOne(): Int = this ?: 1
 
     /**
      * 最後のタッチから経過した時間（秒）
@@ -76,44 +65,16 @@ data class CharacterState(
     /**
      * 今日タッチされたか
      */
-    fun wasTouchedToday(): Boolean {
-        return touchCountToday > 0
-    }
+    fun wasTouchedToday(): Boolean = touchCountToday > 0
 
     /**
      * デバッグ情報
      */
     override fun toString(): String {
+        val varSummary = customVars.entries.take(5).joinToString { "${it.key}=${it.value}" }
         return "CharacterState(id=$characterId, touch=$touchCount, today=$touchCountToday, " +
                 "lastTouch=${getTimeSinceLastTouch()}s ago, " +
-                "customVars=[${customVars.take(5).joinToString()}...])"
-    }
-
-    /**
-     * IntArray の equals/hashCode 対応
-     */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CharacterState
-
-        if (characterId != other.characterId) return false
-        if (touchCount != other.touchCount) return false
-        if (touchCountToday != other.touchCountToday) return false
-        if (lastTouchTime != other.lastTouchTime) return false
-        if (!customVars.contentEquals(other.customVars)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = characterId.hashCode()
-        result = 31 * result + touchCount
-        result = 31 * result + touchCountToday
-        result = 31 * result + lastTouchTime.hashCode()
-        result = 31 * result + customVars.contentHashCode()
-        return result
+                "customVars=[${varSummary}...])"
     }
 }
 
@@ -141,7 +102,9 @@ class CharacterStateManager(private val context: Context) {
         private const val KEY_TOUCH_COUNT_TODAY = "touch_count_today"
         private const val KEY_LAST_TOUCH_TIME = "last_touch_time"
         private const val KEY_LAST_SAVE_DATE = "last_save_date"
-        private const val KEY_CUSTOM_VAR_PREFIX = "custom_var"
+        // カスタム変数は "cvar_{varName}" 形式で名前ベースに保存
+        private const val KEY_CUSTOM_VAR_PREFIX = "cvar_"
+        const val MAX_CUSTOM_VARS = 30
 
         // デフォルト値
         private const val DEFAULT_TOUCH_COUNT = 0
@@ -172,9 +135,13 @@ class CharacterStateManager(private val context: Context) {
         val lastTouchTime = prefs.getLong(makeKey(characterId, KEY_LAST_TOUCH_TIME), DEFAULT_LAST_TOUCH_TIME)
         val lastSaveDate = prefs.getString(makeKey(characterId, KEY_LAST_SAVE_DATE), null)
 
-        // Semantic-Free Variables を取得
-        val customVars = IntArray(20) { index ->
-            prefs.getInt(makeKey(characterId, "$KEY_CUSTOM_VAR_PREFIX$index"), 0)
+        // カスタム変数を名前ベースで取得（"cvar_" プレフィックスを除去して名前を復元）
+        val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
+        val customVars = mutableMapOf<String, Int>()
+        prefs.all.entries.forEach { (key, value) ->
+            if (key.startsWith(cvarPrefix) && value is Int) {
+                customVars[key.removePrefix(cvarPrefix)] = value
+            }
         }
 
         // 日付が変わっていたらリセット
@@ -231,9 +198,11 @@ class CharacterStateManager(private val context: Context) {
             putLong(makeKey(characterId, KEY_LAST_TOUCH_TIME), state.lastTouchTime)
             putString(makeKey(characterId, KEY_LAST_SAVE_DATE), getCurrentDate())
 
-            // Semantic-Free Variables を保存
-            state.customVars.forEachIndexed { index, value ->
-                putInt(makeKey(characterId, "$KEY_CUSTOM_VAR_PREFIX$index"), value)
+            // カスタム変数を名前ベースで保存（古いキーを削除してから書き込む）
+            val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
+            prefs.all.keys.filter { it.startsWith(cvarPrefix) }.forEach { remove(it) }
+            state.customVars.forEach { (name, value) ->
+                putInt("$cvarPrefix$name", value)
             }
 
             apply()
@@ -257,9 +226,8 @@ class CharacterStateManager(private val context: Context) {
             remove(makeKey(characterId, KEY_LAST_TOUCH_TIME))
             remove(makeKey(characterId, KEY_LAST_SAVE_DATE))
 
-            for (i in 0 until 20) {
-                remove(makeKey(characterId, "$KEY_CUSTOM_VAR_PREFIX$i"))
-            }
+            val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
+            prefs.all.keys.filter { it.startsWith(cvarPrefix) }.forEach { remove(it) }
 
             apply()
         }
@@ -278,16 +246,28 @@ class CharacterStateManager(private val context: Context) {
     /**
      * すべてのキャラクターIDを取得
      *
+     * キャラクターIDにアンダースコアが含まれる場合も正しく動作するよう、
+     * 既知のプロパティサフィックスを末尾から逆引きしてIDを特定する。
+     *
      * @return キャラクターIDのリスト
      */
     fun getAllCharacterIds(): List<String> {
         val ids = mutableSetOf<String>()
 
+        // 固定プロパティのサフィックスのみで逆引き（カスタム変数は名前が可変なので使わない）
+        val knownSuffixes = listOf(
+            "_$KEY_TOUCH_COUNT_TODAY",
+            "_$KEY_LAST_TOUCH_TIME",
+            "_$KEY_LAST_SAVE_DATE",
+            "_$KEY_TOUCH_COUNT"
+        ).sortedByDescending { it.length }
+
         prefs.all.keys.forEach { key ->
-            // "neko_touch_count" から "neko" を抽出
-            val parts = key.split("_", limit = 2)
-            if (parts.size >= 2) {
-                ids.add(parts[0])
+            for (suffix in knownSuffixes) {
+                if (key.endsWith(suffix) && key.length > suffix.length) {
+                    ids.add(key.dropLast(suffix.length))
+                    break
+                }
             }
         }
 
@@ -313,7 +293,7 @@ class CharacterStateManager(private val context: Context) {
                 appendLine("    touchCountToday: ${state.touchCountToday}")
                 appendLine("    lastTouchTime: ${state.lastTouchTime}")
                 appendLine("    timeSinceLastTouch: ${state.getTimeSinceLastTouch()}s")
-                appendLine("    customVars[0-4]: ${state.customVars.take(5).joinToString()}")
+                appendLine("    customVars[0-4]: ${state.customVars.entries.take(5).joinToString { "${it.key}=${it.value}" }}")
             }
         }
     }

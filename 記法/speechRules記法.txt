@@ -1,0 +1,112 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  speechRules 記法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+優先度の高いルールから順に評価し、最初にマッチしたルールのファイルを使う。
+conditions / anyOf が両方空のルールはデフォルト（フォールバック）として機能する。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 基本形（1ファイル・AND条件）
+
+  {
+    "file":       "speeches/rainy.txt",
+    "conditions": { "weatherCode": "rain" },
+    "priority":   10
+  }
+
+  - "conditions" 内の全エントリが AND 結合（全部一致で適合）
+  - priority が高いほど優先。省略時は 0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 複数ファイルからランダム選択（"files"）
+
+  {
+    "files": ["speeches/morning1.txt", "speeches/morning2.txt", "speeches/morning3.txt"],
+    "conditions": { "timeSlot": "morning" },
+    "priority": 5
+  }
+
+  - "files" を使うと、マッチ時に候補の中からランダムで1つが選ばれる
+  - "file"（単体）と "files"（複数）は排他。どちらか一方を指定
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ OR条件（"anyOf" / 十分条件）
+
+  {
+    "file":  "speeches/moody.txt",
+    "anyOf": { "isAngry": "true", "mood": "sad" },
+    "priority": 8
+  }
+
+  - "anyOf" 内のいずれか1エントリが一致すれば適合（OR結合）
+  - isAngry が true か、mood が sad か、どちらかで適合
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ AND + OR の組み合わせ
+
+  {
+    "file":       "speeches/night_dark.txt",
+    "conditions": { "timeSlot": "night" },
+    "anyOf":      { "isAngry": "true", "mood": "sad" },
+    "priority":   15
+  }
+
+  - conditions（AND）と anyOf（OR）を両方書いた場合
+  - 「夜帯 かつ (怒ってる OR 悲しい)」でマッチ
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ "conditions" の別名: "allOf"
+
+  "allOf": { "timeSlot": "morning", "isCharging": "true" }
+
+  は "conditions": { ... } と完全に同じ意味。
+  anyOf に対応するキーとして読みやすくしたい場合に使える。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ デフォルトルール（フォールバック）
+
+  {
+    "file": "speeches/default.txt"
+  }
+
+  - "conditions" / "anyOf" を省略（または空）にすると無条件にマッチ
+  - 他の全ルールが外れたときのフォールバックとして必ず1つ書いておくこと
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ conditions / anyOf で使える値の書き方
+
+  文字列一致      "timeSlot": "morning"
+  真偽値          "isCharging": "true"  /  "isCharging": "false"
+  数値（文字列）  "batteryLevel": "20"
+
+  ※ 条件式（>= や &&）は使えない。SafeExpressionEvaluator が必要な条件は
+    emotions の "if" 式か customVariables の "condition" フィールドで書く。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 実用サンプル（全部入り）
+
+  "speechRules": [
+    {
+      "files": ["speeches/angry1.txt", "speeches/angry2.txt"],
+      "anyOf": { "isAngry": "true", "mood": "bad" },
+      "priority": 20
+    },
+    {
+      "file":       "speeches/rainy_morning.txt",
+      "conditions": { "timeSlot": "morning", "weatherCode": "rain" },
+      "priority":   15
+    },
+    {
+      "file":       "speeches/rainy.txt",
+      "conditions": { "weatherCode": "rain" },
+      "priority":   10
+    },
+    {
+      "file":       "speeches/morning.txt",
+      "conditions": { "timeSlot": "morning" },
+      "priority":   5
+    },
+    {
+      "file": "speeches/default.txt"
+    }
+  ]

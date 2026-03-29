@@ -24,7 +24,7 @@ class WidgetUpdateScheduler(private val context: Context) {
 
         private const val ONE_MINUTE_MS = 60 * 1000L
         private const val ONE_HOUR_MS = 60 * 60 * 1000L
-        private const val TWENTY_MINUTES_MS = 10 * 60 * 1000L
+        private const val TEN_MINUTES_MS = 10 * 60 * 1000L
         private const val THIRTY_SECONDS_MS = 30 * 1000L
     }
 
@@ -106,7 +106,7 @@ class WidgetUpdateScheduler(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val nextUpdate = System.currentTimeMillis() + TWENTY_MINUTES_MS
+        val nextUpdate = System.currentTimeMillis() + TEN_MINUTES_MS
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

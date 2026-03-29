@@ -8,7 +8,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import com.example.mascotforge.R
+import com.example.mascotforge.characters.CharacterRegistry
 import com.mascotforge.character.CharacterStateManager
+import com.mascotforge.character.DynamicCharacter
+import com.mascotforge.speech.SpeechContextFactory
 import kotlinx.coroutines.*
 
 /**
@@ -212,7 +215,7 @@ class TimeWidgetProvider : AppWidgetProvider() {
         val scheduler = WidgetUpdateScheduler(context)
         scheduler.scheduleClockUpdate()    // 毎分
         scheduler.scheduleWeatherUpdate()  // 1時間ごと
-        // セリフ更新はキャラパック側でスケジュール
+        scheduler.scheduleSpeechUpdate()   // 10分ごと
     }
 
     /**
@@ -311,7 +314,20 @@ class TimeWidgetProvider : AppWidgetProvider() {
         Log.d(TAG, "Touch recorded: character=$characterId, widget=$appWidgetId, " +
                 "count=${currentState.touchCount}, today=${currentState.touchCountToday}")
 
-        // 4. このウィジェットのみ更新（他のウィジェットは触らない）
+        // 4. ON_TOUCH カスタム変数ルールを発火（updateSingleWidget より前に実行し、
+        //    変数値を更新してからセリフ再生成が走るようにする）
+        try {
+            val character = CharacterRegistry.getCharacterById(context, characterId)
+            if (character is DynamicCharacter) {
+                val ctx = SpeechContextFactory.create(context, characterId)
+                character.triggerTouchRules(ctx)
+                Log.d(TAG, "ON_TOUCH rules fired for character $characterId")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fire ON_TOUCH rules for $characterId", e)
+        }
+
+        // 5. このウィジェットのみ更新（他のウィジェットは触らない）
         updateSingleWidget(context, appWidgetId, characterId)
     }
 

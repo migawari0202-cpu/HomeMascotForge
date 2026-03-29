@@ -79,16 +79,30 @@ class Karioki : ComponentActivity() {
 
         if (isFirstLaunch) {
             prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
-            setupInitializationLayout()
             Log.d(TAG, "初回起動: 初期化処理開始")
 
-            // 権限チェックへ進み、その後のフローで scheduleAllUpdates と onInitializationCompleted が呼ばれる
+            // 初回は権限チェック・スケジュール後にチュートリアルへ
+            setupInitializationLayout()
             checkAndRequestPermissions()
             return
         }
 
         // 通常起動は CharacterInstallActivity に遷移
         if (!isLaunchedFromWidget) {
+            // キャッシュが切れていたら即時取得をエンキュー
+            val weatherCache = widget.cache.UserWeatherCache(applicationContext)
+            if (weatherCache.getCurrentWeather() == null) {
+                Log.d(TAG, "天気キャッシュなし → 即時取得をエンキュー")
+                val immediateWork = androidx.work.OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
+                    .setConstraints(
+                        androidx.work.Constraints.Builder()
+                            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                            .build()
+                    )
+                    .addTag("weather_immediate_on_launch")
+                    .build()
+                androidx.work.WorkManager.getInstance(applicationContext).enqueue(immediateWork)
+            }
             startActivity(Intent(this, CharacterInstallActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
@@ -253,7 +267,7 @@ class Karioki : ComponentActivity() {
         try {
             // WorkManagerによる天気更新のスケジュールロジックは変更なし
             val periodicWork = PeriodicWorkRequestBuilder<WeatherUpdateWorker>(
-                2, TimeUnit.HOURS
+                1, TimeUnit.HOURS
             )
                 .setConstraints(
                     Constraints.Builder()

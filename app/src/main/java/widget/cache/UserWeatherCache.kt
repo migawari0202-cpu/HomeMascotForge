@@ -24,7 +24,7 @@ class UserWeatherCache(private val context: Context) {
         private const val KEY_PREV_CODE = "prev_weather_code"
         private const val KEY_PREV_TIMESTAMP = "prev_timestamp"
 
-        private const val STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000L // 2時間
+        private const val STALE_THRESHOLD_MS = 1 * 60 * 60 * 1000L // 1時間
     }
 
     private val prefs = context.getSharedPreferences(CACHE_PREFS, Context.MODE_PRIVATE)

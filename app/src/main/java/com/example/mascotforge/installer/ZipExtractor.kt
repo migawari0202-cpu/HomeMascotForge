@@ -85,18 +85,23 @@ class ZipExtractor(private val validator: ZipSecurityValidator) {
         destFile.outputStream().buffered().use { output ->
             var bytesRead: Int
             while (zip.read(buffer).also { bytesRead = it } != -1) {
+                totalRead += bytesRead
 
-                // Validatorに展開バイト数を報告し、累積サイズと単一ファイルサイズを監視
+                // 単一ファイルのランタイムサイズチェック（ヘッダー偽装でバイパス不可）
+                if (totalRead > ZipSecurityValidator.MAX_SINGLE_FILE_SIZE) {
+                    destFile.delete()
+                    throw SecurityException(ZipSecurityValidator.ERR_LIMIT_SINGLE_SIZE)
+                }
+
+                // Validatorに展開バイト数を報告し、累積合計サイズを監視
                 try {
                     validator.trackUncompressedSize(bytesRead)
                 } catch (e: SecurityException) {
-                    // 展開途中のファイルを削除
                     destFile.delete()
                     throw e
                 }
 
                 output.write(buffer, 0, bytesRead)
-                totalRead += bytesRead
             }
         }
 

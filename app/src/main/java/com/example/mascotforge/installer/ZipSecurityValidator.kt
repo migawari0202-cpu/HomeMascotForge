@@ -36,6 +36,10 @@ class ZipSecurityValidator(
         const val ERR_JSON_INVALID = "INVALID_JSON_FORMAT"
         const val ERR_JSON_PATH_TYPE = "JSON_PATH_VALUE_NOT_STRING"
         const val ERR_JSON_TRAVERSAL = "JSON_PATH_TRAVERSAL_OR_MISSING"
+        const val ERR_IMAGES_NOT_OBJECT = "IMAGES_MUST_BE_OBJECT"
+        const val ERR_SPEECH_RULES_NOT_ARRAY = "SPEECH_RULES_MUST_BE_ARRAY"
+        const val ERR_SPEECH_RULE_NOT_OBJECT = "SPEECH_RULE_MUST_BE_OBJECT"
+        const val ERR_SPEECH_RULE_NO_FILE = "SPEECH_RULE_MISSING_FILE"
 
         private val ALLOWED_EXTENSIONS = setOf("json", "txt", "png", "jpg", "jpeg", "webp", "gif")
         private val DANGEROUS_EXTENSIONS = setOf("apk", "dex", "so", "jar", "class", "exe", "sh", "bat", "js", "html", "htm", "php")
@@ -235,7 +239,12 @@ class ZipSecurityValidator(
         val isValid = when (extension.lowercase()) {
             "png" -> header.take(8).toByteArray().contentEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
             "jpg", "jpeg" -> header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte()
-            "gif" -> header.take(4).toByteArray().contentEquals(byteArrayOf(0x47, 0x49, 0x46, 0x38))
+            "gif" -> {
+                val gif87a = byteArrayOf(0x47, 0x49, 0x46, 0x38, 0x37, 0x61)
+                val gif89a = byteArrayOf(0x47, 0x49, 0x46, 0x38, 0x39, 0x61)
+                val h = header.take(6).toByteArray()
+                h.contentEquals(gif87a) || h.contentEquals(gif89a)
+            }
             "webp" -> {
                 // RIFF....WEBP の構造をチェック
                 (header[0] == 'R'.code.toByte() && header[1] == 'I'.code.toByte() && header[2] == 'F'.code.toByte() && header[3] == 'F'.code.toByte()) &&
@@ -266,61 +275,47 @@ class ZipSecurityValidator(
         val id = json.getString("id")
         if (!Companion.isValidCharacterId(id)) throw SecurityException("INVALID_ID_FORMAT")
 
-        // 【改善】ヘルパー関数: JSON内のパス検証をCanonical Pathで厳格化
-        fun validateJsonPath(path: String, prefix: String) {
-            // 文字列レベルのチェックは念のため残すが、主役はcanonical check
+        // ヘルパー: images/ 以下のファイル名を検証
+        fun validateImagePath(filename: String) {
+            if (filename.contains("..") || filename.startsWith("/") || filename.contains("\\") || filename.contains(":")) {
+                throw SecurityException(ERR_JSON_TRAVERSAL)
+            }
+            val targetFile = File(rootDir, "images/$filename")
+            if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $filename")
+            if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
+        }
+
+        // ヘルパー: speeches/ を含むルート相対パスを検証（例: "speeches/default.txt"）
+        fun validateSpeechPath(path: String) {
             if (path.contains("..") || path.startsWith("/") || path.contains("\\") || path.contains(":")) {
                 throw SecurityException(ERR_JSON_TRAVERSAL)
             }
-
-            val targetFile = File(rootDir, "$prefix/$path")
-
-            // 実際のファイルシステム上の正規化パスで比較 (isWithinDirectorySafeと同等のロジックを強制適用)
-            // ここでファイルが存在するかどうかも同時にチェック
-            if (!targetFile.isFile) {
-                throw SecurityException("JSON_REFERENCED_FILE_MISSING: $path")
-            }
-
-            if (!isWithinDirectorySafe(targetFile, rootDir)) {
-                throw SecurityException(ERR_JSON_TRAVERSAL)
-            }
+            val targetFile = File(rootDir, path)
+            if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $path")
+            if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
         }
 
-        // images
+        // images: オブジェクト形式（感情名 → images/ 以下のファイル名）
         if (json.has("images")) {
-            val images = json.optJSONArray("images") ?: throw SecurityException("IMAGES_MUST_BE_ARRAY")
-            for (i in 0 until images.length()) {
-                // 【改善】型チェックの強化。optStringではなく生の値を確認する
-                val rawVal = images.opt(i)
+            val images = json.optJSONObject("images") ?: throw SecurityException(ERR_IMAGES_NOT_OBJECT)
+            images.keys().forEach { key ->
+                val rawVal = images.opt(key)
                 if (rawVal !is String) throw SecurityException(ERR_JSON_PATH_TYPE)
-                validateJsonPath(rawVal, "images")
+                validateImagePath(rawVal)
             }
         } else {
             throw SecurityException("MISSING_IMAGES_KEY")
         }
 
-        // speeches
-        if (json.has("speeches")) {
-            val sp = json.get("speeches")
-            when (sp) {
-                is JSONArray -> {
-                    for (i in 0 until sp.length()) {
-                        val rawVal = sp.opt(i)
-                        if (rawVal !is String) throw SecurityException(ERR_JSON_PATH_TYPE)
-                        validateJsonPath(rawVal, "speeches")
-                    }
-                }
-                is JSONObject -> {
-                    sp.keys().forEach { k ->
-                        val rawVal = sp.opt(k)
-                        if (rawVal !is String) throw SecurityException(ERR_JSON_PATH_TYPE)
-                        validateJsonPath(rawVal as String, "speeches")
-                    }
-                }
-                else -> throw SecurityException("INVALID_SPEECHES_FORMAT")
+        // speechRules: 配列形式（各ルールに "file" フィールド）。省略可能（旧方式互換）
+        if (json.has("speechRules")) {
+            val rules = json.optJSONArray("speechRules") ?: throw SecurityException(ERR_SPEECH_RULES_NOT_ARRAY)
+            for (i in 0 until rules.length()) {
+                val rule = rules.optJSONObject(i) ?: throw SecurityException(ERR_SPEECH_RULE_NOT_OBJECT)
+                val filePath = rule.optString("file", "")
+                if (filePath.isEmpty()) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+                validateSpeechPath(filePath)
             }
-        } else {
-            throw SecurityException("MISSING_SPEECHES_KEY")
         }
 
         Log.i(TAG, "Configuration validation passed.")

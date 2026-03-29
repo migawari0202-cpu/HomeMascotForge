@@ -132,7 +132,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.0")
 
     // === Room ===
-    val roomVersion = "2.6.1"
+    val roomVersion = "2.7.0"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")

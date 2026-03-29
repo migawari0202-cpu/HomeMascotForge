@@ -1,0 +1,55 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  emotions（感情判定ルール）記法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+セリフ表示時にキャラ画像を自動で切り替えるためのルール。
+上から順に評価し、最初に "if" が true になったルールの感情が使われる。
+全部外れたら "default" の感情を使う。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 基本形
+
+  "emotions": {
+    "rules": [
+      { "if": "isLowBattery",              "emotion": "worried"  },
+      { "if": "hour >= 22 || hour < 6",    "emotion": "sleepy"   },
+      { "if": "weatherCode == \"雨\"",     "emotion": "sad"      },
+      { "if": "favorability > 70",         "emotion": "happy"    },
+      { "default": "normal" }
+    ]
+  }
+
+  - "if" には条件式を書く（標準変数一覧.txt の演算子が使える）
+  - "emotion" に images で定義した感情名を書く
+  - "default" は最後に1つだけ書く（フォールバック）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ カスタム変数を条件に使う
+
+  カスタム変数の名前をそのまま条件式に書ける。
+
+    { "if": "isAngry",           "emotion": "angry"  }
+    { "if": "mood == \"happy\"", "emotion": "happy"  }
+    { "if": "favorability < 20", "emotion": "sad"    }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 感情タグ [emotion:xxx] との優先度
+
+  セリフ内に [emotion:happy] のように書いた場合、
+  emotions ルールより「セリフ内タグが優先」される。
+
+  ルールと [emotion:タグ] の使い分け:
+    - [emotion:タグ]  → そのセリフの文脈に合わせた1回限りの感情指定
+    - emotionルール   → 変数・時刻・天気などに基づく継続的な感情
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 感情名と images の対応確認
+
+  images で定義していない感情名を emotion に指定すると
+  自動でフォールバックルールへ戻る（ログに警告が出る）。
+
+  必ず images と emotions の感情名を一致させること。
+
+  例:
+    "images":   { "normal": "...", "happy": "...", "angry": "..." }
+    "emotions": { "rules": [ { "if": "...", "emotion": "angry" }, { "default": "normal" } ] }

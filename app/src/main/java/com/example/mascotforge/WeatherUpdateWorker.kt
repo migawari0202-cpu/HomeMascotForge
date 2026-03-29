@@ -1,8 +1,6 @@
 package com.example.mascotforge
 
 import android.Manifest
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -55,7 +53,7 @@ class WeatherUpdateWorker(
          */
         fun schedulePeriodicUpdate(context: Context) {
             val weatherWork = PeriodicWorkRequestBuilder<WeatherUpdateWorker>(
-                2, TimeUnit.HOURS  // 2時間毎（API制限対策）
+                1, TimeUnit.HOURS  // 1時間毎
             )
                 .setConstraints(
                     Constraints.Builder()
@@ -69,7 +67,7 @@ class WeatherUpdateWorker(
                 ExistingPeriodicWorkPolicy.KEEP,
                 weatherWork
             )
-            Log.d(TAG, "定期天気更新をスケジュール（2時間毎、ネットワーク制約付き）")
+            Log.d(TAG, "定期天気更新をスケジュール（1時間毎、ネットワーク制約付き）")
         }
     }
 
@@ -231,7 +229,7 @@ class WeatherUpdateWorker(
                 locationManager.requestLocationUpdates(
                     provider,
                     1000L,
-                    10f,
+                    0f,
                     listener,
                     Looper.getMainLooper()
                 )
@@ -300,6 +298,7 @@ class WeatherUpdateWorker(
         in 300..321 -> "drizzle"
         in 500..531 -> "rain"
         in 600..622 -> "snow"
+        771, 781 -> "storm"
         in 701..781 -> "fog"
         800 -> "clear"
         in 801..802 -> "partly_cloudy"

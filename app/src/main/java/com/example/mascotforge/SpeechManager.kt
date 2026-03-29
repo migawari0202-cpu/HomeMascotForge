@@ -61,19 +61,20 @@ class SafeCharacterLoader(private val context: Context) {
     /**
      * メタデータ読み込み（公開メソッド）
      */
-    fun loadMetadata(basePath: String, isAssets: Boolean = true): CharacterMetadata? {
+    fun loadMetadata(source: CharacterSource): CharacterMetadata? {
         return try {
-            val jsonStr = if (isAssets) {
-                context.assets.open("$basePath/character.json")
+            val jsonStr = when (source) {
+                is CharacterSource.Assets -> context.assets.open("${source.basePath}/character.json")
                     .bufferedReader()
                     .use { it.readText() }
-            } else {
-                val file = File(context.filesDir, "$basePath/character.json")
-                if (!file.exists()) {
-                    Log.w(TAG, "Metadata file not found: ${file.path}")
-                    return null
+                is CharacterSource.InstalledFiles -> {
+                    val file = File(context.filesDir, "${source.basePath}/character.json")
+                    if (!file.exists()) {
+                        Log.w(TAG, "Metadata file not found: ${file.path}")
+                        return null
+                    }
+                    file.readText()
                 }
-                file.readText()
             }
 
             val json = JSONObject(jsonStr)
@@ -90,7 +91,7 @@ class SafeCharacterLoader(private val context: Context) {
                 speechRules = parseSpeechRules(json)
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading metadata: $basePath", e)
+            Log.e(TAG, "Error loading metadata: ${source.basePath}", e)
             null
         }
     }
@@ -98,54 +99,44 @@ class SafeCharacterLoader(private val context: Context) {
     /**
      * キャラクター読み込み（SpeechRules対応版）
      */
-    fun loadCharacter(basePath: String, isAssets: Boolean = true): CharacterProvider? {
+    fun loadCharacter(source: CharacterSource): CharacterProvider? {
         return try {
-            val meta = loadMetadata(basePath, isAssets) ?: run {
-                Log.e(TAG, "Failed to load metadata for: $basePath")
+            val meta = loadMetadata(source) ?: run {
+                Log.e(TAG, "Failed to load metadata for: ${source.basePath}")
                 return null
             }
 
             if (meta.speechRules.isNotEmpty()) {
-                Log.d(TAG, "Using SpeechRules system for: $basePath")
-                return loadCharacterWithRules(basePath, meta, isAssets)
+                Log.d(TAG, "Using SpeechRules system for: ${source.basePath}")
+                return loadCharacterWithRules(source, meta)
             } else {
-                Log.d(TAG, "Using legacy system for: $basePath")
-                return loadCharacterLegacy(basePath, meta, isAssets)
+                Log.d(TAG, "Using legacy system for: ${source.basePath}")
+                return loadCharacterLegacy(source, meta)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading character: $basePath", e)
+            Log.e(TAG, "Error loading character: ${source.basePath}", e)
             null
         }
     }
 
     /**
-     * 🔥 SpeechRulesを使った新方式のロード
-     *
-     * 【重要な変更】
-     * - 初回読み込み時は空のセリフマップを渡す
-     * - loaderへの参照を渡して、DynamicCharacter内で動的に再評価できるようにする
+     * SpeechRulesを使った新方式のロード
      */
     private fun loadCharacterWithRules(
-        basePath: String,
-        meta: CharacterMetadata,
-        isAssets: Boolean
+        source: CharacterSource,
+        meta: CharacterMetadata
     ): CharacterProvider? {
         return try {
-            // 🔥 初期状態では空のマップを渡す
-            // DynamicCharacter側が必要に応じて動的にロードする
-            val emptySpeeches = mapOf<String, List<String>>()
-
             DynamicCharacter(
                 charId = meta.id,
                 metadata = meta,
-                speeches = emptySpeeches,
+                speeches = emptyMap(),
                 context = context,
-                basePath = basePath,
-                isAssets = isAssets,
-                loader = this  // ← loaderへの参照を渡す
+                source = source,
+                loader = this
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading character with rules: $basePath", e)
+            Log.e(TAG, "Error loading character with rules: ${source.basePath}", e)
             null
         }
     }
@@ -154,24 +145,22 @@ class SafeCharacterLoader(private val context: Context) {
      * 旧方式のロード（互換性維持）
      */
     private fun loadCharacterLegacy(
-        basePath: String,
-        meta: CharacterMetadata,
-        isAssets: Boolean
+        source: CharacterSource,
+        meta: CharacterMetadata
     ): CharacterProvider? {
         return try {
-            val speeches = loadAllSpeeches(basePath, isAssets)
+            val speeches = loadAllSpeeches(source)
 
             DynamicCharacter(
                 charId = meta.id,
                 metadata = meta,
                 speeches = speeches,
                 context = context,
-                basePath = basePath,
-                isAssets = isAssets,
-                loader = null  // 旧方式ではloaderは不要
+                source = source,
+                loader = null
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading character (legacy): $basePath", e)
+            Log.e(TAG, "Error loading character (legacy): ${source.basePath}", e)
             null
         }
     }
@@ -187,19 +176,40 @@ class SafeCharacterLoader(private val context: Context) {
             try {
                 val ruleJson = rulesArray.getJSONObject(i)
 
+                // allOf 条件（AND）: "conditions" または "allOf" キーで指定
                 val conditions = mutableMapOf<String, String>()
-                val conditionsJson = ruleJson.optJSONObject("conditions")
-                conditionsJson?.keys()?.forEach { key ->
-                    conditions[key] = conditionsJson.getString(key)
+                (ruleJson.optJSONObject("conditions") ?: ruleJson.optJSONObject("allOf"))
+                    ?.keys()?.forEach { key ->
+                        conditions[key] = (ruleJson.optJSONObject("conditions") ?: ruleJson.optJSONObject("allOf")!!).getString(key)
+                    }
+
+                // anyOf 条件（OR・十分条件）
+                val anyOf = mutableMapOf<String, String>()
+                ruleJson.optJSONObject("anyOf")?.keys()?.forEach { key ->
+                    anyOf[key] = ruleJson.optJSONObject("anyOf")!!.getString(key)
+                }
+
+                // ファイル指定: "file" (単体) または "files" (複数・ランダム選択)
+                val files: List<String> = when {
+                    ruleJson.has("files") -> {
+                        val arr = ruleJson.getJSONArray("files")
+                        List(arr.length()) { j -> arr.getString(j) }
+                    }
+                    ruleJson.has("file") -> listOf(ruleJson.getString("file"))
+                    else -> {
+                        Log.w(TAG, "Speech rule at index $i has no 'file' or 'files', skipping")
+                        continue
+                    }
                 }
 
                 rules.add(SpeechRule(
-                    file = ruleJson.getString("file"),
+                    files = files,
                     conditions = conditions,
+                    anyOf = anyOf,
                     priority = ruleJson.optInt("priority", 0)
                 ))
 
-                Log.d(TAG, "Parsed rule: priority=${ruleJson.optInt("priority", 0)}, file=${ruleJson.getString("file")}, conditions=${conditions.size}")
+                Log.d(TAG, "Parsed rule: priority=${ruleJson.optInt("priority", 0)}, files=${files.size}, conditions=${conditions.size}, anyOf=${anyOf.size}")
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to parse speech rule at index $i", e)
             }
@@ -277,7 +287,7 @@ class SafeCharacterLoader(private val context: Context) {
     /**
      * 全てのセリフファイルを読み込む（旧方式）
      */
-    private fun loadAllSpeeches(basePath: String, isAssets: Boolean): Map<String, List<String>> {
+    private fun loadAllSpeeches(source: CharacterSource): Map<String, List<String>> {
         val speechFiles = listOf(
             "morning.txt",
             "afternoon.txt",
@@ -286,35 +296,31 @@ class SafeCharacterLoader(private val context: Context) {
             "midnight.txt"
         )
 
-        val speeches = mutableMapOf<String, List<String>>()
-
-        speechFiles.forEach { filename ->
+        return speechFiles.associate { filename ->
             val key = filename.removeSuffix(".txt")
-            val speechPath = "$basePath/speeches/$filename"
-            speeches[key] = loadSpeechFile(speechPath, isAssets)
+            val speechPath = "${source.basePath}/speeches/$filename"
+            key to loadSpeechFile(speechPath, source)
         }
-
-        return speeches
     }
 
     /**
-     * 単一のセリフファイルを読み込む（publicに変更）
-     * DynamicCharacterから動的に呼ばれるようになった
+     * 単一のセリフファイルを読み込む
+     * DynamicCharacterから動的に呼ばれる
      */
-    fun loadSpeechFile(path: String, isAssets: Boolean): List<String> {
+    fun loadSpeechFile(path: String, source: CharacterSource): List<String> {
         return try {
-            val lines = if (isAssets) {
-                context.assets.open(path).use { input ->
-                    BufferedReader(InputStreamReader(input, Charsets.UTF_8))
-                        .readLines()
+            val lines = when (source) {
+                is CharacterSource.Assets -> context.assets.open(path).use { input ->
+                    BufferedReader(InputStreamReader(input, Charsets.UTF_8)).readLines()
                 }
-            } else {
-                val file = File(context.filesDir, path)
-                if (file.exists()) {
-                    file.readLines()
-                } else {
-                    Log.w(TAG, "Speech file not found: ${file.path}")
-                    emptyList()
+                is CharacterSource.InstalledFiles -> {
+                    val file = File(context.filesDir, path)
+                    if (file.exists()) {
+                        file.readLines()
+                    } else {
+                        Log.w(TAG, "Speech file not found: ${file.path}")
+                        emptyList()
+                    }
                 }
             }
 
@@ -334,11 +340,21 @@ class SafeCharacterLoader(private val context: Context) {
 
 /**
  * セリフルール（優先度付き条件分岐）
+ *
+ * 【条件の仕組み】
+ * - conditions (allOf): 全エントリが AND 結合。全部一致で適合。省略可。
+ * - anyOf:             任意の1エントリが OR 結合。1つでも一致で適合。省略可。
+ * - 両方指定時は conditions AND anyOf の両方を満たす必要がある。
+ *
+ * 【ファイルの仕組み】
+ * - files: 候補リスト。適合時にランダムで1つ選ばれる。
+ * - JSON では "file": "foo.txt"（単体）か "files": ["a.txt","b.txt"]（複数）で指定。
  */
 data class SpeechRule(
-    val file: String,
-    val conditions: Map<String, String>,
-    val priority: Int
+    val files: List<String>,                       // 候補ファイルリスト（ランダム選択）
+    val conditions: Map<String, String> = emptyMap(), // AND 条件
+    val anyOf: Map<String, String> = emptyMap(),      // OR 条件（十分条件）
+    val priority: Int = 0
 )
 
 /**

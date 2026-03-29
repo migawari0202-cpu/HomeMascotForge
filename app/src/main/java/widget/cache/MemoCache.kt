@@ -126,12 +126,4 @@ class MemoCache(context: Context) {
             }
         }
     }
-
-    /**
-     * キャッシュを無効化（Room版では不要だが互換性のため残す）
-     */
-    fun invalidateCache() {
-        // Roomは常に最新データを返すので、特に何もしない
-        Log.d(TAG, "invalidateCache called (no-op in Room version)")
-    }
 }

@@ -8,6 +8,7 @@ import android.util.Log
 import java.time.LocalDateTime
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import com.mascotforge.character.CharacterStateManager
 import widget.cache.UserWeatherCache
 
@@ -30,19 +31,22 @@ object SpeechContextFactory {
     private const val KEY_CONSECUTIVE_DAYS = "consecutive_days"
     private const val KEY_LAST_LAUNCH_DATE = "last_launch_date"
 
+    private const val KEY_USER_NAME = "user_name"
+
     /**
      * 現在の状況からSpeechContextを作成
      *
      * @param context Android Context
-     * @param userName キャラクターID（デフォルト: "nagisa"）
+     * @param characterId キャラクターID（状態管理・タッチ追跡に使用。デフォルト: "default"）
      * @return 現在の状況を反映したSpeechContext
      */
     fun create(
         context: Context,
-        userName: String = "nagisa"
+        characterId: String = "default"
     ): SpeechContext {
         val now = LocalDateTime.now()
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val userName = prefs.getString(KEY_USER_NAME, "ユーザー") ?: "ユーザー"
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // 時刻系
@@ -84,13 +88,14 @@ object SpeechContextFactory {
 
         if (cachedWeather != null) {
             // キャッシュがある場合（2時間以内に更新された天気）
-            weatherEmoji = cachedWeather.weatherEmoji
+            val rawEmoji = cachedWeather.weatherEmoji
+            weatherEmoji = if (rawEmoji == "☀️" && hour >= 19) "🌙" else rawEmoji
             weatherCode = convertWeatherCodeToJapanese(cachedWeather.weatherCode)
             temperature = cachedWeather.temperature.toInt()
             Log.d(TAG, "天気をキャッシュから取得: $weatherEmoji $weatherCode ${temperature}℃")
         } else {
             // キャッシュがない場合（初回起動 or 天気取得失敗）
-            weatherEmoji = "☀️"
+            weatherEmoji = if (hour >= 19) "🌙" else "☀️"
             weatherCode = "晴れ"
             temperature = 20
             Log.d(TAG, "天気キャッシュなし、デフォルト値を使用")
@@ -115,7 +120,7 @@ object SpeechContextFactory {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // アプリ使用状況
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        val today = "${now.year}-${now.monthValue}-${now.dayOfMonth}"
+        val today = now.toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE)  // "2026-03-20" 形式
         val launchCount = prefs.getInt(KEY_LAUNCH_COUNT + today, 0) + 1
         val lastLaunchMillis = prefs.getLong(KEY_LAST_LAUNCH, 0L)
         val lastLaunchHoursAgo = if (lastLaunchMillis > 0) {
@@ -141,7 +146,7 @@ object SpeechContextFactory {
         // CharacterState & タッチ関連情報
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         val stateManager = CharacterStateManager(context)
-        val charState = stateManager.getState(userName)
+        val charState = stateManager.getState(characterId)
 
         val touchCount = charState.touchCount
         val touchCountToday = charState.touchCountToday
@@ -195,7 +200,8 @@ object SpeechContextFactory {
             lastTouchMinutesAgo = lastTouchMinutesAgo,
             touchCountToday = touchCountToday,
             wasTouched = wasTouched,
-            touchCount = touchCount
+            touchCount = touchCount,
+              characterState = charState,
         )
     }
 
@@ -270,6 +276,7 @@ object SpeechContextFactory {
         "thunder" -> "雷雨"
         "snow" -> "雪"
         "fog" -> "霧"
+        "storm" -> "嵐"
         else -> {
             Log.w(TAG, "Unknown weather code: $code, defaulting to '晴れ'")
             "晴れ"  // デフォルト
@@ -306,7 +313,8 @@ object SpeechContextFactory {
      * 特別な日を判定
      */
     private fun getSpecialDay(month: Int, day: Int): String? = when {
-        month == 2 && day == 14 -> "バレンタイン"
+        month == 2 && day == 3 -> "節分"
+        month == 2 && day == 14 -> "バレンタインデー"
         month == 3 && day == 14 -> "ホワイトデー"
         month == 7 && day == 7 -> "七夕"
         month == 10 && day == 31 -> "ハロウィン"
@@ -363,9 +371,9 @@ object SpeechContextFactory {
         }
 
         return try {
-            // ISO 8601形式 ("YYYY-M-D") をパース
-            val lastDate = LocalDate.parse(lastDateString)
-            val todayDate = LocalDate.parse(today)
+            // ISO 8601形式 ("YYYY-MM-DD") をパース
+            val lastDate = LocalDate.parse(lastDateString, DateTimeFormatter.ISO_LOCAL_DATE)
+            val todayDate = LocalDate.parse(today, DateTimeFormatter.ISO_LOCAL_DATE)
 
             // 昨日の日付と一致するかをチェック
             val yesterday = todayDate.minusDays(1)
