@@ -1,0 +1,143 @@
+{
+    "id": "default",
+    "name": "みなと",
+    "version": "1.1.0",
+    "author": "MascotForge",
+    "description": "デフォルトキャラクターのみなとです。時間帯や天気でおしゃべりが変わります。",
+    "images": {
+        "character": "character.webp",
+        "happy": "happy.webp",
+        "sad": "sad.webp",
+        "angry": "angry.webp",
+        "shy": "shy.webp",
+        "sleepy": "sleepy.webp",
+        "worried": "worried.webp",
+        "excited": "excited.webp"
+    },
+    "customVariables": {
+        "favorability": {
+            "type": "number",
+            "initial": 50,
+            "min": 0,
+            "max": 100,
+            "onChange": [
+                {
+                    "trigger": "onTouch",
+                    "action": "increment",
+                    "value": 1
+                }
+            ]
+        }
+    },
+    "emotions": {
+        "rules": [
+            {
+                "if": "isLowBattery",
+                "emotion": "worried"
+            },
+            {
+                "if": "hour >= 23 || hour < 6",
+                "emotion": "sleepy"
+            },
+            {
+                "default": "normal"
+            }
+        ]
+    },
+    "speechRules": [
+        {
+            "file": "speeches/thunder.txt",
+            "conditions": {
+                "weatherCode": "雷雨"
+            },
+            "priority": 30
+        },
+        {
+            "file": "speeches/storm.txt",
+            "conditions": {
+                "weatherCode": "嵐"
+            },
+            "priority": 30
+        },
+        {
+            "file": "speeches/snow.txt",
+            "conditions": {
+                "weatherCode": "雪"
+            },
+            "priority": 25
+        },
+        {
+            "file": "speeches/rain.txt",
+            "conditions": {
+                "weatherCode": "雨"
+            },
+            "priority": 20
+        },
+        {
+            "file": "speeches/drizzle.txt",
+            "conditions": {
+                "weatherCode": "小雨"
+            },
+            "priority": 20
+        },
+        {
+            "file": "speeches/clear.txt",
+            "conditions": {
+                "weatherCode": "晴れ"
+            },
+            "priority": 15
+        },
+        {
+            "file": "speeches/cloudy.txt",
+            "conditions": {
+                "weatherCode": "曇り"
+            },
+            "priority": 15
+        },
+        {
+            "file": "speeches/fog.txt",
+            "conditions": {
+                "weatherCode": "霧"
+            },
+            "priority": 15
+        },
+        {
+            "file": "speeches/midnight.txt",
+            "conditions": {
+                "timeSlot": "midnight"
+            },
+            "priority": 10
+        },
+        {
+            "file": "speeches/morning.txt",
+            "conditions": {
+                "timeSlot": "morning"
+            },
+            "priority": 10
+        },
+        {
+            "file": "speeches/afternoon.txt",
+            "conditions": {
+                "timeSlot": "afternoon"
+            },
+            "priority": 10
+        },
+        {
+            "file": "speeches/evening.txt",
+            "conditions": {
+                "timeSlot": "evening"
+            },
+            "priority": 10
+        },
+        {
+            "file": "speeches/night.txt",
+            "conditions": {
+                "timeSlot": "night"
+            },
+            "priority": 10
+        },
+        {
+            "file": "speeches/default.txt"
+        }
+    ]
+}

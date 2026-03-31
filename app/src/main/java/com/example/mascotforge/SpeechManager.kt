@@ -1,3 +1,5 @@
+// 実態: SafeCharacterLoader（ZIPキャラクター用ローダー）
+// ファイル名は歴史的経緯。クラス名で判断すること。
 package com.mascotforge.character
 
 import android.content.Context
