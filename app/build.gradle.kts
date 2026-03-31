@@ -121,8 +121,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    //  追加: Material Icons Extended (Icons.Default.Add など)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material-icons-core")
 
     // === ネットワーク ===
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
