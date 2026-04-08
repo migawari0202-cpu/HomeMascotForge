@@ -1,4 +1,4 @@
-package com.mascotforge.speech
+package com.example.mascotforge.speech
 
 import android.graphics.Bitmap
 

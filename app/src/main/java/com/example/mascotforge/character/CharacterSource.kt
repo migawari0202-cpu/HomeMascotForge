@@ -1,4 +1,4 @@
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 /**
  * キャラクターファイルの読み込み元を表す sealed class。

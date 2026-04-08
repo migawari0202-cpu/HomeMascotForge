@@ -9,9 +9,9 @@ import android.os.Bundle
 import android.util.Log
 import com.example.mascotforge.R
 import com.example.mascotforge.characters.CharacterRegistry
-import com.mascotforge.character.CharacterStateManager
-import com.mascotforge.character.DynamicCharacter
-import com.mascotforge.speech.SpeechContextFactory
+import com.example.mascotforge.character.CharacterStateManager
+import com.example.mascotforge.character.DynamicCharacter
+import com.example.mascotforge.speech.SpeechContextFactory
 import kotlinx.coroutines.*
 
 /**

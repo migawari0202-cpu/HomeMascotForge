@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.example.mascotforge.CharacterProvider
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContext
 
 /**
  * 安全テスト用キャラクター

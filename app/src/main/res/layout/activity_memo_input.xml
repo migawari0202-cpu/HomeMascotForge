@@ -47,13 +47,13 @@
             android:hint="ここにメモを入力してください..."
             android:inputType="textMultiLine|textCapSentences"
             android:gravity="top|start"
-            android:maxLength="200"
+            android:maxLength="1000"
             android:scrollbars="vertical" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="※ 200文字以内で入力してください"
+            android:text="※ 1000文字以内で入力してください"
             android:textSize="12sp"
             android:textColor="#999999"
             android:layout_marginTop="4dp" />

@@ -7,8 +7,8 @@ import com.example.mascotforge.CharacterFactory
 import com.example.mascotforge.CharacterProvider
 import com.example.mascotforge.characters.default_character.DefaultCharacterFactory
 import com.example.mascotforge.characters.evil.EvilCharacterFactory
-import com.mascotforge.character.CharacterSource
-import com.mascotforge.character.SafeCharacterLoader
+import com.example.mascotforge.character.CharacterSource
+import com.example.mascotforge.character.SafeCharacterLoader
 import java.io.File
 
 /**
@@ -146,7 +146,7 @@ object CharacterRegistry {
  * ZIPインストールキャラ用Factory
  */
 class InstalledCharacterFactory(
-    private val metadata: com.mascotforge.character.CharacterMetadata,
+    private val metadata: com.example.mascotforge.character.CharacterMetadata,
     private val context: Context
 ) : CharacterFactory {
 

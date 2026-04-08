@@ -20,7 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.work.*
 import com.example.mascotforge.WeatherUpdateWorker
-import com.mascotforge.ui.CharacterInstallActivity
+import com.example.mascotforge.ui.CharacterInstallActivity
 import widget.TimeWidgetProvider
 import widget.WidgetUpdateScheduler
 import java.util.concurrent.TimeUnit

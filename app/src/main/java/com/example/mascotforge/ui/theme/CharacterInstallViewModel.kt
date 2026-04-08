@@ -1,10 +1,10 @@
-package com.mascotforge.ui
+package com.example.mascotforge.ui
 
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mascotforge.installer.CharacterInstaller
+import com.example.mascotforge.installer.CharacterInstaller
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import com.mascotforge.ui.InstallPhase
-import com.mascotforge.ui.InstallProgress
+import com.example.mascotforge.ui.InstallPhase
+import com.example.mascotforge.ui.InstallProgress
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog

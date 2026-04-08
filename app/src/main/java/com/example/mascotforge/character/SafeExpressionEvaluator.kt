@@ -1,7 +1,7 @@
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 import android.util.Log
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContext
 
 /**
  * 安全な式評価器（カスタム変数対応版）
@@ -15,6 +15,7 @@ class SafeExpressionEvaluator(
 
     companion object {
         private const val TAG = "SafeExpressionEvaluator"
+        private const val MAX_DEPTH = 5
     }
 
     /**
@@ -32,27 +33,32 @@ class SafeExpressionEvaluator(
      */
     fun evaluate(expression: String): Boolean {
         return try {
-            evaluateExpression(expression.replace(" ", ""))
+            evaluateExpression(expression.replace(" ", ""), 0)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to evaluate expression: $expression", e)
             false
         }
     }
 
-    private fun evaluateExpression(expr: String): Boolean {
+    private fun evaluateExpression(expr: String, depth: Int): Boolean {
+        if (depth > MAX_DEPTH) {
+            Log.w(TAG, "Expression depth limit exceeded ($MAX_DEPTH): $expr")
+            return false
+        }
+
         // OR演算子（最低優先度 = 最初に分割）
         splitTopLevel(expr, "||")?.let { parts ->
-            return parts.any { evaluateExpression(it) }
+            return parts.any { evaluateExpression(it, depth + 1) }
         }
 
         // AND演算子
         splitTopLevel(expr, "&&")?.let { parts ->
-            return parts.all { evaluateExpression(it) }
+            return parts.all { evaluateExpression(it, depth + 1) }
         }
 
         // 括弧（外側のみ除去、内側に対応する閉じ括弧があることを確認）
         if (expr.startsWith("(") && expr.endsWith(")") && isMatchingParens(expr)) {
-            return evaluateExpression(expr.substring(1, expr.length - 1))
+            return evaluateExpression(expr.substring(1, expr.length - 1), depth + 1)
         }
 
         // 単一条件を評価

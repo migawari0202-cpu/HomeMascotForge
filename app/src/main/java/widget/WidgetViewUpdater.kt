@@ -67,7 +67,6 @@ class WidgetViewUpdater(private val context: Context) {
 
         fun clock(layoutType: LayoutType): Int? = when (layoutType) {
             LayoutType.NORMAL -> R.id.widget_clock_normal
-            LayoutType.COMPACT -> R.id.widget_clock_compact
             else -> null
         }
     }

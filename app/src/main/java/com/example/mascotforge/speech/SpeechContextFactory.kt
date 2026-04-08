@@ -1,4 +1,4 @@
-package com.mascotforge.speech
+package com.example.mascotforge.speech
 
 import android.content.Context
 import android.content.Intent
@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import com.mascotforge.character.CharacterStateManager
+import com.example.mascotforge.character.CharacterStateManager
 import widget.cache.UserWeatherCache
 
 /**

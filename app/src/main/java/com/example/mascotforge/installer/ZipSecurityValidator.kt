@@ -1,4 +1,4 @@
-package com.mascotforge.installer
+package com.example.mascotforge.installer
 
 import android.util.Log
 import org.json.JSONArray
@@ -307,14 +307,34 @@ class ZipSecurityValidator(
             throw SecurityException("MISSING_IMAGES_KEY")
         }
 
-        // speechRules: 配列形式（各ルールに "file" フィールド）。省略可能（旧方式互換）
+        // speechRules: 配列形式（各ルールに "file" or "files" フィールド）。省略可能（旧方式互換）
         if (json.has("speechRules")) {
             val rules = json.optJSONArray("speechRules") ?: throw SecurityException(ERR_SPEECH_RULES_NOT_ARRAY)
             for (i in 0 until rules.length()) {
                 val rule = rules.optJSONObject(i) ?: throw SecurityException(ERR_SPEECH_RULE_NOT_OBJECT)
-                val filePath = rule.optString("file", "")
-                if (filePath.isEmpty()) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
-                validateSpeechPath(filePath)
+
+                val hasFile = rule.has("file")
+                val hasFiles = rule.has("files")
+
+                if (!hasFile && !hasFiles) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+
+                // "file" (単数) の検証
+                if (hasFile) {
+                    val filePath = rule.optString("file", "")
+                    if (filePath.isEmpty()) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+                    validateSpeechPath(filePath)
+                }
+
+                // "files" (複数) の検証
+                if (hasFiles) {
+                    val filesArray = rule.optJSONArray("files") ?: throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+                    if (filesArray.length() == 0) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+                    for (j in 0 until filesArray.length()) {
+                        val fp = filesArray.optString(j, "")
+                        if (fp.isEmpty()) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
+                        validateSpeechPath(fp)
+                    }
+                }
             }
         }
 

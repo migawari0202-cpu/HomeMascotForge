@@ -1,4 +1,4 @@
-package com.mascotforge.ui
+package com.example.mascotforge.ui
 
 // インストール進行状況を表すデータクラス
 data class InstallProgress(

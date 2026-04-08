@@ -1,12 +1,12 @@
 // 実態: SafeCharacterLoader（ZIPキャラクター用ローダー）
 // ファイル名は歴史的経緯。クラス名で判断すること。
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 import android.content.Context
 import android.util.Log
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContext
 import org.json.JSONObject
-import com.mascotforge.speech.SpeechContextFactory
+import com.example.mascotforge.speech.SpeechContextFactory
 import java.io.BufferedReader
 import com.example.mascotforge.CharacterProvider
 import java.io.File
@@ -311,6 +311,12 @@ class SafeCharacterLoader(private val context: Context) {
      */
     fun loadSpeechFile(path: String, source: CharacterSource): List<String> {
         return try {
+            // パストラバーサル防止
+            if (path.contains("..") || !path.startsWith(source.basePath)) {
+                Log.e(TAG, "Invalid speech file path: $path")
+                return emptyList()
+            }
+
             val lines = when (source) {
                 is CharacterSource.Assets -> context.assets.open(path).use { input ->
                     BufferedReader(InputStreamReader(input, Charsets.UTF_8)).readLines()

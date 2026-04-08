@@ -1,8 +1,8 @@
-package com.mascotforge.character.speech
+package com.example.mascotforge.character.speech
 
 import android.util.Log
-import com.mascotforge.character.CharacterState
-import com.mascotforge.character.CharacterStateManager
+import com.example.mascotforge.character.CharacterState
+import com.example.mascotforge.character.CharacterStateManager
 
 /**
  * セリフ内のタグを解析するクラス（完全統合版）

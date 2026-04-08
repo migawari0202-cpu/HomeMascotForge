@@ -1,4 +1,4 @@
-package com.mascotforge.ui
+package com.example.mascotforge.ui
 
 // インストールの各段階を表す列挙型
 enum class InstallPhase {

@@ -1,8 +1,8 @@
 package com.example.mascotforge
 
 import android.graphics.Bitmap
-import com.mascotforge.speech.SpeechProvider
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechProvider
+import com.example.mascotforge.speech.SpeechContext
 
 /**
  * エンジン内部でキャラクターを統一的に扱うためのインターフェース

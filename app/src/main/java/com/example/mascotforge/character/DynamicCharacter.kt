@@ -1,13 +1,13 @@
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContext
 import com.example.mascotforge.CharacterProvider
-import com.mascotforge.character.speech.TagParser
-import com.mascotforge.character.speech.OperationType
+import com.example.mascotforge.character.speech.TagParser
+import com.example.mascotforge.character.speech.OperationType
 import java.io.File
 
 /**
@@ -45,6 +45,13 @@ class DynamicCharacter(
     @Volatile
     private var lastTimeSlot: String? = null
     private var extractedEmotionKey: String? = null
+
+    // アクティブShellのキャッシュ（ディスクI/Oを毎フレーム行わないよう保持）
+    // null = 「未ロード」、CachedShell.shell = null = 「Shellなし確定」
+    @Volatile
+    private var cachedShell: CachedShell? = null
+
+    private data class CachedShell(val shellId: String?, val shell: Shell?)
 
     // 現在ロード中のファイル名を記録
     private var currentSpeechFile: String? = null
@@ -288,17 +295,29 @@ class DynamicCharacter(
 
     /**
      * 感情判定 → 画像取得
+     *
+     * 画像解決の優先順位:
+     *   1. アクティブShellのemotionMapping[emotion] → shells/{id}/images/
+     *   2. キャラクター本来のimageMapping[emotion]  → source.basePath/images/
      */
     override fun getCharaImage(ctx: SpeechContext): Bitmap? {
         var emotion = "normal"
 
+        // 1. アクティブShellを先に取得（感情タグ検証でも使うため）
+        val shell = resolveActiveShell()
+
         if (extractedEmotionKey != null) {
-            if (metadata.imageMapping.containsKey(extractedEmotionKey)) {
+            val knownInCharacter = metadata.imageMapping.containsKey(extractedEmotionKey)
+            val knownInShell     = shell?.emotionMapping?.containsKey(extractedEmotionKey) == true
+
+            if (knownInCharacter || knownInShell) {
                 emotion = extractedEmotionKey!!
-                Log.d(TAG, "[$charId] Using emotion from tag: $emotion")
+                Log.d(TAG, "[$charId] Using emotion from tag: $emotion" +
+                        if (knownInShell && !knownInCharacter) " (shell-only)" else "")
             } else {
                 Log.w(TAG, "[$charId] Unknown emotion tag: '$extractedEmotionKey'. " +
-                        "Available emotions: ${metadata.imageMapping.keys.joinToString()}. " +
+                        "Character: ${metadata.imageMapping.keys.joinToString()}, " +
+                        "Shell: ${shell?.emotionMapping?.keys?.joinToString() ?: "none"}. " +
                         "Falling back to emotionRules.")
                 emotion = determineEmotion(ctx)
             }
@@ -309,6 +328,21 @@ class DynamicCharacter(
 
         extractedEmotionKey = null
 
+        if (shell != null) {
+            val shellFileName = shell.emotionMapping[emotion]
+            if (shellFileName != null) {
+                val shellBitmap = loadShellImage(shell.id, shellFileName)
+                if (shellBitmap != null) {
+                    Log.d(TAG, "[$charId] Using shell image: ${shell.id}/$shellFileName")
+                    return shellBitmap
+                }
+                Log.w(TAG, "[$charId] Shell image not found, falling back to character image.")
+            } else {
+                Log.d(TAG, "[$charId] Shell has no mapping for '$emotion', falling back.")
+            }
+        }
+
+        // 2. キャラクター本来の画像
         val imageFileName = metadata.imageMapping[emotion]
             ?: metadata.imageMapping["normal"]
             ?: metadata.imageMapping.values.firstOrNull()
@@ -316,6 +350,59 @@ class DynamicCharacter(
 
         val imagePath = "${source.basePath}/images/$imageFileName"
         return loadImage(imagePath)
+    }
+
+    /**
+     * アクティブShellをキャッシュ付きで返す。
+     *
+     * SharedPreferencesのshellIdと比較して変化がなければキャッシュをそのまま返す。
+     * shellIdが変わったとき（Shell切替・解除）だけ再読み込みする。
+     */
+    private fun resolveActiveShell(): Shell? {
+        val prefs = context.getSharedPreferences("prefs_shells", Context.MODE_PRIVATE)
+        val currentShellId = prefs.getString("active_shell_$charId", null)
+
+        val cached = cachedShell
+        if (cached != null && cached.shellId == currentShellId) {
+            return cached.shell
+        }
+
+        // キャッシュミス: 実際にロードして保存
+        val loaded = if (currentShellId != null) {
+            ShellRegistry.loadShell(context, currentShellId)
+        } else {
+            null
+        }
+        cachedShell = CachedShell(shellId = currentShellId, shell = loaded)
+        return loaded
+    }
+
+    /**
+     * Shell画像の読み込み（filesDir/shells/{shellId}/images/{fileName}）
+     */
+    private fun loadShellImage(shellId: String, fileName: String): Bitmap? {
+        if (fileName.contains("..") || fileName.contains('/') || fileName.contains('\\')) {
+            Log.e(TAG, "[$charId] Invalid shell image filename: $fileName")
+            return null
+        }
+
+        val relativePath = "shells/$shellId/images/$fileName"
+        val cacheKey = "shell:$shellId:$fileName"
+
+        CharacterBitmapCache.get(cacheKey)?.let { return it }
+
+        return try {
+            val file = File(context.filesDir, relativePath)
+            if (!file.isFile) {
+                Log.w(TAG, "[$charId] Shell image not found: ${file.path}")
+                return null
+            }
+            BitmapFactory.decodeFile(file.absolutePath)
+                ?.also { CharacterBitmapCache.put(cacheKey, it) }
+        } catch (e: Exception) {
+            Log.w(TAG, "[$charId] Failed to load shell image: $relativePath", e)
+            null
+        }
     }
 
     /**

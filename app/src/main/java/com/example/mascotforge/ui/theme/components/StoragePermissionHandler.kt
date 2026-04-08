@@ -1,4 +1,4 @@
-package com.mascotforge.ui
+package com.example.mascotforge.ui
 
 import android.Manifest
 import android.content.Intent

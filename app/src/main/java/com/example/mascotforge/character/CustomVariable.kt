@@ -1,4 +1,4 @@
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 import org.json.JSONObject
 

@@ -1,8 +1,8 @@
-package com.mascotforge.character
+package com.example.mascotforge.character
 
 import android.content.Context
 import android.util.Log
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContext
 
 /**
  * カスタム変数の管理・永続化（CharacterState.customVars 統合版）
@@ -322,9 +322,9 @@ class CustomVariableManager(
 /**
  * 拡張関数: CustomVariableManager と TagParser を連携
  */
-fun CustomVariableManager.createTagParser(): com.mascotforge.character.speech.TagParser {
+fun CustomVariableManager.createTagParser(): com.example.mascotforge.character.speech.TagParser {
     val stateManager = CharacterStateManager(getContext())
-    return com.mascotforge.character.speech.TagParser(
+    return com.example.mascotforge.character.speech.TagParser(
         characterState = getCharacterState(),
         stateManager = stateManager,
         characterId = characterId  // ← 今度はアクセスできる（public にした）

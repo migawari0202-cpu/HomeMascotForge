@@ -37,9 +37,6 @@ object WidgetConstants {
     object WidgetSize {
         const val COMPACT_THRESHOLD_DP = 180    // 2マス以下
         const val LARGE_THRESHOLD_DP = 240      // 4マス以上
-
-        // todo本来は dimens.xml に定義すべき
-        // <dimen name="widget_compact_threshold">180dp</dimen>
     }
 
     // === フォントサイズ（sp） ===
@@ -75,7 +72,7 @@ object WidgetConstants {
     }
     // === 制限値 ===
     object Limits {
-        const val MAX_MEMOS = 100
+        const val MAX_MEMOS = 1000
         const val MAX_VISIBLE_MEMOS = 2
     }
 

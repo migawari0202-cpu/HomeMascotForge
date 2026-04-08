@@ -1,4 +1,4 @@
-package com.mascotforge.installer
+package com.example.mascotforge.installer
 
 import android.util.Log
 import java.io.File

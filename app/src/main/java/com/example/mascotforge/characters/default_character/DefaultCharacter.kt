@@ -5,8 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import com.example.mascotforge.CharacterProvider
-import com.mascotforge.character.speech.TagParser
-import com.mascotforge.speech.SpeechContext
+import com.example.mascotforge.character.speech.TagParser
+import com.example.mascotforge.speech.SpeechContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 

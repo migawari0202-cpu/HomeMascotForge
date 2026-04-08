@@ -187,19 +187,4 @@
                 android:contentDescription="キャラクター画像" />
         </FrameLayout>
     </LinearLayout>
-
-
-    <!-- 🍀 追加：時計（右下固定） -->
-    <ImageView
-        android:id="@+id/widget_clock_compact"
-        android:layout_width="115dp"
-        android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:scaleType="centerInside"
-        android:contentDescription="時計"
-        android:visibility="gone" />
-
 </RelativeLayout>

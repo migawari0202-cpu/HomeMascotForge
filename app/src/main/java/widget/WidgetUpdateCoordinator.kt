@@ -9,7 +9,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import com.example.mascotforge.R
 import com.example.mascotforge.CharacterManager
-import com.mascotforge.character.SafeCharacterLoader
+import com.example.mascotforge.character.SafeCharacterLoader
 import widget.cache.ClockCache
 import widget.cache.UserWeatherCache
 import widget.cache.BatteryManager as WidgetBatteryManager

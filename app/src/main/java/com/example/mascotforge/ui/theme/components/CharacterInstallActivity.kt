@@ -1,4 +1,4 @@
-package com.mascotforge.ui
+package com.example.mascotforge.ui
 
 import android.net.Uri
 import android.os.Bundle
@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mascotforge.ui.components.CharacterCard
+import com.example.mascotforge.ui.components.CharacterCard
 import mascotforge.ui.components.InstallProgressDialog
 
 class CharacterInstallActivity : AppCompatActivity() {

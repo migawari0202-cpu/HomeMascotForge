@@ -1,6 +1,6 @@
-package com.mascotforge.speech
+package com.example.mascotforge.speech
 
-import com.mascotforge.character.CharacterState
+import com.example.mascotforge.character.CharacterState
 
 /**
  * エンジンが「必ず知ってる」情報だけ渡す

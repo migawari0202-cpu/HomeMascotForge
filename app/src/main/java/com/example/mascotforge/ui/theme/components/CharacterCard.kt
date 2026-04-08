@@ -1,4 +1,4 @@
-package com.mascotforge.ui.components
+package com.example.mascotforge.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mascotforge.ui.CharacterDisplayData
+import com.example.mascotforge.ui.CharacterDisplayData
 
 @Composable
 fun CharacterCard(
