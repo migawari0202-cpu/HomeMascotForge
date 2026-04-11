@@ -63,7 +63,7 @@
 
         <!-- キャラクター管理画面 -->
         <activity
-            android:name="com.mascotforge.ui.CharacterInstallActivity"
+            android:name="com.example.mascotforge.ui.CharacterInstallActivity"
             android:label="キャラクター管理"
             android:theme="@style/Theme.Homemascot.NoActionBar"
             android:exported="true">

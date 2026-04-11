@@ -4,6 +4,7 @@
     "version": "1.1.0",
     "author": "MascotForge",
     "description": "デフォルトキャラクターのみなとです。時間帯や天気でおしゃべりが変わります。",
+    "imageCredit": "キャラクター画像: 幽霊 (フリーシェル) — catbottle 倉庫 https://catbottle.sakura.ne.jp/souko_fs.html",
     "images": {
         "character": "character.webp",
         "happy": "happy.webp",
