@@ -190,11 +190,10 @@ class WeatherUpdateWorker(
         return Triple(DEFAULT_LAT, DEFAULT_LON, "取得失敗/デフォルト(東京)")
     }
 
-    // 位置情報が新鮮か（2時間以内）
-    // 天気更新が2時間毎なので、それに合わせる
+    // 位置情報が新鮮か（1時間以内）
     private fun isLocationFresh(location: Location): Boolean {
         val age = System.currentTimeMillis() - location.time
-        return age < 2 * 60 * 60 * 1000L // 2時間以内
+        return age < 1 * 60 * 60 * 1000L // 1時間以内
     }
 
     private suspend fun getLocationFromProvider(
