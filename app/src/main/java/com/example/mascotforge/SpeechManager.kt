@@ -32,20 +32,26 @@ class SafeCharacterLoader(private val context: Context) {
     private var lastContextTime = 0L
     @Volatile
     private var cachedContext: SpeechContext? = null
+    @Volatile
+    private var cachedContextCharacterId: String? = null
 
     /**
      * 現在のSpeechContextを取得
      */
-    fun getCurrentContext(): SpeechContext {
+    fun getCurrentContext(characterId: String = "default"): SpeechContext {
         val now = System.currentTimeMillis()
 
-        if (now - lastContextTime < CACHE_DURATION && cachedContext != null) {
+        if (now - lastContextTime < CACHE_DURATION &&
+            cachedContext != null &&
+            cachedContextCharacterId == characterId
+        ) {
             return cachedContext!!
         }
 
-        val speechContext = SpeechContextFactory.create(context)
+        val speechContext = SpeechContextFactory.create(context, characterId)
 
         cachedContext = speechContext
+        cachedContextCharacterId = characterId
         lastContextTime = now
 
         return speechContext
@@ -56,6 +62,7 @@ class SafeCharacterLoader(private val context: Context) {
      */
     fun clearCache() {
         cachedContext = null
+        cachedContextCharacterId = null
         lastContextTime = 0L
         Log.d(TAG, "Cache cleared")
     }

@@ -7,7 +7,7 @@ import com.example.mascotforge.speech.SpeechContext
 /**
  * カスタム変数の管理・永続化（CharacterState.customVars 統合版）
  *
- * 🔥 統合の仕組み:
+ * 統合の仕組み:
  * - character.json で定義された順番に customVars[0-19] にマッピング
  * - 型変換を自動実行（Int ↔ Boolean/String）
  * - CharacterStateManager を使用して永続化

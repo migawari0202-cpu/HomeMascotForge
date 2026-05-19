@@ -28,6 +28,17 @@
                     "value": 1
                 }
             ]
+        },
+        "isBeingPetted": {
+            "type": "boolean",
+            "initial": false,
+            "onChange": [
+                {
+                    "trigger": "onTouch",
+                    "action": "SET",
+                    "value": true
+                }
+            ]
         }
     },
     "emotions": {
@@ -46,6 +57,14 @@
         ]
     },
     "speechRules": [
+        {
+            "file": "speeches/petting.txt",
+            "conditions": {
+                "isBeingPetted": "true",
+                "consecutiveTouchCount": ">=2"
+            },
+            "priority": 100
+        },
         {
             "file": "speeches/thunder.txt",
             "conditions": {

@@ -9,6 +9,7 @@
 ```
 mychar.zip
 ├── character.json       ← このファイル（必須）
+├── Settings.json        ← 任意（画像の切り抜き等の追加設定）
 ├── speeches/
 │   ├── default.txt      ← セリフファイル（1行1セリフ、# でコメント行）
 │   └── ...
@@ -286,3 +287,32 @@ mychar.zip
   ]
 }
 ```
+
+---
+
+## `Settings.json`（任意）
+
+`character.json` と同階層に置く。
+存在しない場合、画像の切り抜き処理は **行われない**。
+
+### `imageCutout`
+
+感情タグ（`images` のキー）ごとに「指定色を透明化」する設定。
+`byTag["*"]` は全タグ共通のデフォルトとして使える。
+
+```json
+{
+  "imageCutout": {
+    "defaultTolerance": 30,
+    "byTag": {
+      "*": ["#fc0000"],
+      "happy": { "tolerance": 20, "colors": ["#00ff00", "#0000ff"] }
+    }
+  }
+}
+```
+
+- `byTag` の値は以下を受け付ける
+  - `["#RRGGBB", ...]`（色配列、最大10色）
+  - `"#RRGGBB"`（単色）
+  - `{ "tolerance": 0-255, "colors": [...] }`

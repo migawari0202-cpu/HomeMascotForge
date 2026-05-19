@@ -152,6 +152,19 @@ object SpeechContextFactory {
         val touchCountToday = charState.touchCountToday
         val lastTouchMinutesAgo = (charState.getTimeSinceLastTouch() / 60).toInt().coerceAtMost(Int.MAX_VALUE)
         val wasTouched = charState.getTimeSinceLastTouch() < 60 // 1分以内にタッチされたか
+        val isBeingPetted = charState.getTimeSinceLastTouch() <= 10 &&
+                charState.consecutiveTouchCount >= 2
+        val consecutiveTouchCount = if (charState.getTimeSinceLastTouch() <= 10) {
+            charState.consecutiveTouchCount
+        } else {
+            0
+        }
+        val pettingLevel = when {
+            !isBeingPetted -> 0
+            consecutiveTouchCount >= 8 -> 3
+            consecutiveTouchCount >= 4 -> 2
+            else -> 1
+        }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // その他コンテキスト
@@ -201,7 +214,10 @@ object SpeechContextFactory {
             touchCountToday = touchCountToday,
             wasTouched = wasTouched,
             touchCount = touchCount,
-              characterState = charState,
+            consecutiveTouchCount = consecutiveTouchCount,
+            pettingLevel = pettingLevel,
+            isBeingPetted = isBeingPetted,
+            characterState = charState,
         )
     }
 

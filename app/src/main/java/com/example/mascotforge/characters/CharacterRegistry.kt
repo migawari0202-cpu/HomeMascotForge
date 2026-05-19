@@ -5,8 +5,8 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import com.example.mascotforge.CharacterFactory
 import com.example.mascotforge.CharacterProvider
-import com.example.mascotforge.characters.default_character.DefaultCharacterFactory
 import com.example.mascotforge.characters.evil.EvilCharacterFactory
+import com.example.mascotforge.characters.default_character.DefaultCharacterFactory
 import com.example.mascotforge.character.CharacterSource
 import com.example.mascotforge.character.SafeCharacterLoader
 import java.io.File
@@ -27,7 +27,6 @@ object CharacterRegistry {
      */
     private fun getBuiltInFactories(): List<CharacterFactory> {
         return listOf(
-            DefaultCharacterFactory(),
             EvilCharacterFactory()
         )
     }
@@ -43,12 +42,33 @@ object CharacterRegistry {
         // 1. APK同梱キャラ（旧Factory方式）
         factories.addAll(getBuiltInFactories())
 
-        // 2. ZIPインストールキャラ
+        // 2. Assets内のZIP形式キャラ（初期状態で利用可能）
+        factories.addAll(getAssetsCharacterFactories(context))
+
+        // 3. ユーザーがインストールしたZIPキャラ
         factories.addAll(getInstalledFactories(context))
 
-        Log.d(TAG, "Total factories: ${factories.size} (BuiltIn: ${getBuiltInFactories().size}, Installed: ${getInstalledFactories(context).size})")
+        Log.d(TAG, "Total factories: ${factories.size} (BuiltIn: ${getBuiltInFactories().size}, Assets: ${getAssetsCharacterFactories(context).size}, Installed: ${getInstalledFactories(context).size})")
 
         return factories
+    }
+
+    /**
+     * Assets内のZIP形式キャラを取得（初期状態で利用可能）
+     */
+    private fun getAssetsCharacterFactories(context: Context): List<CharacterFactory> {
+        return try {
+            val factories = mutableListOf<CharacterFactory>()
+            
+            // defaultキャラはDefaultCharacterFactoryで提供
+            factories.add(DefaultCharacterFactory())
+            
+            Log.d(TAG, "Loaded assets character: default (DefaultCharacterFactory)")
+            factories
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load assets characters", e)
+            emptyList()
+        }
     }
 
     /**
@@ -81,7 +101,11 @@ object CharacterRegistry {
 
                         if (meta != null) {
                             Log.d(TAG, "Loaded installed character: $charId")
-                            InstalledCharacterFactory(meta, context)
+                            InstalledCharacterFactory(
+                                meta,
+                                context,
+                                CharacterSource.InstalledFiles("installed_characters/$charId")
+                            )
                         } else {
                             Log.w(TAG, "Failed to load metadata for: $charId")
                             null
@@ -143,11 +167,12 @@ object CharacterRegistry {
 }
 
 /**
- * ZIPインストールキャラ用Factory
+ * キャラクター用Factory（ZIP形式、Assets/Files両対応）
  */
 class InstalledCharacterFactory(
     private val metadata: com.example.mascotforge.character.CharacterMetadata,
-    private val context: Context
+    private val context: Context,
+    private val source: com.example.mascotforge.character.CharacterSource = com.example.mascotforge.character.CharacterSource.InstalledFiles("installed_characters/${metadata.id}")
 ) : CharacterFactory {
 
     override fun getCharacterId(): String = metadata.id
@@ -162,41 +187,58 @@ class InstalledCharacterFactory(
 
     override fun create(context: Context): CharacterProvider {
         val loader = SafeCharacterLoader(context)
-        return loader.loadCharacter(CharacterSource.InstalledFiles("installed_characters/${metadata.id}"))
-            ?: throw IllegalStateException("Failed to load installed character: ${metadata.id}")
+        return loader.loadCharacter(source)
+            ?: throw IllegalStateException("Failed to load character: ${metadata.id}")
     }
 
     override fun getThumbnail(context: Context): Drawable? {
         return try {
-            // 1. imageMapping から最初の画像を取得
             val imageName = metadata.imageMapping.values.firstOrNull()
 
-            // 2. imageName があればそれを使用
-            val imageFile = if (imageName != null) {
-                File(context.filesDir, "installed_characters/${metadata.id}/images/$imageName")
-            } else {
-                // フォールバック: character.png
-                File(context.filesDir, "installed_characters/${metadata.id}/images/character.png")
-            }
-
-            if (imageFile.exists()) {
-                return Drawable.createFromPath(imageFile.absolutePath)
-            }
-
-            // 3. どちらもなければ、imagesフォルダ内の最初の画像を使用
-            val imagesDir = File(context.filesDir, "installed_characters/${metadata.id}/images")
-            val firstImage = imagesDir.listFiles()
-                ?.firstOrNull {
-                    it.isFile && it.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
+            val imageFile = when (source) {
+                is com.example.mascotforge.character.CharacterSource.Assets -> {
+                    // assetsから読み込む場合はファイルパスではなく、assetsから直接取得する
+                    return try {
+                        val assetPath = "${source.basePath}/images/${imageName ?: "character.webp"}"
+                        context.assets.open(assetPath).use { input ->
+                            android.graphics.BitmapFactory.decodeStream(input)?.let {
+                                android.graphics.drawable.BitmapDrawable(context.resources, it)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w("InstalledFactory", "Failed to load thumbnail from assets: ${metadata.id}", e)
+                        null
+                    }
                 }
-
-            if (firstImage != null) {
-                Log.d("InstalledFactory", "Using first available image: ${firstImage.name}")
-                Drawable.createFromPath(firstImage.absolutePath)
-            } else {
-                Log.w("InstalledFactory", "No images found in: ${imagesDir.path}")
-                null
+                is com.example.mascotforge.character.CharacterSource.InstalledFiles -> {
+                    if (imageName != null) {
+                        File(context.filesDir, "${source.basePath}/images/$imageName")
+                    } else {
+                        File(context.filesDir, "${source.basePath}/images/character.png")
+                    }
+                }
             }
+
+            if (imageFile is File && imageFile.exists()) {
+                return android.graphics.drawable.Drawable.createFromPath(imageFile.absolutePath)
+            }
+
+            // フォールバック: imagesフォルダ内の最初の画像を使用
+            if (source is com.example.mascotforge.character.CharacterSource.InstalledFiles) {
+                val imagesDir = File(context.filesDir, "${source.basePath}/images")
+                val firstImage = imagesDir.listFiles()
+                    ?.firstOrNull {
+                        it.isFile && it.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
+                    }
+
+                if (firstImage != null) {
+                    Log.d("InstalledFactory", "Using first available image: ${firstImage.name}")
+                    return android.graphics.drawable.Drawable.createFromPath(firstImage.absolutePath)
+                }
+            }
+
+            Log.w("InstalledFactory", "No thumbnail found for: ${metadata.id}")
+            null
         } catch (e: Exception) {
             Log.w("InstalledFactory", "Failed to load thumbnail: ${metadata.id}", e)
             null

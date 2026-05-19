@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.work.ExistingWorkPolicy
+import com.example.mascotforge.WeatherUpdateWorker
 import widget.TimeWidgetProvider
 import android.os.Build
 import android.util.Log
@@ -71,6 +73,12 @@ class WidgetUpdateScheduler(private val context: Context) {
 
     fun scheduleWeatherUpdate() {
         cancelWeatherUpdate()
+        WeatherUpdateWorker.schedulePeriodicUpdate(context)
+        WeatherUpdateWorker.enqueueImmediateUpdate(
+            context,
+            "weather_alarm_schedule",
+            ExistingWorkPolicy.KEEP
+        )
 
         val intent = Intent(context, WeatherUpdateReceiver::class.java).apply {
             action = ACTION_UPDATE_WEATHER
@@ -199,6 +207,11 @@ class ClockUpdateReceiver : BroadcastReceiver() {
 class WeatherUpdateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         try {
+            WeatherUpdateWorker.enqueueImmediateUpdate(
+                context,
+                "weather_alarm_fetch",
+                ExistingWorkPolicy.REPLACE
+            )
             TimeWidgetProvider.updateWeatherOnly(context)
         } catch (e: Exception) {
             Log.e("WeatherUpdateReceiver", "Update failed", e)

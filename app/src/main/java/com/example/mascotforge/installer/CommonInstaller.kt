@@ -6,15 +6,12 @@ import android.util.Log
 import java.util.zip.ZipInputStream
 
 /**
- * ZIPの種類（キャラクター or Shell）を自動判別してインストールを委譲する。
+ * ZIPの中身を見て、Character / Shell をインストールする共通入口。
  *
- * 判別ロジック:
- *   - ZIPエントリを走査し "character.json" を発見 → CharacterInstaller へ
- *   - ZIPエントリを走査し "shell.json" を発見      → ShellInstaller へ
- *   - どちらも見つからない                         → エラー
- *
- * 既存の CharacterInstaller / ShellInstaller はそのまま残し、
- * CommonInstaller がラップする形で一本化する。
+ * ルール:
+ * - ZIP内に `character.json` があれば CharacterInstaller
+ * - ZIP内に `shell.json` があれば ShellInstaller
+ * - 両方入っていれば両方インストールする
  */
 class CommonInstaller(private val context: Context) {
 
@@ -22,13 +19,6 @@ class CommonInstaller(private val context: Context) {
         private const val TAG = "CommonInstaller"
     }
 
-    /**
-     * ZIPをインストールする。
-     *
-     * @return InstallResult.Character または InstallResult.Shell を包んだ Result。
-     *         ShellでR18フラグが立っている場合は InstallResult.Shell.isR18 = true。
-     *         呼び出し元がユーザーへの警告表示を担当すること。
-     */
     fun install(zipUri: Uri): Result<InstallResult> {
         return try {
             when (detectZipType(zipUri)) {
@@ -40,14 +30,12 @@ class CommonInstaller(private val context: Context) {
                     ShellInstaller(context).installFromZip(zipUri)
                         .map { InstallResult.Shell(it) }
                 }
-                ZipType.UNKNOWN -> {
-                    Result.failure(
-                        Exception(
-                            "ZIPの種類を特定できませんでした。" +
-                            "character.json または shell.json が必要です。"
-                        )
+                ZipType.BOTH -> installCharacterAndShell(zipUri)
+                ZipType.UNKNOWN -> Result.failure(
+                    Exception(
+                        "ZIPの種類を判定できませんでした。character.json または shell.json が必要です。"
                     )
-                }
+                )
             }
         } catch (e: Exception) {
             Log.e(TAG, "CommonInstaller failed", e)
@@ -55,26 +43,56 @@ class CommonInstaller(private val context: Context) {
         }
     }
 
-    /**
-     * ZIPを一度だけ走査してエントリ名から種類を判別する。
-     * 実際の展開は行わないため軽量。
-     */
+    private fun installCharacterAndShell(zipUri: Uri): Result<InstallResult> {
+        val characterInstaller = CharacterInstaller(context)
+        val shellInstaller = ShellInstaller(context)
+
+        val characterResult = characterInstaller.installFromZip(zipUri)
+        if (characterResult.isFailure) {
+            return characterResult.map { InstallResult.Character(it) }
+        }
+        val characterInfo = characterResult.getOrThrow()
+
+        val shellResult = shellInstaller.installFromZip(zipUri)
+        if (shellResult.isFailure) {
+            // 両方入りZIPとして扱っているので、片方だけ成功した状態を残さない（ベストエフォート）
+            runCatching { characterInstaller.uninstall(characterInfo.id) }
+            return Result.failure(shellResult.exceptionOrNull() ?: Exception("SHELL_INSTALL_FAILED"))
+        }
+        val shellInfo = shellResult.getOrThrow()
+
+        return Result.success(InstallResult.Both(character = characterInfo, shell = shellInfo))
+    }
+
     private fun detectZipType(uri: Uri): ZipType {
         if (uri.scheme !in listOf("content", "file")) return ZipType.UNKNOWN
 
         return try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 ZipInputStream(input.buffered()).use { zip ->
+                    var hasCharacter = false
+                    var hasShell = false
+
                     var entry = zip.nextEntry
                     while (entry != null) {
-                        when (entry.name.trim()) {
-                            "character.json" -> return ZipType.CHARACTER
-                            "shell.json"     -> return ZipType.SHELL
+                        val fileName = entry.name
+                            .replace("\\", "/")
+                            .substringAfterLast("/")
+
+                        when (fileName) {
+                            "character.json" -> hasCharacter = true
+                            "shell.json" -> hasShell = true
                         }
+                        if (hasCharacter && hasShell) return ZipType.BOTH
                         zip.closeEntry()
                         entry = zip.nextEntry
                     }
-                    ZipType.UNKNOWN
+
+                    when {
+                        hasCharacter -> ZipType.CHARACTER
+                        hasShell -> ZipType.SHELL
+                        else -> ZipType.UNKNOWN
+                    }
                 }
             } ?: ZipType.UNKNOWN
         } catch (e: Exception) {
@@ -84,10 +102,10 @@ class CommonInstaller(private val context: Context) {
     }
 }
 
-/** インストール結果を表すsealed class */
 sealed class InstallResult {
     data class Character(val info: CharacterInstallInfo) : InstallResult()
     data class Shell(val info: ShellInstallInfo) : InstallResult()
+    data class Both(val character: CharacterInstallInfo, val shell: ShellInstallInfo) : InstallResult()
 }
 
-private enum class ZipType { CHARACTER, SHELL, UNKNOWN }
+private enum class ZipType { CHARACTER, SHELL, BOTH, UNKNOWN }
