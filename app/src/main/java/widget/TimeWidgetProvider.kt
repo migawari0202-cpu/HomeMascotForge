@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import com.example.mascotforge.R
+import com.example.mascotforge.WeatherUpdateWorker
 import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.character.CharacterStateManager
 import com.example.mascotforge.character.DynamicCharacter
@@ -189,6 +190,8 @@ class TimeWidgetProvider : AppWidgetProvider() {
         super.onEnabled(context)
         Log.d(TAG, "First widget enabled")
         WidgetCacheManager.initialize(context)
+        WeatherUpdateWorker.schedulePeriodicUpdate(context)
+        WeatherUpdateWorker.enqueueImmediateUpdate(context, "weather_widget_enabled")
     }
 
     /**
@@ -312,7 +315,8 @@ class TimeWidgetProvider : AppWidgetProvider() {
         stateManager.saveState(characterId, currentState)
 
         Log.d(TAG, "Touch recorded: character=$characterId, widget=$appWidgetId, " +
-                "count=${currentState.touchCount}, today=${currentState.touchCountToday}")
+                "count=${currentState.touchCount}, today=${currentState.touchCountToday}, " +
+                "consecutive=${currentState.consecutiveTouchCount}")
 
         // 4. ON_TOUCH カスタム変数ルールを発火（updateSingleWidget より前に実行し、
         //    変数値を更新してからセリフ再生成が走るようにする）

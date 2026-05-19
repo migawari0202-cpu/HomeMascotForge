@@ -58,6 +58,9 @@ data class SpeechContext(
     val touchCount: Int,               // 累計タッチ回数
     val touchCountToday: Int,          // 今日のタッチ回数
     val lastTouchMinutesAgo: Int,      // 最後にタッチされてから何分
+    val consecutiveTouchCount: Int,    // 短時間に続けてタッチされた回数
+    val pettingLevel: Int,             // 撫で段階 0..3
+    val isBeingPetted: Boolean,        // 短時間の連続タッチ中
 
     // === キャラクター状態（追加） ===
     val characterState: CharacterState  // カスタム変数を含む状態
@@ -205,7 +208,7 @@ data class SpeechContext(
     fun isHotDay(): Boolean = temperature >= 30
 
     /** 猛暑日（35度以上） */
-    fun isExtremlyHotDay(): Boolean = temperature >= 35
+    fun isExtremelyHotDay(): Boolean = temperature >= 35
 
     /** 真冬日（0度以下） */
     fun isFreezingDay(): Boolean = temperature <= 0
@@ -358,6 +361,13 @@ data class SpeechContext(
             // 使用状況
             "launchCount" -> checkNumberCondition(launchCount, value)
             "isFirstLaunchToday" -> isFirstLaunchToday == value.toBoolean()
+            "wasTouched" -> wasTouched == value.toBoolean()
+            "touchCount" -> checkNumberCondition(touchCount, value)
+            "touchCountToday" -> checkNumberCondition(touchCountToday, value)
+            "lastTouchMinutesAgo" -> checkNumberCondition(lastTouchMinutesAgo, value)
+            "consecutiveTouchCount" -> checkNumberCondition(consecutiveTouchCount, value)
+            "pettingLevel" -> checkNumberCondition(pettingLevel, value)
+            "isBeingPetted" -> isBeingPetted == value.toBoolean()
             "lastLaunchHoursAgo" -> lastLaunchHoursAgo?.let {
                 checkNumberCondition(it, value)
             } ?: false

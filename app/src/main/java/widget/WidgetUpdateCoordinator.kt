@@ -158,7 +158,7 @@ class WidgetUpdateCoordinator(private val context: Context) {
         try {
             val characterId = characterManager.getCharacterIdForWidget(widgetId)
             val provider = characterManager.getProviderForWidget(widgetId)
-            val speechContext = contextLoader.getCurrentContext()
+            val speechContext = contextLoader.getCurrentContext(characterId)
             val updaterLayoutType = layoutType.toUpdaterLayoutType()
 
             Log.d(TAG, "updateCharacter: widgetId=$widgetId, layoutType=$layoutType, characterId=$characterId")

@@ -3,6 +3,7 @@ package com.example.mascotforge.character
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.Log
 import com.example.mascotforge.speech.SpeechContext
 import com.example.mascotforge.CharacterProvider
@@ -349,7 +350,7 @@ class DynamicCharacter(
             ?: "character.png"
 
         val imagePath = "${source.basePath}/images/$imageFileName"
-        return loadImage(imagePath)
+        return loadImage(imagePath = imagePath, tag = emotion)
     }
 
     /**
@@ -474,7 +475,14 @@ class DynamicCharacter(
             "launchCount" to ctx.launchCount.toString(),
             "consecutiveDays" to ctx.consecutiveDays.toString(),
             "lastLaunchHoursAgo" to (ctx.lastLaunchHoursAgo?.toString() ?: "0"),
-            "isFirstLaunchToday" to ctx.isFirstLaunchToday.toString()
+            "isFirstLaunchToday" to ctx.isFirstLaunchToday.toString(),
+            "wasTouched" to ctx.wasTouched.toString(),
+            "touchCount" to ctx.touchCount.toString(),
+            "touchCountToday" to ctx.touchCountToday.toString(),
+            "lastTouchMinutesAgo" to ctx.lastTouchMinutesAgo.toString(),
+            "consecutiveTouchCount" to ctx.consecutiveTouchCount.toString(),
+            "pettingLevel" to ctx.pettingLevel.toString(),
+            "isBeingPetted" to ctx.isBeingPetted.toString()
         )
 
         standardVariables.forEach { (key, value) ->
@@ -493,14 +501,28 @@ class DynamicCharacter(
     /**
      * 画像読み込み（Assets or InstalledFiles）
      * CharacterBitmapCache でメモリキャッシュする。
+     * 赤背景を透明化する処理も含む
      */
-    private fun loadImage(imagePath: String): Bitmap? {
+    private fun loadImage(imagePath: String, tag: String?): Bitmap? {
         if (imagePath.contains("..") || !imagePath.startsWith(source.basePath)) {
             Log.e(TAG, "[$charId] Invalid image path: $imagePath")
             return null
         }
 
-        val cacheKey = "$charId:$imagePath"
+        val settings = CharacterSettingsLoader.load(context, source)
+        val cutoutSpec = settings?.findCutoutSpec(tag)
+        val tolerance = when {
+            cutoutSpec?.tolerance != null -> cutoutSpec.tolerance
+            settings?.imageCutout != null -> settings.imageCutout.defaultTolerance
+            else -> null
+        }
+        val colors = cutoutSpec?.colors ?: emptyList()
+
+        val cacheKey = if (colors.isEmpty() || tolerance == null) {
+            "$charId:$imagePath:raw"
+        } else {
+            "$charId:$imagePath:cutout:$tag:t$tolerance:${colors.joinToString(separator = ",") { it.toUInt().toString(16) }}"
+        }
         CharacterBitmapCache.get(cacheKey)?.let { return it }
 
         return try {
@@ -518,11 +540,60 @@ class DynamicCharacter(
                     }
                 }
             }
-            bitmap?.also { CharacterBitmapCache.put(cacheKey, it) }
+            bitmap?.let { raw ->
+                val processed = if (colors.isEmpty() || tolerance == null) {
+                    raw
+                } else {
+                    applyColorCutout(raw, colors, tolerance)
+                }
+                CharacterBitmapCache.put(cacheKey, processed)
+                processed
+            }
         } catch (e: Exception) {
             Log.w(TAG, "[$charId] Failed to load image: $imagePath", e)
             null
         }
+    }
+
+    /**
+     * 指定色（最大10色想定）を透明に置き換える
+     */
+    private fun applyColorCutout(src: Bitmap, targetColors: List<Int>, tolerance: Int): Bitmap {
+        val targets = targetColors.map {
+            Triple((it shr 16) and 0xFF, (it shr 8) and 0xFF, it and 0xFF)
+        }
+        val pixels = IntArray(src.width * src.height)
+        src.getPixels(pixels, 0, src.width, 0, 0, src.width, src.height)
+
+        val toleranceSq = tolerance * tolerance
+
+        for (i in pixels.indices) {
+            val p = pixels[i]
+            // すでに透明なら判定不要
+            if ((p ushr 24) == 0) continue
+
+            val r = (p shr 16) and 0xFF
+            val g = (p shr 8) and 0xFF
+            val b = p and 0xFF
+
+            var hit = false
+            for (t in targets) {
+                val dr = r - t.first
+                val dg = g - t.second
+                val db = b - t.third
+                val distSq = dr * dr + dg * dg + db * db
+                if (distSq < toleranceSq) {
+                    hit = true
+                    break
+                }
+            }
+            if (hit) pixels[i] = Color.TRANSPARENT
+        }
+
+        val result = src.copy(Bitmap.Config.ARGB_8888, true)
+        result.setPixels(pixels, 0, src.width, 0, 0, src.width, src.height)
+        src.recycle()
+        return result
     }
 
     override fun isAvailable(): Boolean = true

@@ -1,3 +1,5 @@
+package com.example.mascotforge
+
 data class WeatherResponse(
     val weather: List<Weather>,
     val main: Main,

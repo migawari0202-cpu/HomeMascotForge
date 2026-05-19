@@ -210,6 +210,13 @@ class SafeExpressionEvaluator(
             "lastLaunchHoursAgo" -> ctx.lastLaunchHoursAgo?.toString() ?: "0"
             "isFirstLaunchToday" -> ctx.isFirstLaunchToday.toString()
             "consecutiveDays" -> ctx.consecutiveDays.toString()
+            "wasTouched" -> ctx.wasTouched.toString()
+            "touchCount" -> ctx.touchCount.toString()
+            "touchCountToday" -> ctx.touchCountToday.toString()
+            "lastTouchMinutesAgo" -> ctx.lastTouchMinutesAgo.toString()
+            "consecutiveTouchCount" -> ctx.consecutiveTouchCount.toString()
+            "pettingLevel" -> ctx.pettingLevel.toString()
+            "isBeingPetted" -> ctx.isBeingPetted.toString()
             "userName" -> ctx.userName
             "userGender" -> ctx.userGender ?: ""
             "isNearBedtime" -> ctx.isNearBedtime.toString()

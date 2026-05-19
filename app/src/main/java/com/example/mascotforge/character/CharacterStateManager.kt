@@ -20,6 +20,7 @@ data class CharacterState(
     var touchCount: Int = 0,
     var touchCountToday: Int = 0,
     var lastTouchTime: Long = 0L,
+    var consecutiveTouchCount: Int = 0,
     val customVars: MutableMap<String, Int> = mutableMapOf()  // 名前ベースのカスタム変数
 ) {
     /**
@@ -73,7 +74,7 @@ data class CharacterState(
     override fun toString(): String {
         val varSummary = customVars.entries.take(5).joinToString { "${it.key}=${it.value}" }
         return "CharacterState(id=$characterId, touch=$touchCount, today=$touchCountToday, " +
-                "lastTouch=${getTimeSinceLastTouch()}s ago, " +
+                "lastTouch=${getTimeSinceLastTouch()}s ago, consecutive=$consecutiveTouchCount, " +
                 "customVars=[${varSummary}...])"
     }
 }
@@ -101,6 +102,7 @@ class CharacterStateManager(private val context: Context) {
         private const val KEY_TOUCH_COUNT = "touch_count"
         private const val KEY_TOUCH_COUNT_TODAY = "touch_count_today"
         private const val KEY_LAST_TOUCH_TIME = "last_touch_time"
+        private const val KEY_CONSECUTIVE_TOUCH_COUNT = "consecutive_touch_count"
         private const val KEY_LAST_SAVE_DATE = "last_save_date"
         // カスタム変数は "cvar_{varName}" 形式で名前ベースに保存
         private const val KEY_CUSTOM_VAR_PREFIX = "cvar_"
@@ -109,6 +111,7 @@ class CharacterStateManager(private val context: Context) {
         // デフォルト値
         private const val DEFAULT_TOUCH_COUNT = 0
         private const val DEFAULT_LAST_TOUCH_TIME = 0L
+        private const val PETTING_SESSION_TIMEOUT_MS = 10_000L
     }
 
     // SharedPreferences（遅延初期化）
@@ -133,6 +136,7 @@ class CharacterStateManager(private val context: Context) {
         val touchCount = prefs.getInt(makeKey(characterId, KEY_TOUCH_COUNT), DEFAULT_TOUCH_COUNT)
         val touchCountToday = prefs.getInt(makeKey(characterId, KEY_TOUCH_COUNT_TODAY), DEFAULT_TOUCH_COUNT)
         val lastTouchTime = prefs.getLong(makeKey(characterId, KEY_LAST_TOUCH_TIME), DEFAULT_LAST_TOUCH_TIME)
+        val consecutiveTouchCount = prefs.getInt(makeKey(characterId, KEY_CONSECUTIVE_TOUCH_COUNT), DEFAULT_TOUCH_COUNT)
         val lastSaveDate = prefs.getString(makeKey(characterId, KEY_LAST_SAVE_DATE), null)
 
         // カスタム変数を名前ベースで取得（"cvar_" プレフィックスを除去して名前を復元）
@@ -158,6 +162,7 @@ class CharacterStateManager(private val context: Context) {
             touchCount = touchCount,
             touchCountToday = actualTouchCountToday,
             lastTouchTime = lastTouchTime,
+            consecutiveTouchCount = consecutiveTouchCount,
             customVars = customVars
         )
 
@@ -171,12 +176,22 @@ class CharacterStateManager(private val context: Context) {
      * @param state 更新対象の状態
      */
     fun recordTouch(state: CharacterState) {
+        val now = System.currentTimeMillis()
+        val isPettingSession = state.lastTouchTime > 0L &&
+                now - state.lastTouchTime <= PETTING_SESSION_TIMEOUT_MS
+
         state.touchCount++
         state.touchCountToday++
-        state.lastTouchTime = System.currentTimeMillis()
+        state.consecutiveTouchCount = if (isPettingSession) {
+            state.consecutiveTouchCount + 1
+        } else {
+            1
+        }
+        state.lastTouchTime = now
 
         Log.d(TAG, "Touch recorded: ${state.characterId} -> " +
-                "total=${state.touchCount}, today=${state.touchCountToday}")
+                "total=${state.touchCount}, today=${state.touchCountToday}, " +
+                "consecutive=${state.consecutiveTouchCount}")
     }
 
     /**
@@ -196,6 +211,7 @@ class CharacterStateManager(private val context: Context) {
             putInt(makeKey(characterId, KEY_TOUCH_COUNT), state.touchCount)
             putInt(makeKey(characterId, KEY_TOUCH_COUNT_TODAY), state.touchCountToday)
             putLong(makeKey(characterId, KEY_LAST_TOUCH_TIME), state.lastTouchTime)
+            putInt(makeKey(characterId, KEY_CONSECUTIVE_TOUCH_COUNT), state.consecutiveTouchCount)
             putString(makeKey(characterId, KEY_LAST_SAVE_DATE), getCurrentDate())
 
             // カスタム変数を名前ベースで保存（古いキーを削除してから書き込む）
@@ -209,7 +225,8 @@ class CharacterStateManager(private val context: Context) {
         }
 
         Log.d(TAG, "State saved: $characterId -> " +
-                "touch=${state.touchCount}, today=${state.touchCountToday}")
+                "touch=${state.touchCount}, today=${state.touchCountToday}, " +
+                "consecutive=${state.consecutiveTouchCount}")
     }
 
     /**
@@ -224,6 +241,7 @@ class CharacterStateManager(private val context: Context) {
             remove(makeKey(characterId, KEY_TOUCH_COUNT))
             remove(makeKey(characterId, KEY_TOUCH_COUNT_TODAY))
             remove(makeKey(characterId, KEY_LAST_TOUCH_TIME))
+            remove(makeKey(characterId, KEY_CONSECUTIVE_TOUCH_COUNT))
             remove(makeKey(characterId, KEY_LAST_SAVE_DATE))
 
             val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
@@ -258,6 +276,7 @@ class CharacterStateManager(private val context: Context) {
         val knownSuffixes = listOf(
             "_$KEY_TOUCH_COUNT_TODAY",
             "_$KEY_LAST_TOUCH_TIME",
+            "_$KEY_CONSECUTIVE_TOUCH_COUNT",
             "_$KEY_LAST_SAVE_DATE",
             "_$KEY_TOUCH_COUNT"
         ).sortedByDescending { it.length }
@@ -293,6 +312,7 @@ class CharacterStateManager(private val context: Context) {
                 appendLine("    touchCountToday: ${state.touchCountToday}")
                 appendLine("    lastTouchTime: ${state.lastTouchTime}")
                 appendLine("    timeSinceLastTouch: ${state.getTimeSinceLastTouch()}s")
+                appendLine("    consecutiveTouchCount: ${state.consecutiveTouchCount}")
                 appendLine("    customVars[0-4]: ${state.customVars.entries.take(5).joinToString { "${it.key}=${it.value}" }}")
             }
         }

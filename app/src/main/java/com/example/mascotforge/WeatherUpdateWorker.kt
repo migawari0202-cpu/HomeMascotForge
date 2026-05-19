@@ -11,26 +11,26 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.work.*
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.example.mascotforge.weather.WeatherRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import widget.TimeWidgetProvider
-import java.net.HttpURLConnection
-import java.net.URL
+import widget.cache.UserWeatherCache
+import widget.cache.WeatherInfo
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
-/**
- * WeatherUpdateWorker（改善版）
- *
- * 改善点:
- * - ネットワーク制約追加（接続がある時のみ実行）
- * - リトライ間隔: 2分
- * - 最大リトライ回数: 3回
- * - 指数バックオフではなく固定間隔（シンプル）
- */
 class WeatherUpdateWorker(
     context: Context,
     params: WorkerParameters
@@ -38,258 +38,94 @@ class WeatherUpdateWorker(
 
     companion object {
         private const val TAG = "WeatherWorker"
-        private const val LOCATION_TIMEOUT = 10000L
-        private const val KEY_RETRY_COUNT = "RETRY_COUNT"
-        private const val MAX_RETRY_COUNT = 3
-        private const val RETRY_DELAY_MINUTES = 2L
 
-        // デフォルト位置（東京）
         private const val DEFAULT_LAT = 35.6895
         private const val DEFAULT_LON = 139.6917
         private const val DEFAULT_CITY = "Tokyo"
 
-        /**
-         * 定期実行をスケジュール（ネットワーク制約付き）
-         */
+        private const val UNIQUE_PERIODIC_WORK = "weather_update_periodic"
+        private const val UNIQUE_IMMEDIATE_WORK = "weather_update_immediate"
+
         fun schedulePeriodicUpdate(context: Context) {
             val weatherWork = PeriodicWorkRequestBuilder<WeatherUpdateWorker>(
-                1, TimeUnit.HOURS  // 1時間毎
+                1, TimeUnit.HOURS
             )
                 .setConstraints(
                     Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)  // ネットワーク必須
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build()
                 )
                 .build()
 
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "weather_update_periodic",
+            WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
+                UNIQUE_PERIODIC_WORK,
                 ExistingPeriodicWorkPolicy.KEEP,
                 weatherWork
             )
-            Log.d(TAG, "定期天気更新をスケジュール（1時間毎、ネットワーク制約付き）")
+            Log.d(TAG, "Periodic weather update scheduled")
         }
-    }
 
-    override suspend fun doWork(): Result {
-        val retryCount = inputData.getInt(KEY_RETRY_COUNT, 0)
-        Log.d(TAG, "=== 天気更新 Worker 開始 (試行: ${retryCount + 1}/${MAX_RETRY_COUNT + 1}) ===")
-
-        return try {
-            // 位置情報取得
-            val locationInfo = getCurrentLocationWithDetails()
-
-            // API呼び出し
-            val apiResponse = fetchWeatherFromApi(locationInfo.first, locationInfo.second)
-            val json = JSONObject(apiResponse)
-            val weatherArray = json.getJSONArray("weather")
-            val weatherId = weatherArray.getJSONObject(0).getInt("id")
-            val temp = json.getJSONObject("main").getDouble("temp")
-            val cityName = json.optString("name", DEFAULT_CITY)
-
-            val emoji = getWeatherEmoji(weatherId)
-            val code = getWeatherCode(weatherId)
-
-            Log.d(TAG, "✓ 天気取得成功: $emoji ($code) ${temp}°C at $cityName (${locationInfo.third})")
-
-            // 天気をキャッシュ
-            try {
-                val cache = widget.cache.UserWeatherCache(applicationContext)
-                val info = widget.cache.WeatherInfo(temp.toFloat(), emoji, code)
-                cache.updateFromWorker(info)
-                Log.d(TAG, "✓ 天気データをキャッシュに保存しました")
-            } catch (e: Exception) {
-                Log.e(TAG, "キャッシュ保存中にエラー", e)
-            }
-
-            // ウィジェット更新
-            try {
-                TimeWidgetProvider.updateAllWidgets(applicationContext)
-                Log.d(TAG, "✓ ウィジェット即時更新完了")
-            } catch (e: Exception) {
-                Log.e(TAG, "ウィジェット更新中にエラー", e)
-            }
-
-            Result.success()
-
-        } catch (e: Exception) {
-            Log.e(TAG, "✗ 天気更新失敗 (試行 ${retryCount + 1}回目): ${e.message}", e)
-
-            // 最大リトライ回数チェック
-            if (retryCount >= MAX_RETRY_COUNT) {
-                Log.e(TAG, "最大リトライ回数(${MAX_RETRY_COUNT})に達しました。次回の定期実行まで待機します。")
-                return Result.failure()
-            }
-
-            // 2分後にリトライ
-            Log.d(TAG, "${RETRY_DELAY_MINUTES}分後に再試行します (残り${MAX_RETRY_COUNT - retryCount}回)")
-
-            val retryData = Data.Builder()
-                .putInt(KEY_RETRY_COUNT, retryCount + 1)
-                .build()
-
-            val retryWork = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
-                .setInputData(retryData)
-                .setInitialDelay(RETRY_DELAY_MINUTES, TimeUnit.MINUTES)
+        fun enqueueImmediateUpdate(
+            context: Context,
+            tag: String = "weather_immediate",
+            policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP
+        ) {
+            val work = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
                 .setConstraints(
                     Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)  // リトライ時もネットワーク必須
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build()
                 )
+                .addTag(tag)
                 .build()
 
-            WorkManager.getInstance(applicationContext).enqueue(retryWork)
-
-            // このWorkerは終了（リトライは新しいWorkerで）
-            Result.failure()
+            WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+                UNIQUE_IMMEDIATE_WORK,
+                policy,
+                work
+            )
+            Log.d(TAG, "Immediate weather update enqueued: tag=$tag policy=$policy")
         }
     }
 
+    private val weatherRepository = WeatherRepository()
+    private val locationResolver = WeatherLocationResolver(applicationContext)
 
-    // =============================
-    // 位置情報取得処理
-    // =============================
-    private suspend fun getCurrentLocationWithDetails(): Triple<Double, Double, String> {
-        val fine = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION)
-        val coarse = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION)
+    override suspend fun doWork(): Result {
+        Log.d(TAG, "Weather update started")
 
-        if (fine != PackageManager.PERMISSION_GRANTED && coarse != PackageManager.PERMISSION_GRANTED) {
-            Log.w(TAG, "位置情報権限なし → デフォルト位置を使用")
-            return Triple(DEFAULT_LAT, DEFAULT_LON, "権限なし/デフォルト(東京)")
-        }
+        return try {
+            val location = locationResolver.resolveLocation()
+            val weather = weatherRepository.getCurrentWeather(location.latitude, location.longitude)
+            val emoji = getWeatherEmoji(weather.weatherId)
+            val code = getWeatherCode(weather.weatherId)
 
-        val locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            Log.d(
+                TAG,
+                "Weather fetched: $emoji ($code) ${weather.temperature}C at ${weather.cityName} (${location.source})"
+            )
 
-        // まず最後の既知の位置を試す（高速）
-        try {
-            val lastKnownNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            if (lastKnownNetwork != null && isLocationFresh(lastKnownNetwork)) {
-                Log.d(TAG, "最後の既知位置を使用（ネットワーク）")
-                return Triple(lastKnownNetwork.latitude, lastKnownNetwork.longitude, "ネットワーク/キャッシュ")
-            }
+            UserWeatherCache(applicationContext).updateFromWorker(
+                WeatherInfo(weather.temperature.toFloat(), emoji, code)
+            )
+            TimeWidgetProvider.updateAllWidgets(applicationContext)
 
-            val lastKnownGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (lastKnownGps != null && isLocationFresh(lastKnownGps)) {
-                Log.d(TAG, "最後の既知位置を使用（GPS）")
-                return Triple(lastKnownGps.latitude, lastKnownGps.longitude, "GPS/キャッシュ")
-            }
-        } catch (e: SecurityException) {
-            Log.e(TAG, "最後の既知位置の取得に失敗", e)
-        }
-
-        // 新規取得を試みる（タイムアウトあり）
-        getLocationFromProvider(locationManager, LocationManager.NETWORK_PROVIDER)?.let { (lat, lon) ->
-            return Triple(lat, lon, "ネットワーク/新規取得")
-        }
-
-        getLocationFromProvider(locationManager, LocationManager.GPS_PROVIDER)?.let { (lat, lon) ->
-            return Triple(lat, lon, "GPS/新規取得")
-        }
-
-        Log.w(TAG, "位置情報取得不可 → デフォルト位置を使用")
-        return Triple(DEFAULT_LAT, DEFAULT_LON, "取得失敗/デフォルト(東京)")
-    }
-
-    // 位置情報が新鮮か（1時間以内）
-    private fun isLocationFresh(location: Location): Boolean {
-        val age = System.currentTimeMillis() - location.time
-        return age < 1 * 60 * 60 * 1000L // 1時間以内
-    }
-
-    private suspend fun getLocationFromProvider(
-        locationManager: LocationManager,
-        provider: String
-    ): Pair<Double, Double>? = withContext(Dispatchers.Main) {
-        if (!locationManager.isProviderEnabled(provider)) {
-            Log.d(TAG, "$provider プロバイダーが無効")
-            return@withContext null
-        }
-
-        return@withContext try {
-            suspendCancellableCoroutine { continuation ->
-                val listener = object : LocationListener {
-                    override fun onLocationChanged(location: Location) {
-                        locationManager.removeUpdates(this)
-                        if (continuation.isActive) {
-                            continuation.resume(Pair(location.latitude, location.longitude))
-                        }
-                    }
-
-                    override fun onProviderEnabled(provider: String) {}
-                    override fun onProviderDisabled(provider: String) {
-                        locationManager.removeUpdates(this)
-                        if (continuation.isActive) continuation.resume(null)
-                    }
-                    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-                }
-
-                continuation.invokeOnCancellation { locationManager.removeUpdates(listener) }
-
-                locationManager.requestLocationUpdates(
-                    provider,
-                    1000L,
-                    0f,
-                    listener,
-                    Looper.getMainLooper()
-                )
-
-                Handler(Looper.getMainLooper()).postDelayed({
-                    locationManager.removeUpdates(listener)
-                    if (continuation.isActive) {
-                        Log.d(TAG, "$provider でタイムアウト")
-                        continuation.resume(null)
-                    }
-                }, LOCATION_TIMEOUT)
-            }
-        } catch (e: SecurityException) {
-            Log.e(TAG, "$provider での位置取得中に権限エラー", e)
-            null
+            Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "$provider での位置取得中にエラー", e)
-            null
+            Log.e(TAG, "Weather update failed", e)
+            Result.retry()
         }
     }
 
-    // =============================
-    // 天気API通信処理
-    // =============================
-    private suspend fun fetchWeatherFromApi(lat: Double, lon: Double): String {
-        return withContext(Dispatchers.IO) {
-            val apiKey = BuildConfig.WEATHER_API_KEY
-            val url = "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric"
-
-            val connection = URL(url).openConnection() as HttpURLConnection
-            try {
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    val errorBody = connection.errorStream?.bufferedReader()?.readText()
-                    throw Exception("HTTPエラー: ${connection.responseCode}, body=$errorBody")
-                }
-
-                val response = connection.inputStream.bufferedReader().readText()
-                Log.d(TAG, "API応答受信 (${response.length}文字)")
-                response
-            } finally {
-                connection.disconnect()
-            }
-        }
-    }
-
-    // =============================
-    // 天気コード→表情変換
-    // =============================
     private fun getWeatherEmoji(weatherId: Int): String = when (weatherId) {
-        800 -> "☀️"
-        in 801..804 -> "☁️"
-        in 500..531 -> "🌧️"
-        in 200..232 -> "⛈️"
-        in 600..622 -> "❄️"
-        in 701..781 -> "🌫️"
-        in 300..321 -> "🌦️"
-        else -> "☀️"
+        800 -> "\u2600\uFE0F"
+        in 801..804 -> "\u2601\uFE0F"
+        in 500..531 -> "\uD83C\uDF27\uFE0F"
+        in 200..232 -> "\u26C8\uFE0F"
+        in 600..622 -> "\u2744\uFE0F"
+        in 701..781 -> "\uD83C\uDF2B\uFE0F"
+        in 300..321 -> "\uD83C\uDF26\uFE0F"
+        else -> "\u2600\uFE0F"
     }
 
     private fun getWeatherCode(weatherId: Int): String = when (weatherId) {
@@ -305,3 +141,155 @@ class WeatherUpdateWorker(
         else -> "clear"
     }
 }
+
+private class WeatherLocationResolver(
+    private val context: Context
+) {
+    private companion object {
+        private const val TAG = "WeatherLocationResolver"
+        private const val PREFS = "weather_location_policy"
+        private const val KEY_LAST_ACTIVE_LOCATION_AT = "last_active_location_at"
+        private const val LOCATION_TIMEOUT_MS = 5000L
+        private const val LAST_KNOWN_MAX_AGE_MS = 6 * 60 * 60 * 1000L
+        private const val ACTIVE_LOCATION_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000L
+        private const val DEFAULT_LAT = 35.6895
+        private const val DEFAULT_LON = 139.6917
+    }
+
+    suspend fun resolveLocation(): WeatherLocation {
+        if (!hasLocationPermission()) {
+            Log.w(TAG, "Location permission missing; using default location")
+            return defaultLocation("permission_missing")
+        }
+
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        getBestLastKnownLocation(locationManager)?.let {
+            return WeatherLocation(it.latitude, it.longitude, "last_known/${it.provider}")
+        }
+
+        if (!canRequestActiveLocation()) {
+            Log.d(TAG, "Active location request throttled; using default location")
+            return defaultLocation("active_location_throttled")
+        }
+
+        getActiveNetworkLocation(locationManager)?.let {
+            return WeatherLocation(it.latitude, it.longitude, "active/network")
+        }
+
+        return defaultLocation("location_unavailable")
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val fine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+        return fine == PackageManager.PERMISSION_GRANTED || coarse == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getBestLastKnownLocation(locationManager: LocationManager): Location? {
+        val candidates = listOf(
+            LocationManager.NETWORK_PROVIDER,
+            LocationManager.GPS_PROVIDER
+        ).mapNotNull { provider ->
+            try {
+                locationManager.getLastKnownLocation(provider)
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Last known location permission error: $provider", e)
+                null
+            } catch (e: IllegalArgumentException) {
+                Log.d(TAG, "Location provider unavailable: $provider")
+                null
+            }
+        }
+
+        return candidates
+            .filter { System.currentTimeMillis() - it.time <= LAST_KNOWN_MAX_AGE_MS }
+            .maxByOrNull { it.time }
+    }
+
+    private fun canRequestActiveLocation(): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val lastRequestedAt = prefs.getLong(KEY_LAST_ACTIVE_LOCATION_AT, 0L)
+        return System.currentTimeMillis() - lastRequestedAt >= ACTIVE_LOCATION_MIN_INTERVAL_MS
+    }
+
+    private fun markActiveLocationRequested() {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putLong(KEY_LAST_ACTIVE_LOCATION_AT, System.currentTimeMillis())
+            .apply()
+    }
+
+    private suspend fun getActiveNetworkLocation(locationManager: LocationManager): Location? {
+        return withContext(Dispatchers.Main) {
+            if (!isProviderEnabled(locationManager, LocationManager.NETWORK_PROVIDER)) {
+                return@withContext null
+            }
+
+            try {
+                suspendCancellableCoroutine { continuation ->
+                    val listener = object : LocationListener {
+                        override fun onLocationChanged(location: Location) {
+                            locationManager.removeUpdates(this)
+                            if (continuation.isActive) {
+                                continuation.resume(location)
+                                markActiveLocationRequested()
+                            }
+                        }
+
+                        override fun onProviderEnabled(provider: String) = Unit
+
+                        override fun onProviderDisabled(provider: String) {
+                            locationManager.removeUpdates(this)
+                            if (continuation.isActive) {
+                                continuation.resume(null)
+                            }
+                        }
+
+                        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+                    }
+
+                    continuation.invokeOnCancellation { locationManager.removeUpdates(listener) }
+
+                    locationManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER,
+                        0L,
+                        1000f,
+                        listener,
+                        Looper.getMainLooper()
+                    )
+
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        locationManager.removeUpdates(listener)
+                        if (continuation.isActive) {
+                            continuation.resume(null)
+                        }
+                    }, LOCATION_TIMEOUT_MS)
+                }
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Active network location permission error", e)
+                null
+            } catch (e: Exception) {
+                Log.e(TAG, "Active network location failed", e)
+                null
+            }
+        }
+    }
+
+    private fun isProviderEnabled(locationManager: LocationManager, provider: String): Boolean {
+        return try {
+            locationManager.isProviderEnabled(provider)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun defaultLocation(source: String): WeatherLocation {
+        return WeatherLocation(DEFAULT_LAT, DEFAULT_LON, "default/$source")
+    }
+}
+
+private data class WeatherLocation(
+    val latitude: Double,
+    val longitude: Double,
+    val source: String
+)

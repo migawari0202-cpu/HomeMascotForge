@@ -1,4 +1,8 @@
+package com.example.mascotforge.ui
+
 import com.example.mascotforge.BuildConfig
+import com.example.mascotforge.WeatherApiService
+import com.example.mascotforge.WeatherResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
