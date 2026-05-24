@@ -42,7 +42,9 @@ fun CharacterCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

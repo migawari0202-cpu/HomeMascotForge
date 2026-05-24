@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mascotforge.CharacterPreferences
+import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.installer.CharacterInstaller
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.launch
 class CharacterInstallViewModel : ViewModel() {
 
     private lateinit var installer: CharacterInstaller
+    private lateinit var appContext: Context
 
     // ---- UI State ----
     private val _uiState = MutableStateFlow(CharacterInstallUiState())
@@ -21,7 +24,8 @@ class CharacterInstallViewModel : ViewModel() {
     fun initialize(context: Context) {
         if (this::installer.isInitialized) return
 
-        installer = CharacterInstaller(context)
+        appContext = context.applicationContext
+        installer = CharacterInstaller(appContext)
 
         viewModelScope.launch {
             loadInstalledCharacters()
@@ -32,24 +36,28 @@ class CharacterInstallViewModel : ViewModel() {
     private suspend fun loadInstalledCharacters() {
         _uiState.value = _uiState.value.copy(isLoading = true)
 
-        val list = installer.getInstalledMetadata()
+        val list = CharacterRegistry.getEntries(appContext)
         _uiState.value = _uiState.value.copy(
             characters = list.map {
                 CharacterDisplayData(
-                    id = it.id,
-                    name = it.name,
-                    version = it.version,
-                    author = it.author,
-                    description = it.description,
-                    isBuiltIn = false
+                    id = it.metadata.id,
+                    name = it.metadata.name,
+                    version = it.metadata.version,
+                    author = it.metadata.author,
+                    description = it.metadata.description,
+                    isBuiltIn = it.isBuiltIn
                 )
             },
+            selectedCharId = CharacterPreferences.getSelectedCharacterId(appContext),
             isLoading = false
         )
     }
 
     /** キャラ選択 */
     fun selectCharacter(charId: String) {
+        if (this::appContext.isInitialized) {
+            CharacterPreferences.setSelectedCharacterId(appContext, charId)
+        }
         _uiState.value = _uiState.value.copy(selectedCharId = charId)
     }
 
