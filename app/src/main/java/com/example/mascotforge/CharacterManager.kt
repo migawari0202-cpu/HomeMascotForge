@@ -15,7 +15,9 @@ class CharacterManager(private val context: Context) {
     fun getCurrentProvider(): CharacterProvider {
         val selectedId = CharacterPreferences.getSelectedCharacterId(context)
         val allProviders = getAllProviders()
-        return allProviders.find { it.id == selectedId } ?: allProviders.first()
+        return allProviders.find { it.id == selectedId }
+            ?: allProviders.firstOrNull()
+            ?: error("No characters available")
     }
 
     /**
@@ -24,7 +26,9 @@ class CharacterManager(private val context: Context) {
     fun getProviderForWidget(widgetId: Int): CharacterProvider {
         val selectedId = CharacterPreferences.getCharacterIdForWidget(context, widgetId)
         val allProviders = getAllProviders()
-        return allProviders.find { it.id == selectedId } ?: allProviders.first()
+        return allProviders.find { it.id == selectedId }
+            ?: allProviders.firstOrNull()
+            ?: error("No characters available")
     }
 
     /**

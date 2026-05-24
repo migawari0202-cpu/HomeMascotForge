@@ -5,80 +5,79 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import com.example.mascotforge.CharacterFactory
 import com.example.mascotforge.CharacterProvider
-import com.example.mascotforge.characters.evil.EvilCharacterFactory
-import com.example.mascotforge.characters.default_character.DefaultCharacterFactory
+import com.example.mascotforge.character.CharacterMetadata
 import com.example.mascotforge.character.CharacterSource
 import com.example.mascotforge.character.SafeCharacterLoader
 import java.io.File
 
-/**
- * キャラクター統合レジストリ v2
- *
- * 【管理対象】
- * 1. APK同梱キャラ（旧来のFactory方式）
- * 2. ZIPインストールキャラ（filesDir）
- */
 object CharacterRegistry {
 
     private const val TAG = "CharacterRegistry"
 
-    /**
-     * APK同梱の旧Factory一覧（後方互換性）
-     */
-    private fun getBuiltInFactories(): List<CharacterFactory> {
-        return listOf(
-            EvilCharacterFactory()
-        )
-    }
-
-    /**
-     * 全てのキャラクターFactory取得（UI表示用）
-     *
-     * @return APK同梱 + assets JSON + インストール済みの統合リスト
-     */
     fun getFactories(context: Context): List<CharacterFactory> {
-        val factories = mutableListOf<CharacterFactory>()
-
-        // 1. APK同梱キャラ（旧Factory方式）
-        factories.addAll(getBuiltInFactories())
-
-        // 2. Assets内のZIP形式キャラ（初期状態で利用可能）
-        factories.addAll(getAssetsCharacterFactories(context))
-
-        // 3. ユーザーがインストールしたZIPキャラ
-        factories.addAll(getInstalledFactories(context))
-
-        Log.d(TAG, "Total factories: ${factories.size} (BuiltIn: ${getBuiltInFactories().size}, Assets: ${getAssetsCharacterFactories(context).size}, Installed: ${getInstalledFactories(context).size})")
-
-        return factories
+        return getEntries(context).map { it.factory }
     }
 
-    /**
-     * Assets内のZIP形式キャラを取得（初期状態で利用可能）
-     */
-    private fun getAssetsCharacterFactories(context: Context): List<CharacterFactory> {
+    fun getEntries(context: Context): List<CharacterEntry> {
+        val assetsEntries = getAssetsEntries(context)
+        val assetIds = assetsEntries.map { it.metadata.id }.toSet()
+        val installedEntries = getInstalledEntries(context)
+            .filterNot { entry ->
+                val isDuplicate = entry.metadata.id in assetIds
+                if (isDuplicate) {
+                    Log.w(TAG, "Skipping installed character with built-in duplicate id: ${entry.metadata.id}")
+                }
+                isDuplicate
+            }
+
+        return buildList {
+            addAll(assetsEntries)
+            addAll(installedEntries)
+        }.also {
+            Log.d(
+                TAG,
+                "Total characters: ${it.size} (Assets: ${assetsEntries.size}, Installed: ${installedEntries.size})"
+            )
+        }
+    }
+
+    fun getInstalledEntries(context: Context): List<CharacterEntry> {
+        return getInstalledEntriesInternal(context)
+    }
+
+    fun getInstalledMetadata(context: Context): List<CharacterMetadata> {
+        return getInstalledEntries(context).map { it.metadata }
+    }
+
+    private fun getAssetsEntries(context: Context): List<CharacterEntry> {
         return try {
-            val factories = mutableListOf<CharacterFactory>()
-            
-            // defaultキャラはDefaultCharacterFactoryで提供
-            factories.add(DefaultCharacterFactory())
-            
-            Log.d(TAG, "Loaded assets character: default (DefaultCharacterFactory)")
-            factories
+            val loader = SafeCharacterLoader(context)
+            val characterDirs = context.assets.list("characters")?.toList().orEmpty()
+
+            characterDirs.mapNotNull { dirName ->
+                val source = CharacterSource.Assets("characters/$dirName")
+                try {
+                    val meta = loader.loadMetadata(source)
+                    if (meta != null) {
+                        Log.d(TAG, "Loaded assets character: ${meta.id} from $dirName")
+                        val factory = InstalledCharacterFactory(meta, context, source)
+                        CharacterEntry(meta, source, isBuiltIn = true, factory = factory)
+                    } else {
+                        Log.w(TAG, "Failed to load assets metadata from $dirName")
+                        null
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to create assets factory for: $dirName", e)
+                    null
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load assets characters", e)
             emptyList()
         }
     }
 
-    /**
-     * ZIPインストールキャラを取得
-     *
-     * 【変更点】
-     * - CharacterInstaller のメタデータは使わず、
-     *   直接 SafeCharacterLoader でロードする
-     */
-    private fun getInstalledFactories(context: Context): List<CharacterFactory> {
+    private fun getInstalledEntriesInternal(context: Context): List<CharacterEntry> {
         return try {
             val installedDir = File(context.filesDir, "installed_characters")
 
@@ -89,7 +88,6 @@ object CharacterRegistry {
 
             val loader = SafeCharacterLoader(context)
 
-            // installed_characters/ 内のフォルダを列挙
             installedDir.listFiles()
                 ?.filter { it.isDirectory }
                 ?.mapNotNull { charDir ->
@@ -101,11 +99,13 @@ object CharacterRegistry {
 
                         if (meta != null) {
                             Log.d(TAG, "Loaded installed character: $charId")
-                            InstalledCharacterFactory(
+                            val source = CharacterSource.InstalledFiles("installed_characters/$charId")
+                            val factory = InstalledCharacterFactory(
                                 meta,
                                 context,
-                                CharacterSource.InstalledFiles("installed_characters/$charId")
+                                source
                             )
+                            CharacterEntry(meta, source, isBuiltIn = false, factory = factory)
                         } else {
                             Log.w(TAG, "Failed to load metadata for: $charId")
                             null
@@ -121,9 +121,6 @@ object CharacterRegistry {
         }
     }
 
-    /**
-     * 全キャラクターの一覧を取得
-     */
     fun getInternalCharacters(context: Context): List<CharacterProvider> {
         return getFactories(context).mapNotNull { factory ->
             try {
@@ -135,44 +132,39 @@ object CharacterRegistry {
         }
     }
 
-    /**
-     * 特定IDのキャラが存在するかチェック
-     */
     fun hasCharacter(context: Context, id: String): Boolean {
         return getFactories(context).any { it.getCharacterId() == id }
     }
 
-    /**
-     * IDを指定してキャラを取得
-     */
     fun getCharacterById(context: Context, id: String): CharacterProvider? {
         return getFactories(context)
             .find { it.getCharacterId() == id }
             ?.create(context)
     }
 
-    /**
-     * デフォルトキャラのIDを取得
-     */
-    fun getDefaultCharacterId(): String = "default"
+    fun getDefaultCharacterId(context: Context): String {
+        return getFactories(context).firstOrNull()?.getCharacterId()
+            ?: error("No characters available")
+    }
 
-    /**
-     * デフォルトキャラを取得
-     */
     fun getDefaultCharacter(context: Context): CharacterProvider {
-        return getCharacterById(context, getDefaultCharacterId())
-            ?: getFactories(context).firstOrNull()?.create(context)
+        return getFactories(context).firstOrNull()?.create(context)
             ?: error("No characters available")
     }
 }
 
-/**
- * キャラクター用Factory（ZIP形式、Assets/Files両対応）
- */
+data class CharacterEntry(
+    val metadata: CharacterMetadata,
+    val source: CharacterSource,
+    val isBuiltIn: Boolean,
+    val factory: CharacterFactory
+)
+
 class InstalledCharacterFactory(
-    private val metadata: com.example.mascotforge.character.CharacterMetadata,
+    private val metadata: CharacterMetadata,
     private val context: Context,
-    private val source: com.example.mascotforge.character.CharacterSource = com.example.mascotforge.character.CharacterSource.InstalledFiles("installed_characters/${metadata.id}")
+    private val source: com.example.mascotforge.character.CharacterSource =
+        com.example.mascotforge.character.CharacterSource.InstalledFiles("installed_characters/${metadata.id}")
 ) : CharacterFactory {
 
     override fun getCharacterId(): String = metadata.id
@@ -197,7 +189,6 @@ class InstalledCharacterFactory(
 
             val imageFile = when (source) {
                 is com.example.mascotforge.character.CharacterSource.Assets -> {
-                    // assetsから読み込む場合はファイルパスではなく、assetsから直接取得する
                     return try {
                         val assetPath = "${source.basePath}/images/${imageName ?: "character.webp"}"
                         context.assets.open(assetPath).use { input ->
@@ -210,6 +201,7 @@ class InstalledCharacterFactory(
                         null
                     }
                 }
+
                 is com.example.mascotforge.character.CharacterSource.InstalledFiles -> {
                     if (imageName != null) {
                         File(context.filesDir, "${source.basePath}/images/$imageName")
@@ -223,7 +215,6 @@ class InstalledCharacterFactory(
                 return android.graphics.drawable.Drawable.createFromPath(imageFile.absolutePath)
             }
 
-            // フォールバック: imagesフォルダ内の最初の画像を使用
             if (source is com.example.mascotforge.character.CharacterSource.InstalledFiles) {
                 val imagesDir = File(context.filesDir, "${source.basePath}/images")
                 val firstImage = imagesDir.listFiles()

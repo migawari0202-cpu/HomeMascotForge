@@ -86,23 +86,27 @@ class SafeCharacterLoader(private val context: Context) {
                 }
             }
 
-            val json = JSONObject(jsonStr)
-
-            CharacterMetadata(
-                id = json.getString("id"),
-                name = json.getString("name"),
-                version = json.optString("version", "1.0.0"),
-                author = json.optString("author", "Unknown"),
-                description = json.optString("description", ""),
-                emotionRules = parseEmotionRules(json.optJSONObject("emotions")),
-                imageMapping = parseImageMapping(json.optJSONObject("images")),
-                customVariables = parseCustomVariables(json.optJSONObject("customVariables")),
-                speechRules = parseSpeechRules(json)
-            )
+            parseMetadata(jsonStr)
         } catch (e: Exception) {
             Log.e(TAG, "Error loading metadata: ${source.basePath}", e)
             null
         }
+    }
+
+    fun parseMetadata(jsonStr: String): CharacterMetadata {
+        val json = JSONObject(jsonStr)
+
+        return CharacterMetadata(
+            id = json.getString("id"),
+            name = json.getString("name"),
+            version = json.optString("version", "1.0.0"),
+            author = json.optString("author", "Unknown"),
+            description = json.optString("description", ""),
+            emotionRules = parseEmotionRules(json.optJSONObject("emotions")),
+            imageMapping = parseImageMapping(json.optJSONObject("images")),
+            customVariables = parseCustomVariables(json.optJSONObject("customVariables")),
+            speechRules = parseSpeechRules(json)
+        )
     }
 
     /**
