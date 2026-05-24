@@ -3,15 +3,14 @@ package com.example.mascotforge.installer
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import org.json.JSONObject
+import com.example.mascotforge.character.CharacterMetadata
+import com.example.mascotforge.character.SafeCharacterLoader
+import com.example.mascotforge.characters.CharacterRegistry
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-/**
- * キャラクターのインストール・アンインストールを担当 (最終版)
- */
 class CharacterInstaller(private val context: Context) {
 
     companion object {
@@ -23,9 +22,6 @@ class CharacterInstaller(private val context: Context) {
             if (!exists()) mkdirs()
         }
 
-    /**
-     * ZIPからキャラクターをインストール
-     */
     fun installFromZip(zipUri: Uri): Result<CharacterInstallInfo> {
         return try {
             if (zipUri.scheme !in listOf("content", "file")) {
@@ -38,28 +34,33 @@ class CharacterInstaller(private val context: Context) {
             }
 
             context.contentResolver.openInputStream(zipUri)?.use { input ->
-                val info = validateAndInstall(input)
-                Result.success(info)
-            } ?: Result.failure(Exception("FILE_OPEN_FAILED"))
+                Result.success(validateAndInstall(input))
+            } ?: Result.failure(CharacterInstallException("FILE_OPEN_FAILED", "ファイルを開けませんでした。"))
+        } catch (e: CharacterInstallException) {
+            Log.e(TAG, "Character installation rejected: ${e.code}", e)
+            Result.failure(e)
         } catch (e: SecurityException) {
             Log.e(TAG, "Security violation during installation: ${e.message}", e)
-            Result.failure(Exception("セキュリティ検証に失敗しました。ファイルが不正です。"))
+            Result.failure(CharacterInstallException.fromSecurityException(e))
         } catch (e: Exception) {
             Log.e(TAG, "Installation failed due to unexpected error", e)
-            Result.failure(Exception("インストール中に予期せぬエラーが発生しました。"))
+            Result.failure(
+                CharacterInstallException(
+                    code = "UNEXPECTED_INSTALL_ERROR",
+                    message = "インストール中に予期しないエラーが発生しました。",
+                    detail = e.message,
+                    cause = e
+                )
+            )
         }
     }
 
-    /**
-     * 検証とインストールの実行
-     */
     private fun validateAndInstall(zipInput: InputStream): CharacterInstallInfo {
         val tempDir = File(context.cacheDir, "char_temp_${System.currentTimeMillis()}")
         if (!tempDir.mkdirs()) {
             throw SecurityException("TEMP_DIR_CREATE_FAILED")
         }
 
-        // Validator/Extractorの初期化
         val validator = ZipSecurityValidator(tempDir)
         val extractor = ZipExtractor(validator)
 
@@ -70,15 +71,18 @@ class CharacterInstaller(private val context: Context) {
                 ?: throw SecurityException("MISSING_METADATA")
 
             val metadata = loadMetadata(metadataFile)
-                ?: throw SecurityException("METADATA_READ_FAILED")
+            rejectDuplicateId(metadata.id)
 
             val targetDir = File(installedCharDir, metadata.id)
             synchronized(this) {
                 if (targetDir.exists()) {
-                    throw SecurityException("ID_ALREADY_EXISTS")
+                    throw CharacterInstallException(
+                        code = "ID_ALREADY_EXISTS",
+                        message = "同じIDのキャラクターがすでにインストールされています。",
+                        detail = metadata.id
+                    )
                 }
 
-                // 必須ファイル、JSONスキーマ、画像マジックバイトの最終検証
                 validator.validateRequiredFiles(tempDir)
                 validator.validateImageFiles(tempDir)
 
@@ -87,23 +91,20 @@ class CharacterInstaller(private val context: Context) {
                 }
             }
 
-            Log.i(TAG, "キャラクターインストール成功: ${metadata.id}")
+            Log.i(TAG, "Character installed: ${metadata.id}")
             return CharacterInstallInfo(
                 id = metadata.id,
                 name = metadata.name,
                 version = metadata.version,
                 author = metadata.author,
                 fileCount = extractedFiles,
-                installPath = "[保護されたパス]"
+                installPath = "[protected]"
             )
         } finally {
             tempDir.deleteRecursively()
         }
     }
 
-    /**
-     * アトミックなインストール（中断時も安全）
-     */
     private fun atomicInstall(source: File, target: File): Boolean {
         val tempTarget = File(target.parentFile, "${target.name}.tmp_${System.currentTimeMillis()}")
 
@@ -121,54 +122,53 @@ class CharacterInstaller(private val context: Context) {
         }
     }
 
-    /**
-     * メタデータの読み込みとパース
-     */
-    private fun loadMetadata(file: File): CharacterMetadata? {
+    private fun loadMetadata(file: File): CharacterMetadata {
         return try {
-            if (!file.isFile) return null
-            if (file.length() > ZipSecurityValidator.MAX_SINGLE_FILE_SIZE) return null
+            if (!file.isFile) {
+                throw CharacterInstallException("METADATA_FILE_NOT_FOUND", "character.json が見つかりません。", file.path)
+            }
+            if (file.length() > ZipSecurityValidator.MAX_SINGLE_FILE_SIZE) {
+                throw CharacterInstallException("METADATA_TOO_LARGE", "character.json のサイズが大きすぎます。", file.path)
+            }
 
-            val jsonStr = file.readText()
-            parseMetadata(jsonStr)
+            val metadata = SafeCharacterLoader(context).parseMetadata(file.readText(Charsets.UTF_8))
+            if (!ZipSecurityValidator.isValidCharacterId(metadata.id)) {
+                throw CharacterInstallException("INVALID_CHARACTER_ID_FORMAT", "キャラクターIDの形式が不正です。", metadata.id)
+            }
+            metadata
+        } catch (e: CharacterInstallException) {
+            throw e
         } catch (e: SecurityException) {
-            Log.e(TAG, "Metadata parsing security failure", e)
-            null
+            throw CharacterInstallException.fromSecurityException(e)
         } catch (e: Exception) {
             Log.e(TAG, "Metadata parsing error", e)
-            null
+            throw CharacterInstallException("METADATA_PARSE_FAILED", "character.json の読み込みに失敗しました。", e.message, e)
         }
     }
 
-    /**
-     * メタデータのパース
-     */
-    private fun parseMetadata(jsonStr: String): CharacterMetadata {
-        val json = JSONObject(jsonStr)
-        val id = json.getString("id")
+    private fun rejectDuplicateId(characterId: String) {
+        val existing = CharacterRegistry.getEntries(context)
+            .firstOrNull { it.metadata.id == characterId }
+            ?: return
 
-        // 修正済み: 静的メソッドとしてクラス名で呼び出す
-        if (!ZipSecurityValidator.isValidCharacterId(id)) {
-            throw SecurityException("INVALID_CHARACTER_ID_FORMAT")
+        if (existing.isBuiltIn) {
+            throw CharacterInstallException(
+                code = "BUILTIN_ID_ALREADY_EXISTS",
+                message = "内蔵キャラクターと同じIDは使用できません。",
+                detail = characterId
+            )
         }
 
-        return CharacterMetadata(
-            id = id,
-            name = json.getString("name").sanitizeLogField(),
-            version = json.optString("version", "1.0.0"),
-            author = json.optString("author", "Unknown").sanitizeLogField(),
-            description = json.optString("description", "").sanitizeLogField()
+        throw CharacterInstallException(
+            code = "ID_ALREADY_EXISTS",
+            message = "同じIDのキャラクターがすでにインストールされています。",
+            detail = characterId
         )
     }
 
-    /**
-     * キャラクターのアンインストール
-     */
     fun uninstall(charId: String): Boolean {
-        // Validatorインスタンスは、isWithinDirectorySafeチェックのためにのみ使用する
         val validator = ZipSecurityValidator(installedCharDir)
 
-        // 🚨 修正箇所: 静的メソッドとしてクラス名で呼び出す
         if (!ZipSecurityValidator.isValidCharacterId(charId)) {
             Log.e(TAG, "Uninstall failed: Invalid character ID format.")
             return false
@@ -179,7 +179,6 @@ class CharacterInstaller(private val context: Context) {
             return false
         }
 
-        // パストラバーサルチェックはインスタンスメソッドを使用
         if (!validator.isWithinDirectorySafe(charDir, installedCharDir)) {
             Log.e(TAG, "Uninstall path traversal attempt detected.")
             return false
@@ -188,25 +187,20 @@ class CharacterInstaller(private val context: Context) {
         return try {
             charDir.deleteRecursively()
         } catch (e: Exception) {
-            Log.e(TAG, "アンインストール失敗: $charId", e)
+            Log.e(TAG, "Uninstall failed: $charId", e)
             false
         }
     }
 
-    /**
-     * キャラクターをZIPにエクスポート
-     */
     fun exportToZip(charId: String, outputUri: Uri): Result<File> {
         return try {
             val validator = ZipSecurityValidator(installedCharDir)
 
-            // 静的メソッドとしてクラス名で呼び出す
             if (!ZipSecurityValidator.isValidCharacterId(charId)) {
                 return Result.failure(SecurityException("INVALID_CHARACTER_ID_FORMAT"))
             }
 
             val charDir = File(installedCharDir, charId)
-            // パストラバーサルチェックはインスタンスメソッドを使用
             if (!charDir.exists() || !validator.isWithinDirectorySafe(charDir, installedCharDir)) {
                 return Result.failure(Exception("CHARACTER_NOT_FOUND"))
             }
@@ -217,16 +211,13 @@ class CharacterInstaller(private val context: Context) {
             } ?: Result.failure(Exception("OUTPUT_STREAM_FAILED"))
         } catch (e: SecurityException) {
             Log.e(TAG, "Export security violation", e)
-            Result.failure(Exception("エクスポート中にセキュリティ検証に失敗しました。"))
+            Result.failure(CharacterInstallException.fromSecurityException(e))
         } catch (e: Exception) {
-            Log.e(TAG, "エクスポート失敗", e)
+            Log.e(TAG, "Export failed", e)
             Result.failure(e)
         }
     }
 
-    /**
-     * ディレクトリをZIPに圧縮 (Validatorによる制限チェックを追加)
-     */
     private fun zipDirectory(dir: File, output: java.io.OutputStream, validator: ZipSecurityValidator) {
         var entryCount = 0
         ZipOutputStream(output.buffered()).use { zip ->
@@ -240,7 +231,6 @@ class CharacterInstaller(private val context: Context) {
                     }
 
                     val relativePath = file.relativeTo(dir).path
-
                     if (relativePath.contains("..") || relativePath.contains('\\')) {
                         throw SecurityException("EXPORT_PATH_INVALID")
                     }
@@ -254,31 +244,10 @@ class CharacterInstaller(private val context: Context) {
         }
     }
 
-    /**
-     * インストール済みキャラクターのメタデータ一覧を取得
-     */
     fun getInstalledMetadata(): List<CharacterMetadata> {
-        val validator = ZipSecurityValidator(installedCharDir)
-
-        return installedCharDir.listFiles()
-            ?.filter { it.isDirectory }
-            ?.mapNotNull { charDir ->
-                try {
-                    // パストラバーサルチェックはインスタンスメソッドを使用
-                    if (!validator.isWithinDirectorySafe(charDir, installedCharDir)) {
-                        Log.w(TAG, "Potential path traversal detected in installed directory listing.")
-                        return@mapNotNull null
-                    }
-                    loadMetadata(File(charDir, "character.json"))
-                } catch (e: Exception) {
-                    null
-                }
-            } ?: emptyList()
+        return CharacterRegistry.getInstalledMetadata(context)
     }
 }
-
-private fun String.sanitizeLogField(): String =
-    this.replace(Regex("[\n\r\t\u0000-\u001F]"), " ").trim()
 
 data class CharacterInstallInfo(
     val id: String,
@@ -289,10 +258,33 @@ data class CharacterInstallInfo(
     val installPath: String
 )
 
-data class CharacterMetadata(
-    val id: String,
-    val name: String,
-    val version: String,
-    val author: String,
-    val description: String
-)
+class CharacterInstallException(
+    val code: String,
+    message: String,
+    val detail: String? = null,
+    cause: Throwable? = null
+) : Exception(if (detail.isNullOrBlank()) message else "$message ($detail)", cause) {
+
+    companion object {
+        fun fromSecurityException(e: SecurityException): CharacterInstallException {
+            val code = e.message ?: "SECURITY_VALIDATION_FAILED"
+            val message = when {
+                code == "ID_ALREADY_EXISTS" -> "同じIDのキャラクターがすでにインストールされています。"
+                code == "INVALID_URI_SCHEME" -> "このファイルのURI形式は使用できません。"
+                code == "MISSING_METADATA" || code.startsWith("MISSING_REQUIRED_FILE") -> "必要な character.json が見つかりません。"
+                code == "INVALID_CHARACTER_ID_FORMAT" || code == "INVALID_ID_FORMAT" -> "キャラクターIDの形式が不正です。"
+                code == ZipSecurityValidator.ERR_JSON_INVALID -> "character.json のJSON形式が不正です。"
+                code == ZipSecurityValidator.ERR_IMAGES_NOT_OBJECT -> "character.json の images はオブジェクトである必要があります。"
+                code == ZipSecurityValidator.ERR_SPEECH_RULES_NOT_ARRAY -> "character.json の speechRules は配列である必要があります。"
+                code == ZipSecurityValidator.ERR_SPEECH_RULE_NO_FILE -> "speechRules に file または files が必要です。"
+                code.startsWith("JSON_REFERENCED_FILE_MISSING") -> "character.json が参照しているファイルが見つかりません。"
+                code == ZipSecurityValidator.ERR_JSON_TRAVERSAL -> "character.json の参照パスが不正です。"
+                code == ZipSecurityValidator.ERR_EXTENSION -> "ZIP内に許可されていない拡張子のファイルがあります。"
+                code == ZipSecurityValidator.ERR_PATH_TRAVERSAL -> "ZIP内に危険なパスが含まれています。"
+                else -> "キャラクターZIPの検証に失敗しました。"
+            }
+
+            return CharacterInstallException(code, message, e.message, e)
+        }
+    }
+}
