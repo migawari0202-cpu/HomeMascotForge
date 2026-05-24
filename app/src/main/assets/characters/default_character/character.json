@@ -1,163 +1,106 @@
 {
-    "id": "default",
-    "name": "みなと",
-    "version": "1.1.0",
-    "author": "MascotForge",
-    "description": "デフォルトキャラクターのみなとです。時間帯や天気でおしゃべりが変わります。",
-    "imageCredit": "キャラクター画像: 幽霊 (フリーシェル) — catbottle 倉庫 https://catbottle.sakura.ne.jp/souko_fs.html",
-    "images": {
-        "character": "character.webp",
-        "happy": "happy.webp",
-        "sad": "sad.webp",
-        "angry": "angry.webp",
-        "shy": "shy.webp",
-        "sleepy": "sleepy.webp",
-        "worried": "worried.webp",
-        "excited": "excited.webp"
-    },
-    "customVariables": {
-        "favorability": {
-            "type": "number",
-            "initial": 50,
-            "min": 0,
-            "max": 100,
-            "onChange": [
-                {
-                    "trigger": "onTouch",
-                    "action": "increment",
-                    "value": 1
-                }
-            ]
-        },
-        "isBeingPetted": {
-            "type": "boolean",
-            "initial": false,
-            "onChange": [
-                {
-                    "trigger": "onTouch",
-                    "action": "SET",
-                    "value": true
-                }
-            ]
+  "id": "default",
+  "name": "みなと",
+  "version": "1.1.0",
+  "author": "MascotForge",
+  "description": "デフォルトキャラクターのみなとです。時間帯でおしゃべりが変わります。",
+  "images": {
+    "character": "character.png",
+    "happy": "happy.png",
+    "sad": "sad.png",
+    "angry": "angry.png",
+    "shy": "shy.png",
+    "sleepy": "sleepy.png",
+    "worried": "worried.png",
+    "excited": "excited.png"
+  },
+  "customVariables": {
+    "favorability": {
+      "type": "number",
+      "initial": 50,
+      "min": 0,
+      "max": 100,
+      "onChange": [
+        {
+          "trigger": "onTouch",
+          "action": "increment",
+          "value": 1
         }
+      ]
     },
-    "emotions": {
-        "rules": [
-            {
-                "if": "isLowBattery",
-                "emotion": "worried"
-            },
-            {
-                "if": "hour >= 23 || hour < 6",
-                "emotion": "sleepy"
-            },
-            {
-                "default": "normal"
-            }
-        ]
-    },
-    "speechRules": [
+    "isBeingPetted": {
+      "type": "boolean",
+      "initial": false,
+      "onChange": [
         {
-            "file": "speeches/petting.txt",
-            "conditions": {
-                "isBeingPetted": "true",
-                "consecutiveTouchCount": ">=2"
-            },
-            "priority": 100
-        },
-        {
-            "file": "speeches/thunder.txt",
-            "conditions": {
-                "weatherCode": "雷雨"
-            },
-            "priority": 30
-        },
-        {
-            "file": "speeches/storm.txt",
-            "conditions": {
-                "weatherCode": "嵐"
-            },
-            "priority": 30
-        },
-        {
-            "file": "speeches/snow.txt",
-            "conditions": {
-                "weatherCode": "雪"
-            },
-            "priority": 25
-        },
-        {
-            "file": "speeches/rain.txt",
-            "conditions": {
-                "weatherCode": "雨"
-            },
-            "priority": 20
-        },
-        {
-            "file": "speeches/drizzle.txt",
-            "conditions": {
-                "weatherCode": "小雨"
-            },
-            "priority": 20
-        },
-        {
-            "file": "speeches/clear.txt",
-            "conditions": {
-                "weatherCode": "晴れ"
-            },
-            "priority": 15
-        },
-        {
-            "file": "speeches/cloudy.txt",
-            "conditions": {
-                "weatherCode": "曇り"
-            },
-            "priority": 15
-        },
-        {
-            "file": "speeches/fog.txt",
-            "conditions": {
-                "weatherCode": "霧"
-            },
-            "priority": 15
-        },
-        {
-            "file": "speeches/midnight.txt",
-            "conditions": {
-                "timeSlot": "midnight"
-            },
-            "priority": 10
-        },
-        {
-            "file": "speeches/morning.txt",
-            "conditions": {
-                "timeSlot": "morning"
-            },
-            "priority": 10
-        },
-        {
-            "file": "speeches/afternoon.txt",
-            "conditions": {
-                "timeSlot": "afternoon"
-            },
-            "priority": 10
-        },
-        {
-            "file": "speeches/evening.txt",
-            "conditions": {
-                "timeSlot": "evening"
-            },
-            "priority": 10
-        },
-        {
-            "file": "speeches/night.txt",
-            "conditions": {
-                "timeSlot": "night"
-            },
-            "priority": 10
-        },
-        {
-            "file": "speeches/default.txt"
+          "trigger": "onTouch",
+          "action": "SET",
+          "value": true
         }
+      ]
+    }
+  },
+  "emotions": {
+    "rules": [
+      {
+        "if": "isLowBattery",
+        "emotion": "worried"
+      },
+      {
+        "if": "hour >= 23 || hour < 6",
+        "emotion": "sleepy"
+      },
+      {
+        "default": "normal"
+      }
     ]
+  },
+  "speechRules": [
+    {
+      "file": "speeches/petting.txt",
+      "conditions": {
+        "isBeingPetted": "true",
+        "consecutiveTouchCount": ">=2"
+      },
+      "priority": 100
+    },
+    {
+      "file": "speeches/midnight.txt",
+      "conditions": {
+        "timeSlot": "midnight"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/morning.txt",
+      "conditions": {
+        "timeSlot": "morning"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/afternoon.txt",
+      "conditions": {
+        "timeSlot": "afternoon"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/evening.txt",
+      "conditions": {
+        "timeSlot": "evening"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/night.txt",
+      "conditions": {
+        "timeSlot": "night"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/default.txt"
+    }
+  ]
 }

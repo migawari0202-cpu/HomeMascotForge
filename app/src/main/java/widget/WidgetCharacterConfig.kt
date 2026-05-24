@@ -3,12 +3,8 @@ package com.example.mascotforge
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.example.mascotforge.characters.CharacterRegistry
 
-/**
- * ウィジェットごとのキャラクター設定を管理
- *
- * 各ウィジェットが独立したキャラクターを持てるようにする
- */
 class WidgetCharacterConfig(private val context: Context) {
 
     companion object {
@@ -16,69 +12,59 @@ class WidgetCharacterConfig(private val context: Context) {
         private const val PREFS_NAME = "widget_character_config"
         private const val KEY_PREFIX_CHARACTER = "widget_char_"
         private const val KEY_DEFAULT_CHARACTER = "default_character_id"
-
-        // デフォルトキャラID
-        private const val FALLBACK_CHARACTER_ID = "default_character"
+        private const val REMOVED_DEFAULT_CHARACTER_ID = "default"
+        private const val LEGACY_DEFAULT_CHARACTER_ID = "default_character"
+        private const val REMOVED_EVIL_CHARACTER_ID = "evil"
     }
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /**
-     * 特定ウィジェットのキャラクターIDを取得
-     */
     fun getCharacterForWidget(widgetId: Int): String {
         val key = "$KEY_PREFIX_CHARACTER$widgetId"
         val characterId = prefs.getString(key, null)
 
         if (characterId != null) {
-            Log.d(TAG, "Widget #$widgetId uses: $characterId")
-            return characterId
+            val normalized = normalizeCharacterId(characterId)
+            if (normalized != characterId) {
+                setCharacterForWidget(widgetId, normalized)
+            }
+            Log.d(TAG, "Widget #$widgetId uses: $normalized")
+            return normalized
         }
 
-        // ウィジェット固有の設定がない場合、デフォルトを使用
         val defaultCharId = getDefaultCharacter()
         Log.d(TAG, "Widget #$widgetId uses default: $defaultCharId")
         return defaultCharId
     }
 
-    /**
-     * 特定ウィジェットにキャラクターを設定
-     */
     fun setCharacterForWidget(widgetId: Int, characterId: String) {
         val key = "$KEY_PREFIX_CHARACTER$widgetId"
         prefs.edit().putString(key, characterId).apply()
-        Log.i(TAG, "Widget #$widgetId → $characterId")
+        Log.i(TAG, "Widget #$widgetId -> $characterId")
     }
 
-    /**
-     * デフォルトキャラクターIDを取得
-     */
     fun getDefaultCharacter(): String {
-        return prefs.getString(KEY_DEFAULT_CHARACTER, FALLBACK_CHARACTER_ID)
-            ?: FALLBACK_CHARACTER_ID
+        val fallbackId = CharacterRegistry.getDefaultCharacterId(context)
+        val characterId = prefs.getString(KEY_DEFAULT_CHARACTER, fallbackId) ?: fallbackId
+        val normalized = normalizeCharacterId(characterId)
+        if (normalized != characterId) {
+            setDefaultCharacter(normalized)
+        }
+        return normalized
     }
 
-    /**
-     * デフォルトキャラクターIDを設定
-     */
     fun setDefaultCharacter(characterId: String) {
         prefs.edit().putString(KEY_DEFAULT_CHARACTER, characterId).apply()
-        Log.i(TAG, "Default character → $characterId")
+        Log.i(TAG, "Default character -> $characterId")
     }
 
-    /**
-     * ウィジェット削除時に設定をクリア
-     */
     fun clearWidgetConfig(widgetId: Int) {
         val key = "$KEY_PREFIX_CHARACTER$widgetId"
         prefs.edit().remove(key).apply()
         Log.i(TAG, "Widget #$widgetId config cleared")
     }
 
-    /**
-     * 全ウィジェットの設定を取得（デバッグ用）
-     */
     fun getAllWidgetConfigs(): Map<Int, String> {
         val configs = mutableMapOf<Int, String>()
 
@@ -86,7 +72,7 @@ class WidgetCharacterConfig(private val context: Context) {
             if (key.startsWith(KEY_PREFIX_CHARACTER) && value is String) {
                 val widgetId = key.removePrefix(KEY_PREFIX_CHARACTER).toIntOrNull()
                 if (widgetId != null) {
-                    configs[widgetId] = value
+                    configs[widgetId] = normalizeCharacterId(value)
                 }
             }
         }
@@ -94,13 +80,22 @@ class WidgetCharacterConfig(private val context: Context) {
         return configs
     }
 
-    /**
-     * 指定されたキャラクターを使用しているウィジェット一覧
-     */
     fun getWidgetsUsingCharacter(characterId: String): List<Int> {
         return getAllWidgetConfigs()
             .filterValues { it == characterId }
             .keys
             .toList()
+    }
+
+    private fun normalizeCharacterId(characterId: String): String {
+        return if (
+            characterId == LEGACY_DEFAULT_CHARACTER_ID ||
+            characterId == REMOVED_DEFAULT_CHARACTER_ID ||
+            characterId == REMOVED_EVIL_CHARACTER_ID
+        ) {
+            CharacterRegistry.getDefaultCharacterId(context)
+        } else {
+            characterId
+        }
     }
 }
