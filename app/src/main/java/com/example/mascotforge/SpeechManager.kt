@@ -23,7 +23,6 @@ class SafeCharacterLoader(private val context: Context) {
 
     companion object {
         private const val TAG = "SafeCharacterLoader"
-        private const val MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
         private const val MAX_LINES = 10000
         private const val CACHE_DURATION = 1 * 60 * 1000L // 1分
     }
