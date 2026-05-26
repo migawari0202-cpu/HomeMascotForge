@@ -2,6 +2,7 @@ package com.example.mascotforge.ui
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mascotforge.CharacterPreferences
@@ -45,7 +46,8 @@ class CharacterInstallViewModel : ViewModel() {
                     version = it.metadata.version,
                     author = it.metadata.author,
                     description = it.metadata.description,
-                    isBuiltIn = it.isBuiltIn
+                    isBuiltIn = it.isBuiltIn,
+                    thumbnail = it.factory.getThumbnail(appContext)?.toBitmap()
                 )
             },
             selectedCharId = CharacterPreferences.getSelectedCharacterId(appContext),
