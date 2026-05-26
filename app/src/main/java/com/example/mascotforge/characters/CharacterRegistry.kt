@@ -185,33 +185,43 @@ class InstalledCharacterFactory(
 
     override fun getThumbnail(context: Context): Drawable? {
         return try {
-            val imageName = metadata.imageMapping.values.firstOrNull()
+            val candidates = listOfNotNull(
+                metadata.imageMapping["thumbnail"],
+                "thumbnail.png",
+                metadata.imageMapping["normal"],
+                metadata.imageMapping["character"],
+                metadata.imageMapping.values.firstOrNull(),
+                "character.png",
+                "character.webp"
+            ).distinct()
 
             val imageFile = when (source) {
                 is com.example.mascotforge.character.CharacterSource.Assets -> {
-                    return try {
-                        val assetPath = "${source.basePath}/images/${imageName ?: "character.webp"}"
-                        context.assets.open(assetPath).use { input ->
-                            android.graphics.BitmapFactory.decodeStream(input)?.let {
-                                android.graphics.drawable.BitmapDrawable(context.resources, it)
+                    for (imageName in candidates) {
+                        try {
+                            val assetPath = "${source.basePath}/images/$imageName"
+                            context.assets.open(assetPath).use { input ->
+                                android.graphics.BitmapFactory.decodeStream(input)?.let {
+                                    return android.graphics.drawable.BitmapDrawable(context.resources, it)
+                                }
                             }
+                        } catch (_: Exception) {
+                            // Try the next thumbnail candidate.
                         }
-                    } catch (e: Exception) {
-                        Log.w("InstalledFactory", "Failed to load thumbnail from assets: ${metadata.id}", e)
-                        null
                     }
+
+                    Log.w("InstalledFactory", "Failed to load thumbnail from assets: ${metadata.id}")
+                    return null
                 }
 
                 is com.example.mascotforge.character.CharacterSource.InstalledFiles -> {
-                    if (imageName != null) {
-                        File(context.filesDir, "${source.basePath}/images/$imageName")
-                    } else {
-                        File(context.filesDir, "${source.basePath}/images/character.png")
-                    }
+                    candidates
+                        .map { File(context.filesDir, "${source.basePath}/images/$it") }
+                        .firstOrNull { it.exists() }
                 }
             }
 
-            if (imageFile is File && imageFile.exists()) {
+            if (imageFile != null && imageFile.exists()) {
                 return android.graphics.drawable.Drawable.createFromPath(imageFile.absolutePath)
             }
 

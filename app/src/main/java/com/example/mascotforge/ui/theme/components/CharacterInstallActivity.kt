@@ -1,5 +1,6 @@
 package com.example.mascotforge.ui
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -271,7 +272,8 @@ data class CharacterDisplayData(
     val version: String,
     val author: String,
     val description: String,
-    val isBuiltIn: Boolean
+    val isBuiltIn: Boolean,
+    val thumbnail: Bitmap? = null
 )
 
 data class InstallError(
