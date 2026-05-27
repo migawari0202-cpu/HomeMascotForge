@@ -11,9 +11,9 @@ import com.example.mascotforge.R
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import widget.TimeWidgetProvider
-import widget.database.MemoEntity
-import widget.database.MemoRepository
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.database.MemoEntity
+import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.launch
 
 class MemoInputActivity : AppCompatActivity() {

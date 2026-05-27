@@ -21,8 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.work.*
 import com.example.mascotforge.WeatherUpdateWorker
 import com.example.mascotforge.ui.CharacterInstallActivity
-import widget.TimeWidgetProvider
-import widget.WidgetUpdateScheduler
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.WidgetUpdateScheduler
 import java.util.concurrent.TimeUnit
 
 class Karioki : ComponentActivity() {

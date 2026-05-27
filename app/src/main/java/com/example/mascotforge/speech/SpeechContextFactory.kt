@@ -10,7 +10,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.mascotforge.character.CharacterStateManager
-import widget.cache.UserWeatherCache
+import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
  * SpeechContextを生成するヘルパー
@@ -95,8 +95,8 @@ object SpeechContextFactory {
             Log.d(TAG, "天気をキャッシュから取得: $weatherEmoji $weatherCode ${temperature}℃")
         } else {
             // キャッシュがない場合（初回起動 or 天気取得失敗）
-            weatherEmoji = if (hour >= 19) "🌙" else "☀️"
-            weatherCode = "晴れ"
+            weatherEmoji = "?"
+            weatherCode = "不明"
             temperature = 20
             Log.d(TAG, "天気キャッシュなし、デフォルト値を使用")
         }
