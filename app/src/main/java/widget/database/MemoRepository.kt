@@ -1,4 +1,4 @@
-package widget.database
+package com.example.mascotforge.widget.database
 
 import android.content.Context
 import kotlinx.coroutines.flow.Flow

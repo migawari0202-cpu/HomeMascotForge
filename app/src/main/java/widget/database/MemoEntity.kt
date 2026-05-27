@@ -1,4 +1,4 @@
-package widget.database
+package com.example.mascotforge.widget.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -19,8 +19,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.mascotforge.characters.CharacterRegistry
 import kotlinx.coroutines.launch
-import widget.TimeWidgetProvider
-import widget.WidgetUpdateCoordinator
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.WidgetUpdateCoordinator
 
 class CharacterSelectorActivity : AppCompatActivity() {
 

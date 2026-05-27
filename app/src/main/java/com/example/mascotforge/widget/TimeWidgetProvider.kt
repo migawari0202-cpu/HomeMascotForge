@@ -1,4 +1,4 @@
-package widget
+package com.example.mascotforge.widget
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
