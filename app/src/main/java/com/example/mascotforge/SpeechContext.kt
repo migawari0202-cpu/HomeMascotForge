@@ -342,7 +342,18 @@ data class SpeechContext(
 
 
             // 天気
-            "weatherCode" -> weatherCode == value
+            "weatherCode" -> {
+                // 英語・日本語両対応
+                val japaneseMap = mapOf(
+                    "sunny" to "晴れ",
+                    "rain" to "雨",
+                    "cloudy" to "曇り",
+                    "snow" to "雪",
+                    "wind" to "強風",
+                    "hail" to "あられ"
+                )
+                weatherCode == value || japaneseMap[value] == weatherCode
+            }
             "weatherEmoji" -> weatherEmoji == value
             "temperature" -> checkNumberCondition(temperature, value)
             "temperatureFeeling" -> temperatureFeeling == value

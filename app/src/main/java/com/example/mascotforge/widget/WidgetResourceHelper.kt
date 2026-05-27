@@ -3,7 +3,7 @@ package com.example.mascotforge.widget
 import android.content.Context
 import android.widget.RemoteViews
 import com.example.mascotforge.R
-import widget.WidgetConstants
+import com.example.mascotforge.widget.WidgetConstants
 
     /**
      * 動的に drawable を名前で取得

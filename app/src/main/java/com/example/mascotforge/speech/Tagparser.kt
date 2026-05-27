@@ -28,7 +28,7 @@ class TagParser(
 
         // 正規表現パターン
         private val EMOTION_REGEX = "\\[(?:emotion|e):([a-zA-Z0-9_]{1,30})\\]".toRegex()
-        private val VAR_REGEX = "\\[v:\\s*([^\\]]+)\\]".toRegex()
+        private val VAR_REGEX = "\\[(?:v|var):\\s*([^\\]]+)\\]".toRegex()
         private val LITERAL_NEWLINE_REGEX = "\\\\n".toRegex()
     }
 

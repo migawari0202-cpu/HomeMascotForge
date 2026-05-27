@@ -21,9 +21,9 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
-import widget.TimeWidgetProvider
-import widget.database.MemoEntity
-import widget.database.MemoRepository
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.database.MemoEntity
+import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce

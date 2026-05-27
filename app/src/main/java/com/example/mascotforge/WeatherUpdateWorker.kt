@@ -25,9 +25,9 @@ import com.example.mascotforge.weather.WeatherRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import widget.TimeWidgetProvider
-import widget.cache.UserWeatherCache
-import widget.cache.WeatherInfo
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.cache.UserWeatherCache
+import com.example.mascotforge.widget.cache.WeatherInfo
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 

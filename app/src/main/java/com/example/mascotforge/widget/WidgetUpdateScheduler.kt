@@ -1,4 +1,4 @@
-package widget
+package com.example.mascotforge.widget
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.work.ExistingWorkPolicy
 import com.example.mascotforge.WeatherUpdateWorker
-import widget.TimeWidgetProvider
+import com.example.mascotforge.widget.TimeWidgetProvider
 import android.os.Build
 import android.util.Log
 import java.util.*

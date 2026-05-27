@@ -1,4 +1,4 @@
-package widget
+package com.example.mascotforge.widget
 
 /**
  * ウィジェット関連の定数を一元管理

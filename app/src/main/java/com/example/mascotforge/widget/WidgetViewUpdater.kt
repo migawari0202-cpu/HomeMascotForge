@@ -1,4 +1,4 @@
-package widget
+package com.example.mascotforge.widget
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -7,8 +7,8 @@ import android.util.TypedValue
 import android.widget.RemoteViews
 import com.example.mascotforge.R
 import java.util.*
-import widget.cache.ClockCache
-import widget.cache.UserWeatherCache
+import com.example.mascotforge.widget.cache.ClockCache
+import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
  * WidgetViewUpdater - レイアウトタイプ対応版（修正版）

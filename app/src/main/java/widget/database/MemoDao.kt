@@ -1,4 +1,4 @@
-package widget.database
+package com.example.mascotforge.widget.database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow

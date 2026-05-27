@@ -1,4 +1,4 @@
-package widget
+package com.example.mascotforge.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -10,10 +10,10 @@ import android.widget.RemoteViews
 import com.example.mascotforge.R
 import com.example.mascotforge.CharacterManager
 import com.example.mascotforge.character.SafeCharacterLoader
-import widget.cache.ClockCache
-import widget.cache.UserWeatherCache
-import widget.cache.BatteryManager as WidgetBatteryManager
-import widget.database.MemoRepository
+import com.example.mascotforge.widget.cache.ClockCache
+import com.example.mascotforge.widget.cache.UserWeatherCache
+import com.example.mascotforge.widget.cache.BatteryManager as WidgetBatteryManager
+import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.flow.first
 import java.util.*
 

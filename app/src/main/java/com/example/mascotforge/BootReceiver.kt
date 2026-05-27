@@ -15,8 +15,8 @@ import com.example.mascotforge.WeatherUpdateWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import widget.TimeWidgetProvider
-import widget.cache.UserWeatherCache
+import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.cache.UserWeatherCache
 
 class BootReceiver : BroadcastReceiver() {
 
