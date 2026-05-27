@@ -1,10 +1,10 @@
-package widget
+package com.example.mascotforge.widget
 
 import android.content.Context
 import android.util.Log
-import widget.cache.BatteryManager
-import widget.cache.ClockCache
-import widget.cache.MemoCache
+import com.example.mascotforge.widget.cache.BatteryManager
+import com.example.mascotforge.widget.cache.ClockCache
+import com.example.mascotforge.widget.cache.MemoCache
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
