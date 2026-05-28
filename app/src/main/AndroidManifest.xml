@@ -81,7 +81,7 @@
 
         <!-- メインウィジェットプロバイダー -->
         <receiver
-            android:name="widget.TimeWidgetProvider"
+            android:name="com.example.mascotforge.widget.TimeWidgetProvider"
             android:exported="true"
             android:enabled="true">
             <intent-filter>
@@ -96,7 +96,7 @@
         </receiver>
 
         <receiver
-            android:name="widget.ClockUpdateReceiver"
+            android:name="com.example.mascotforge.widget.ClockUpdateReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.homemascot.UPDATE_CLOCK" />
@@ -104,7 +104,7 @@
         </receiver>
 
         <receiver
-            android:name="widget.WeatherUpdateReceiver"
+            android:name="com.example.mascotforge.widget.WeatherUpdateReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.homemascot.UPDATE_WEATHER" />
@@ -112,7 +112,7 @@
         </receiver>
 
         <receiver
-            android:name="widget.SpeechUpdateReceiver"
+            android:name="com.example.mascotforge.widget.SpeechUpdateReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.homemascot.UPDATE_SPEECH" />

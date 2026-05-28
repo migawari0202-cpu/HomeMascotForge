@@ -23,6 +23,7 @@ import com.example.mascotforge.WeatherUpdateWorker
 import com.example.mascotforge.ui.CharacterInstallActivity
 import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.WidgetUpdateScheduler
+import com.example.mascotforge.widget.cache.UserWeatherCache
 import java.util.concurrent.TimeUnit
 
 class Karioki : ComponentActivity() {
@@ -90,7 +91,7 @@ class Karioki : ComponentActivity() {
         // 通常起動は CharacterInstallActivity に遷移
         if (!isLaunchedFromWidget) {
             // キャッシュが切れていたら即時取得をエンキュー
-            val weatherCache = widget.cache.UserWeatherCache(applicationContext)
+            val weatherCache = UserWeatherCache(applicationContext)
             if (weatherCache.getCurrentWeather() == null) {
                 Log.d(TAG, "天気キャッシュなし → 即時取得をエンキュー")
                 val immediateWork = androidx.work.OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
