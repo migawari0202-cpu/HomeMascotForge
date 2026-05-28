@@ -12,7 +12,6 @@
     <!-- =================================== -->
     <string name="memo_input_title">メモを追加</string>
     <string name="memo_hint">ここにメモを入力してください...</string>
-    <string name="memo_limit_notice">※ 200文字以内で入力してください</string>
     <string name="button_save">保存</string>
     <string name="button_cancel">キャンセル</string>
     <string name="memo_saved">メモを保存しました</string>
@@ -31,29 +30,6 @@
     <string name="cd_game_button">ゲームボタン</string>
     <string name="cd_memo_button">メモボタン</string>
     <string name="widget_description">時計、天気、キャラクターのセリフを表示</string>
-
-    <!-- =================================== -->
-    <!-- セリフ関連 -->
-    <!-- =================================== -->
-    <string name="memo_text_ellipsize">end</string>
-    <string name="speech_loading">セリフを考え中…</string>
-    <string name="speech_error">セリフがうまく出てこないや…</string>
-    <string name="speech_fallback">（セリフが準備中です）</string>
-    <string name="widget_speech_placeholder">こんにちは！</string>
-    <string name="mascot_speech_cd">私がしゃべるところだよ</string>
-    <string name="mascot_default_text">おはよう〜</string>
-    <string name="mascot_supplement_default">補足テスト</string>
-
-    <!-- =================================== -->
-    <!-- マスコットコーパス -->
-    <!-- =================================== -->
-    <string-array name="mascot_corpus">
-        <item>おはよう！今日もがんばろうね。</item>
-        <item>コーヒー飲んだ？一緒に一杯どう？</item>
-        <item>忘れ物はないかな〜チェックしよう！</item>
-        <item>天気がよければ散歩しない？</item>
-        <item>メモが増えたよ。見てみる？</item>
-    </string-array>
 
     <!-- =================================== -->
     <!-- 天気関連 -->
