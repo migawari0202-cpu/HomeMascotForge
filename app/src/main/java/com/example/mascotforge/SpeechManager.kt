@@ -21,49 +21,23 @@ import java.io.InputStreamReader
  */
 class SafeCharacterLoader(private val context: Context) {
 
-    companion object {
+        companion object {
         private const val TAG = "SafeCharacterLoader"
         private const val MAX_LINES = 10000
-        private const val CACHE_DURATION = 1 * 60 * 1000L // 1分
     }
 
-    @Volatile
-    private var lastContextTime = 0L
-    @Volatile
-    private var cachedContext: SpeechContext? = null
-    @Volatile
-    private var cachedContextCharacterId: String? = null
-
     /**
-     * 現在のSpeechContextを取得
+     * 現在のSpeechContextを取得（キャッシュなし・毎回最新の状態を生成）
      */
     fun getCurrentContext(characterId: String = "default"): SpeechContext {
-        val now = System.currentTimeMillis()
-
-        if (now - lastContextTime < CACHE_DURATION &&
-            cachedContext != null &&
-            cachedContextCharacterId == characterId
-        ) {
-            return cachedContext!!
-        }
-
-        val speechContext = SpeechContextFactory.create(context, characterId)
-
-        cachedContext = speechContext
-        cachedContextCharacterId = characterId
-        lastContextTime = now
-
-        return speechContext
+        return SpeechContextFactory.create(context, characterId)
     }
 
     /**
-     * キャッシュクリア
+     * キャッシュクリア（キャッシュ廃止に伴い空実装）
      */
     fun clearCache() {
-        cachedContext = null
-        cachedContextCharacterId = null
-        lastContextTime = 0L
-        Log.d(TAG, "Cache cleared")
+        Log.d(TAG, "Cache cleared (no-op)") 
     }
 
     /**

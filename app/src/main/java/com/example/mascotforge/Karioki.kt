@@ -42,8 +42,15 @@ class Karioki : ComponentActivity() {
         private const val KEY_FIRST_LAUNCH = "first_launch"
     }
 
+    private enum class CompletionTarget {
+        FINISH,
+        LAUNCH_CHARACTER_INSTALL
+    }
+
     private lateinit var prefs: SharedPreferences
     private var exactAlarmDialog: AlertDialog? = null
+    private var initializationCompleted = false
+    private var completionTarget: CompletionTarget = CompletionTarget.FINISH
 
     private val requestMultiplePermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -53,8 +60,7 @@ class Karioki : ComponentActivity() {
 
         Log.d(TAG, "権限結果: FINE=$fineGranted, COARSE=$coarseGranted")
         markPermissionsRequested()
-        scheduleAllUpdates()
-        onInitializationCompleted()
+        scheduleWeatherAndClockUpdates()
     }
 
     private val exactAlarmSettingsLauncher = registerForActivityResult(
@@ -62,7 +68,7 @@ class Karioki : ComponentActivity() {
     ) {
         markExactAlarmRequested()
         executeClockScheduling()
-        onInitializationCompleted()
+        completeInitialization()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +83,7 @@ class Karioki : ComponentActivity() {
             markFirstLaunchCompleted()
             Log.d(TAG, "初回起動: 初期化処理開始")
 
+            completionTarget = CompletionTarget.FINISH
             setupInitializationLayout()
             checkAndRequestPermissions()
             return
@@ -88,11 +95,11 @@ class Karioki : ComponentActivity() {
             return
         }
 
+        completionTarget = CompletionTarget.FINISH
         setupInitializationLayout()
         Log.d(TAG, "ウィジェット起動: 初期化処理開始")
 
-        scheduleAllUpdates()
-        onInitializationCompleted()
+        checkAndRequestPermissions()
     }
 
     override fun onDestroy() {
@@ -141,8 +148,7 @@ class Karioki : ComponentActivity() {
         if (fineGranted || coarseGranted) {
             Log.d(TAG, "位置情報権限は既に許可されています")
             markPermissionsRequested()
-            scheduleAllUpdates()
-            onInitializationCompleted()
+            scheduleWeatherAndClockUpdates()
         } else {
             showLocationPermissionDialog()
         }
@@ -162,14 +168,18 @@ class Karioki : ComponentActivity() {
             }
             .setNegativeButton("許可しない") { _, _ ->
                 markPermissionsRequested()
-                scheduleAllUpdates()
-                onInitializationCompleted()
+                scheduleWeatherAndClockUpdates()
             }
             .setCancelable(false)
             .show()
     }
 
-    private fun scheduleClockUpdatesAndFinish() {
+    private fun scheduleWeatherAndClockUpdates() {
+        scheduleWeatherUpdates()
+        requestClockScheduling()
+    }
+
+    private fun requestClockScheduling() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val exactRequested = prefs.getBoolean(KEY_EXACT_ALARM_REQUESTED, false)
@@ -181,7 +191,7 @@ class Karioki : ComponentActivity() {
         }
 
         executeClockScheduling()
-        onInitializationCompleted()
+        completeInitialization()
     }
 
     private fun showExactAlarmDialog() {
@@ -190,10 +200,16 @@ class Karioki : ComponentActivity() {
         exactAlarmDialog = AlertDialog.Builder(this)
             .setTitle("時計の正確な更新について")
             .setMessage("正確な時計更新には「アラームとリマインダー」の権限が必要です。")
-            .setPositiveButton("設定を開く") { _, _ -> openExactAlarmSettings() }
-            .setNegativeButton("スキップ") { _, _ -> continueWithoutExactAlarm() }
+            .setPositiveButton("設定を開く") { _, _ ->
+                openExactAlarmSettings()
+            }
+            .setNegativeButton("スキップ") { _, _ ->
+                continueWithoutExactAlarm()
+            }
             .setCancelable(true)
-            .setOnCancelListener { continueWithoutExactAlarm() }
+            .setOnCancelListener {
+                continueWithoutExactAlarm()
+            }
             .create()
 
         exactAlarmDialog?.show()
@@ -206,6 +222,8 @@ class Karioki : ComponentActivity() {
                     data = Uri.parse("package:$packageName")
                 }
                 exactAlarmSettingsLauncher.launch(intent)
+            } else {
+                continueWithoutExactAlarm()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exact Alarm 設定画面を開けませんでした", e)
@@ -216,7 +234,7 @@ class Karioki : ComponentActivity() {
     private fun continueWithoutExactAlarm() {
         markExactAlarmRequested()
         executeClockScheduling()
-        onInitializationCompleted()
+        completeInitialization()
     }
 
     private fun executeClockScheduling() {
@@ -264,28 +282,16 @@ class Karioki : ComponentActivity() {
         }
     }
 
-    private fun scheduleAllUpdates() {
-        scheduleWeatherUpdates()
+    private fun completeInitialization() {
+        if (initializationCompleted || isFinishing || isDestroyed) return
 
-        if (!prefs.getBoolean(KEY_CLOCK_SCHEDULED, false)) {
-            scheduleClockUpdatesAndFinish()
+        initializationCompleted = true
+        Log.d(TAG, "初期化処理完了")
+
+        when (completionTarget) {
+            CompletionTarget.FINISH -> finish()
+            CompletionTarget.LAUNCH_CHARACTER_INSTALL -> launchCharacterInstall()
         }
-    }
-
-    private fun onInitializationCompleted() {
-        if (isFinishing || isDestroyed) return
-
-        Log.d(TAG, "初期化処理完了: アクティビティを終了します")
-
-        val launchedFromWidget = intent?.action == "FROM_WIDGET"
-        val firstLaunchCompleted = !prefs.getBoolean(KEY_FIRST_LAUNCH, false)
-
-        if (!launchedFromWidget && firstLaunchCompleted) {
-            launchCharacterInstall()
-            return
-        }
-
-        finish()
     }
 
     private fun enqueueWeatherRefreshIfNeeded() {
