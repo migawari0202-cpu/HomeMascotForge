@@ -12,7 +12,6 @@ import com.example.mascotforge.CharacterManager
 import com.example.mascotforge.character.SafeCharacterLoader
 import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.UserWeatherCache
-import com.example.mascotforge.widget.cache.BatteryManager as WidgetBatteryManager
 import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.flow.first
 import java.util.*
@@ -30,7 +29,7 @@ class WidgetUpdateCoordinator(private val context: Context) {
     private val weatherCache = UserWeatherCache(context)
     private val memoRepository = MemoRepository(context)
     private val viewUpdater = WidgetViewUpdater(context)
-    private val batteryManager = WidgetBatteryManager()
+    private val batteryManager = WidgetCacheManager.batteryManager
 
     data class WidgetSize(val widthDp: Int, val heightDp: Int)
 
@@ -98,8 +97,8 @@ class WidgetUpdateCoordinator(private val context: Context) {
     }
 
     private fun updateBatterySection(views: RemoteViews, updaterLayoutType: WidgetViewUpdater.LayoutType) {
-        val batteryLevel = batteryManager.getBatteryLevel(context).coerceIn(0, 100)
-        val isCharging = batteryManager.isCharging(context)
+        val batteryLevel = batteryManager.getBatteryLevel().coerceIn(0, 100)
+        val isCharging = batteryManager.isCharging()
         viewUpdater.updateBatteryViews(views, batteryLevel, isCharging, updaterLayoutType)
     }
 

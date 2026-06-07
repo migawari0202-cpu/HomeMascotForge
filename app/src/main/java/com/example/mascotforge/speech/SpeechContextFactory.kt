@@ -1,10 +1,8 @@
 package com.example.mascotforge.speech
 
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.BatteryManager
 import android.util.Log
+import com.example.mascotforge.widget.WidgetCacheManager
 import java.time.LocalDateTime
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -107,9 +105,10 @@ object SpeechContextFactory {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // デバイス状態
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        val batteryInfo = getBatteryInfo(context)
-        val batteryLevel = batteryInfo.level
-        val isCharging = batteryInfo.isCharging
+        WidgetCacheManager.initialize(context)
+        val batteryManager = WidgetCacheManager.batteryManager
+        val batteryLevel = batteryManager.getBatteryLevel()
+        val isCharging = batteryManager.isCharging()
         val isLowBattery = batteryLevel <= 20
         val batteryStatus = when {
             isCharging -> "充電中"
@@ -340,29 +339,6 @@ object SpeechContextFactory {
         else -> null
     }
 
-    /**
-     * バッテリー情報を取得
-     */
-    private fun getBatteryInfo(context: Context): BatteryInfo {
-        val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { ifilter ->
-            context.registerReceiver(null, ifilter)
-        }
-
-        val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
-        val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
-        val status = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-
-        val batteryPct = if (level >= 0 && scale > 0) {
-            (level * 100 / scale)
-        } else {
-            100  // 取得失敗時はデフォルト100%
-        }
-
-        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL
-
-        return BatteryInfo(batteryPct, isCharging)
-    }
 
     /**
      * 連続起動日数を計算
@@ -407,11 +383,5 @@ object SpeechContextFactory {
         }
     }
 
-    /**
-     * バッテリー情報を保持するデータクラス
-     */
-    private data class BatteryInfo(
-        val level: Int,
-        val isCharging: Boolean
-    )
+
 }
