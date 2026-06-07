@@ -1,8 +1,11 @@
 package com.example.mascotforge.widget
 
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import com.example.mascotforge.widget.cache.BatteryManager
+import com.example.mascotforge.widget.cache.BatteryReceiver
 import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.MemoCache
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,6 +20,7 @@ object WidgetCacheManager {
 
     private val initialized = AtomicBoolean(false)
     private var appContext: Context? = null
+    private var batteryReceiver: BatteryReceiver? = null
 
     // 型を明示的に指定
     private val _batteryManager: BatteryManager by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -39,8 +43,24 @@ object WidgetCacheManager {
      */
     fun initialize(context: Context) {
         if (initialized.compareAndSet(false, true)) {
-            appContext = context.applicationContext
+            val appCtx = context.applicationContext
+            appContext = appCtx
             Log.d(TAG, "WidgetCacheManager initialized")
+
+            // BatteryReceiver を動的に登録
+            if (batteryReceiver == null) {
+                batteryReceiver = BatteryReceiver().also { receiver ->
+                    try {
+                        appCtx.registerReceiver(
+                            receiver,
+                            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                        )
+                        Log.d(TAG, "BatteryReceiver registered dynamically")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to register BatteryReceiver", e)
+                    }
+                }
+            }
         } else {
             Log.d(TAG, "Already initialized")
         }
@@ -81,6 +101,16 @@ object WidgetCacheManager {
      */
     fun cleanup() {
         Log.d(TAG, "Full cleanup")
+
+        batteryReceiver?.let { receiver ->
+            try {
+                appContext?.unregisterReceiver(receiver)
+                Log.d(TAG, "BatteryReceiver unregistered")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to unregister BatteryReceiver", e)
+            }
+            batteryReceiver = null
+        }
 
         clearAll()
         appContext = null

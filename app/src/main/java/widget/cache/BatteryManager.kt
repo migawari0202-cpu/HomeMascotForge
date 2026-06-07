@@ -4,92 +4,57 @@ import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager as SystemBatteryManager
 import android.util.Log
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 
 /**
- * バッテリー情報のキャッシュ管理
- * スレッドセーフな実装
+ * バッテリー情報のキャッシュ管理（CQS準拠）
+ * 状態の取得（Query）と状態の更新（Command）を完全に分離
  */
 class BatteryManager {
     // AtomicXXX でスレッドセーフに
-    private val cachedLevel = AtomicInteger(-1)
-    private val lastUpdateTime = AtomicLong(0L)
+    private val cachedLevel = AtomicInteger(DEFAULT_LEVEL)
+    private val cachedIsCharging = AtomicBoolean(false)
 
     companion object {
         private const val TAG = "BatteryManager"
-        private const val CACHE_DURATION_MS = 2 * 60 * 1000L  // 2分（5分は長すぎ）
         private const val DEFAULT_LEVEL = -1
+        const val FALLBACK_BATTERY_LEVEL = 50
     }
 
-    /**
-     * バッテリーレベルを取得（キャッシュ有効）
-     */
-    fun getBatteryLevel(context: Context): Int {
-        val now = System.currentTimeMillis()
-
-        // キャッシュが有効なら返す
-        if (isCacheValid(now)) {
-            return cachedLevel.get()
-        }
-
-        // キャッシュ更新
-        val newLevel = fetchBatteryLevel(context)
-        cachedLevel.set(newLevel)
-        lastUpdateTime.set(now)
-
-        return newLevel
-    }
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Queries (Query: Side-effect free)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     /**
-     * 充電中かどうかを取得
+     * バッテリーレベルを取得（副作用なし）
+     * 未初期化の場合はデフォルト値（FALLBACK_BATTERY_LEVEL）を返す
      */
-    fun isCharging(context: Context): Boolean {
-        return try {
-            val intent = context.registerReceiver(
-                null,
-                android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            )
-            val status = intent?.getIntExtra(SystemBatteryManager.EXTRA_STATUS, -1) ?: -1
-            status == SystemBatteryManager.BATTERY_STATUS_CHARGING
-                    || status == SystemBatteryManager.BATTERY_STATUS_FULL
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to check charging status", e)
-            false
-        }
-    }
-
-    /**
-     * キャッシュが有効かチェック
-     */
-    private fun isCacheValid(now: Long): Boolean {
+    fun getBatteryLevel(): Int {
         val level = cachedLevel.get()
-        val lastUpdate = lastUpdateTime.get()
-        return level != DEFAULT_LEVEL && (now - lastUpdate) < CACHE_DURATION_MS
+        return if (level == DEFAULT_LEVEL) FALLBACK_BATTERY_LEVEL else level
     }
 
     /**
-     * 実際にバッテリーレベルを取得
+     * 充電中かどうかを取得（副作用なし）
      */
-    private fun fetchBatteryLevel(context: Context): Int {
-        return try {
-            // ACTION_BATTERY_CHANGED はエミュレータ・実機ともに信頼性が高い
-            val intent = context.registerReceiver(
-                null,
-                android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            )
-            val level = intent?.getIntExtra(SystemBatteryManager.EXTRA_LEVEL, -1) ?: -1
-            val scale = intent?.getIntExtra(SystemBatteryManager.EXTRA_SCALE, -1) ?: -1
+    fun isCharging(): Boolean {
+        return cachedIsCharging.get()
+    }
 
-            if (level >= 0 && scale > 0) {
-                (level * 100) / scale
-            } else {
-                throw IllegalStateException("Invalid battery data: level=$level, scale=$scale")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch battery level", e)
-            // エラー時は前回の値を返す（50%より親切）
-            cachedLevel.get().takeIf { it != DEFAULT_LEVEL } ?: 50
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Commands (Command: Modifies state, returns void/Unit)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /**
+     * バッテリー情報を更新（状態を変更するが、値は返さない）
+     */
+    fun updateBatteryInfo(level: Int, isCharging: Boolean) {
+        val oldLevel = cachedLevel.getAndSet(level)
+        val oldCharging = cachedIsCharging.getAndSet(isCharging)
+
+        if (oldLevel != level || oldCharging != isCharging) {
+            Log.d(TAG, "Battery status updated: level=$level% (was $oldLevel%), charging=$isCharging (was $oldCharging)")
         }
     }
 
@@ -98,6 +63,7 @@ class BatteryManager {
      */
     fun clearCache() {
         cachedLevel.set(DEFAULT_LEVEL)
-        lastUpdateTime.set(0L)
+        cachedIsCharging.set(false)
+        Log.d(TAG, "Battery cache cleared")
     }
 }
