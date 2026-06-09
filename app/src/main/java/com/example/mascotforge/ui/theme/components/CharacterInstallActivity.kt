@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mascotforge.ui.components.CharacterCard
 import mascotforge.ui.components.InstallProgressDialog
+import kotlinx.coroutines.flow.SharedFlow
 
 class CharacterInstallActivity : AppCompatActivity() {
 
@@ -35,9 +36,6 @@ class CharacterInstallActivity : AppCompatActivity() {
 
         // 権限ハンドラー初期化
         permissionHandler = requestStoragePermission(
-            onGranted = {
-                // 権限許可済み
-            },
             onDenied = {
                 Toast.makeText(this, "ストレージへのアクセスが拒否されました", Toast.LENGTH_SHORT).show()
             }
@@ -56,6 +54,7 @@ class CharacterInstallActivity : AppCompatActivity() {
                 CharacterInstallScreen(
                     onBack = { finish() },
                     onRequestPermission = { permissionHandler.checkAndRequestPermissions() },
+                    permissionEventFlow = permissionHandler.permissionEvent,
                     viewModel = viewModel
                 )
             }
@@ -68,6 +67,7 @@ class CharacterInstallActivity : AppCompatActivity() {
 fun CharacterInstallScreen(
     onBack: () -> Unit,
     onRequestPermission: () -> Unit,
+    permissionEventFlow: SharedFlow<Boolean>,
     viewModel: CharacterInstallViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -79,6 +79,14 @@ fun CharacterInstallScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             viewModel.installCharacter(uri, context)
+        }
+    }
+
+    LaunchedEffect(permissionEventFlow) {
+        permissionEventFlow.collect { granted ->
+            if (granted) {
+                filePickerLauncher.launch("application/zip")
+            }
         }
     }
 
@@ -100,9 +108,7 @@ fun CharacterInstallScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    // 権限チェック後にファイルピッカー起動
                     onRequestPermission()
-                    filePickerLauncher.launch("application/zip")
                 },
                 icon = { Icon(Icons.Default.Add, "追加") },
                 text = { Text("キャラ追加") }

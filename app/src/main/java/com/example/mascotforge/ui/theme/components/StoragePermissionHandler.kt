@@ -11,6 +11,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import android.util.Log
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 /**
  * ストレージ権限ハンドラー
@@ -20,7 +24,6 @@ import androidx.core.content.ContextCompat
  */
 class StoragePermissionHandler(
     private val activity: AppCompatActivity,
-    private val onGranted: () -> Unit,
     private val onDenied: () -> Unit
 ) {
 
@@ -29,6 +32,23 @@ class StoragePermissionHandler(
     }
 
     private var permissionLauncher: ActivityResultLauncher<Array<String>>? = null
+
+    private val _permissionEvent = MutableSharedFlow<Boolean>(replay = 0, extraBufferCapacity = 1)
+    val permissionEvent: SharedFlow<Boolean> = _permissionEvent.asSharedFlow()
+
+    private fun emitEvent(granted: Boolean) {
+        val success = _permissionEvent.tryEmit(granted)
+        if (!success) {
+            Log.w(TAG, "Failed to emit permission event (granted=$granted). Buffer might be full.")
+        }
+    }
+
+    /**
+     * すべての必要な権限が許可されているか
+     */
+    fun hasPermissions(): Boolean {
+        return hasAllPermissions(getRequiredPermissions())
+    }
 
     /**
      * 初期化（onCreate で呼ぶ）
@@ -40,10 +60,11 @@ class StoragePermissionHandler(
             val allGranted = permissions.values.all { it }
 
             if (allGranted) {
-                onGranted()
+                emitEvent(true)
             } else {
                 // 権限拒否時の処理
                 handlePermissionDenied(permissions)
+                emitEvent(false)
             }
         }
     }
@@ -56,7 +77,7 @@ class StoragePermissionHandler(
 
         if (hasAllPermissions(requiredPermissions)) {
             // すでに権限がある
-            onGranted()
+            emitEvent(true)
         } else {
             // 権限リクエスト
             if (shouldShowRationale(requiredPermissions)) {
@@ -141,6 +162,7 @@ class StoragePermissionHandler(
             .setNegativeButton("キャンセル") { dialog, _ ->
                 dialog.dismiss()
                 onDenied()
+                emitEvent(false)
             }
             .setCancelable(false)
             .show()
@@ -165,6 +187,7 @@ class StoragePermissionHandler(
                 .setPositiveButton("OK") { dialog, _ ->
                     dialog.dismiss()
                     onDenied()
+                    emitEvent(false)
                 }
                 .show()
         }
@@ -187,6 +210,7 @@ class StoragePermissionHandler(
             .setNegativeButton("キャンセル") { dialog, _ ->
                 dialog.dismiss()
                 onDenied()
+                emitEvent(false)
             }
             .show()
     }
@@ -206,10 +230,9 @@ class StoragePermissionHandler(
  * 使いやすいヘルパー拡張関数
  */
 fun AppCompatActivity.requestStoragePermission(
-    onGranted: () -> Unit,
     onDenied: () -> Unit = {}
 ): StoragePermissionHandler {
-    return StoragePermissionHandler(this, onGranted, onDenied).apply {
+    return StoragePermissionHandler(this, onDenied).apply {
         init()
     }
 }

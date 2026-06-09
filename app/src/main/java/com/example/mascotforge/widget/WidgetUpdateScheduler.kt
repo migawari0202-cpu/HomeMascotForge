@@ -23,8 +23,6 @@ class WidgetUpdateScheduler(private val context: Context) {
         const val ACTION_UPDATE_CLOCK = "com.example.homemascot.UPDATE_CLOCK"
         const val ACTION_UPDATE_WEATHER = "com.example.homemascot.UPDATE_WEATHER"
         const val ACTION_UPDATE_SPEECH = "com.example.homemascot.UPDATE_SPEECH"
-
-        private const val ONE_MINUTE_MS = 60 * 1000L
         private const val ONE_HOUR_MS = 60 * 60 * 1000L
         private const val TEN_MINUTES_MS = 10 * 60 * 1000L
         private const val THIRTY_SECONDS_MS = 30 * 1000L
