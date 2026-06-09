@@ -13,7 +13,6 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -38,10 +37,6 @@ class WeatherUpdateWorker(
 
     companion object {
         private const val TAG = "WeatherWorker"
-
-        private const val DEFAULT_LAT = 35.6895
-        private const val DEFAULT_LON = 139.6917
-        private const val DEFAULT_CITY = "Tokyo"
 
         private const val UNIQUE_PERIODIC_WORK = "weather_update_periodic"
         private const val UNIQUE_IMMEDIATE_WORK = "weather_update_immediate"

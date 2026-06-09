@@ -10,11 +10,7 @@ object WidgetConstants {
     object Time {
         const val ONE_SECOND_MS = 1_000L
         const val ONE_MINUTE_MS = 60 * ONE_SECOND_MS
-        const val FIVE_MINUTES_MS = 5 * ONE_MINUTE_MS
-        const val TWENTY_MINUTES_MS = 20 * ONE_MINUTE_MS
-        const val THIRTY_SECONDS_MS = 30 * ONE_SECOND_MS
         const val ONE_HOUR_MS = 60 * ONE_MINUTE_MS
-        const val SIX_HOURS_MS = 6 * ONE_HOUR_MS
     }
 
     // === ウィジェットサイズ閾値（dp） ===
