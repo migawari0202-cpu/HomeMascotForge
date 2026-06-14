@@ -16,6 +16,19 @@ class SafeExpressionEvaluator(
     companion object {
         private const val TAG = "SafeExpressionEvaluator"
         private const val MAX_DEPTH = 5
+
+        /** 天気コードの英語→日本語マッピング（感情ルールの式評価用） */
+        private val WEATHER_CODE_EN_TO_JP = mapOf(
+            "clear" to "晴れ",
+            "partly_cloudy" to "晴れ時々曇り",
+            "cloudy" to "曇り",
+            "rain" to "雨",
+            "drizzle" to "小雨",
+            "thunder" to "雷雨",
+            "snow" to "雪",
+            "fog" to "霧",
+            "storm" to "嵐"
+        )
     }
 
     /**
@@ -164,11 +177,16 @@ class SafeExpressionEvaluator(
         }
 
         // 文字列比較
-        return when (op) {
-            "==" -> leftVal == rightVal
-            "!=" -> leftVal != rightVal
+        val equality = when (op) {
+            "==" -> leftVal == rightVal || (left == "weatherCode" && WEATHER_CODE_EN_TO_JP[rightVal] == leftVal)
+            "!=" -> {
+                val match = leftVal == rightVal || (left == "weatherCode" && WEATHER_CODE_EN_TO_JP[rightVal] == leftVal)
+                !match
+            }
             else -> false
         }
+
+        return equality
     }
 
     /**

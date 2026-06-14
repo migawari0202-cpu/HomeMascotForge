@@ -477,7 +477,41 @@ class DynamicCharacter(
             result = result.replace("{$key}", value)
         }
 
+        // 三項演算子 {条件 ? 真値 : 偽値} を評価
+        result = expandTernaryExpressions(result, ctx, customValues)
+
         return result
+    }
+
+    /**
+     * セリフ内の三項演算子 {条件 ? 真値 : 偽値} を評価して置換する。
+     *
+     * 例: {temperatureFeeling == "cold" ? 寒いね : いい天気だね}
+     *     条件部には標準変数・カスタム変数・文字列リテラルが使用可能。
+     */
+    private fun expandTernaryExpressions(
+        template: String,
+        ctx: SpeechContext,
+        customValues: Map<String, String>
+    ): String {
+        // {条件 ? 真 : 偽} のパターン（条件部は ? を含まない前提）
+        val ternaryRegex = "\\{([^?}]+)\\?\\s*([^:}]+)\\s*:\\s*([^}]+)\\}".toRegex()
+
+        return ternaryRegex.replace(template) { matchResult ->
+            val condition = matchResult.groupValues[1].trim()
+            val trueBranch = matchResult.groupValues[2].trim()
+            val falseBranch = matchResult.groupValues[3].trim()
+
+            val result = try {
+                val evaluator = SafeExpressionEvaluator(ctx, customValues)
+                if (evaluator.evaluate(condition)) trueBranch else falseBranch
+            } catch (e: Exception) {
+                Log.w(TAG, "[$charId] Ternary evaluation failed: $condition", e)
+                falseBranch
+            }
+
+            result
+        }
     }
 
     private fun loadImage(imagePath: String, tag: String?): Bitmap? {
