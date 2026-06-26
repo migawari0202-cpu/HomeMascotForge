@@ -105,6 +105,19 @@ customVariables の "condition" のすべてで使える。
   ()        (hour >= 9 && hour < 18) && !isWeekend
   数値範囲  batteryLevel in 20..50  （条件式では使えない。>= && <= で代替）
 
+  【評価エンジンの動作仕様】
+
+  - stripSpacesOutsideQuotes: 条件式中のクォート外スペースは評価前に自動除去
+    例: weatherCode == "晴れ 時々 曇り" の " " は保持される
+
+  - ! の評価順: 外側括弧のアンラップ後に判定
+    例: !(hour >= 6 && hour < 12) → 括弧内を先に再帰評価し、その結果を反転
+        これにより !(A && B) のような否定評価が正常動作
+
+  - evaluateSingleCondition 内のNOTチェックなし:
+    単一条件レベルでの ! 判定は行わず、上位の再帰で処理するため
+    evaluateSingleCondition は純粋な比較のみに集中
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ speechRules の conditions / anyOf で使える値
 

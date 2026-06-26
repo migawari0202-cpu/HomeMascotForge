@@ -5,12 +5,19 @@ import com.example.mascotforge.character.CharacterState
 import com.example.mascotforge.character.CharacterStateManager
 
 /**
- * セリフ内のタグを解析するクラス（完全統合版）
+  * セリフ内のタグを解析するクラス（完全統合版）
  *
  * 対応タグ:
  * - [emotion:xxx] / [e:xxx] - 感情指定
  * - [v: xxx] - 変数操作（変数名 or customVars[n]）
  * - {br} - 改行
+ *
+ * 変数代入 RHS の緩和ルール:
+ * - 数値 → 従来通り SET
+ * - toggle → TOGGLE
+ * - true/false → SET_STRING (小文字に正規化)
+ * - [ ] を含まない最大50文字の任意文字列 → SET_STRING（マルチバイト可）
+ * - 例: [v: mood=うれしい] / [v: mood=happy] がパース可能
  *
  * 統合の特徴:
  * - DynamicCharacter用: 変数名ベース（例: favorability + 5）
@@ -141,8 +148,8 @@ class TagParser(
                     return VariableOperation(OperationType.SET_STRING, variableName, stringValue = rhs.lowercase())
                 }
 
-                // 4. 文字列値（英数字＋アンダースコア、最大50文字）
-                if (rhs.length in 1..50 && rhs.matches(Regex("[a-zA-Z0-9_]+"))) {
+                // 4. 文字列値（大文字・小文字、数字、日本語など、[ または ] を含まない最大50文字の任意の文字列）
+                if (rhs.length in 1..50 && !rhs.contains('[') && !rhs.contains(']')) {
                     return VariableOperation(OperationType.SET_STRING, variableName, stringValue = rhs)
                 }
 

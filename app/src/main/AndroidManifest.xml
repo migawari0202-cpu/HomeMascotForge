@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
 
     <!-- ストレージ権限（キャラクターZIPインストール用） -->
     <uses-permission
@@ -76,6 +76,8 @@
                 <data android:mimeType="application/x-zip-compressed" />
             </intent-filter>
         </activity>
+
+
 
         <!-- メインウィジェットプロバイダー -->
         <receiver

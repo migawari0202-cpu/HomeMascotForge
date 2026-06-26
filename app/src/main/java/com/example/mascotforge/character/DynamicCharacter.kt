@@ -192,11 +192,13 @@ class DynamicCharacter(
         val defaultRule = rules.firstOrNull { it.conditions.isEmpty() && it.anyOf.isEmpty() }
         val conditionalRules = rules.filter { it.conditions.isNotEmpty() || it.anyOf.isNotEmpty() }
 
+        val customValues = variableManager.getAllValues(metadata.customVariables)
+
         conditionalRules
             .sortedByDescending { it.priority }
             .forEach { rule ->
-                val allOfMatches = rule.conditions.isEmpty() || context.matchesAll(rule.conditions)
-                val anyOfMatches = rule.anyOf.isEmpty() || context.matchesAny(rule.anyOf)
+                val allOfMatches = rule.conditions.isEmpty() || context.matchesAll(rule.conditions, customValues)
+                val anyOfMatches = rule.anyOf.isEmpty() || context.matchesAny(rule.anyOf, customValues)
 
                 if (allOfMatches && anyOfMatches) {
                     val selectedFile = rule.files.randomOrNull()
