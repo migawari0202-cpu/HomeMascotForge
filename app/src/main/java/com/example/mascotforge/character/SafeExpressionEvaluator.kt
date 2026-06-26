@@ -46,11 +46,30 @@ class SafeExpressionEvaluator(
      */
     fun evaluate(expression: String): Boolean {
         return try {
-            evaluateExpression(expression.replace(" ", ""), 0)
+            evaluateExpression(stripSpacesOutsideQuotes(expression), 0)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to evaluate expression: $expression", e)
             false
         }
+    }
+
+    private fun stripSpacesOutsideQuotes(expr: String): String {
+        val sb = StringBuilder()
+        var inQuotes = false
+        var i = 0
+        while (i < expr.length) {
+            val c = expr[i]
+            if (c == '"') {
+                inQuotes = !inQuotes
+                sb.append(c)
+            } else {
+                if (inQuotes || c != ' ') {
+                    sb.append(c)
+                }
+            }
+            i++
+        }
+        return sb.toString()
     }
 
     private fun evaluateExpression(expr: String, depth: Int): Boolean {
@@ -72,6 +91,11 @@ class SafeExpressionEvaluator(
         // 括弧（外側のみ除去、内側に対応する閉じ括弧があることを確認）
         if (expr.startsWith("(") && expr.endsWith(")") && isMatchingParens(expr)) {
             return evaluateExpression(expr.substring(1, expr.length - 1), depth + 1)
+        }
+
+        // 否定演算子 !（括弧アンラップの後に判定することで、!(A && B) などの構造を再帰評価可能にする）
+        if (expr.startsWith("!")) {
+            return !evaluateExpression(expr.substring(1), depth + 1)
         }
 
         // 単一条件を評価
@@ -138,12 +162,6 @@ class SafeExpressionEvaluator(
 
                 return compareValues(left, right, op)
             }
-        }
-
-        // NOT演算子
-        if (expr.startsWith("!")) {
-            val field = expr.substring(1)
-            return getContextValue(field) != "true"
         }
 
         // 単純な真偽値チェック

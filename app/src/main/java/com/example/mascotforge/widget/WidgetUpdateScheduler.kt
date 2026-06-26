@@ -25,7 +25,6 @@ class WidgetUpdateScheduler(private val context: Context) {
         const val ACTION_UPDATE_SPEECH = "com.example.homemascot.UPDATE_SPEECH"
         private const val ONE_HOUR_MS = 60 * 60 * 1000L
         private const val TEN_MINUTES_MS = 10 * 60 * 1000L
-        private const val THIRTY_SECONDS_MS = 30 * 1000L
     }
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -47,26 +46,7 @@ class WidgetUpdateScheduler(private val context: Context) {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (!alarmManager.canScheduleExactAlarms()) {
-                    Log.w(TAG, "Exact alarms not allowed, using window alarm")
-                    scheduleWindowAlarm(pendingIntent, nextMinute)
-                    return
-                }
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent
-                )
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
-            }
-        } catch (e: SecurityException) {
-            Log.w(TAG, "SecurityException, falling back to window alarm", e)
-            scheduleWindowAlarm(pendingIntent, nextMinute)
-        }
+        scheduleNonExactAlarm(pendingIntent, nextMinute)
     }
 
     fun scheduleWeatherUpdate() {
@@ -88,17 +68,7 @@ class WidgetUpdateScheduler(private val context: Context) {
 
         val nextUpdate = System.currentTimeMillis() + ONE_HOUR_MS
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, nextUpdate, pendingIntent
-                )
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextUpdate, pendingIntent)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule weather update", e)
-        }
+        scheduleNonExactAlarm(pendingIntent, nextUpdate)
     }
 
     fun scheduleSpeechUpdate() {
@@ -114,26 +84,23 @@ class WidgetUpdateScheduler(private val context: Context) {
 
         val nextUpdate = System.currentTimeMillis() + TEN_MINUTES_MS
 
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP, nextUpdate, pendingIntent
-                )
-            } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextUpdate, pendingIntent)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule speech update", e)
-        }
+        scheduleNonExactAlarm(pendingIntent, nextUpdate)
     }
 
-    private fun scheduleWindowAlarm(pendingIntent: PendingIntent, triggerAt: Long) {
-        alarmManager.setWindow(
-            AlarmManager.RTC_WAKEUP,
-            triggerAt,
-            THIRTY_SECONDS_MS,
-            pendingIntent
-        )
+    private fun scheduleNonExactAlarm(pendingIntent: PendingIntent, triggerAt: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAt,
+                pendingIntent
+            )
+        } else {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerAt,
+                pendingIntent
+            )
+        }
     }
 
     fun cancelAllUpdates() {

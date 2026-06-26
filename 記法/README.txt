@@ -36,3 +36,16 @@
   タップしたとき変数を変えたい            customVariables記法.txt（onTouch）
   好感度が高いと画像を変えたい            emotions記法.txt
   毎日起動したらボーナスを与えたい        customVariables記法.txt（onLaunch）
+  条件式で !(A && B) の否定を使いたい     emotions記法.txt / 標準変数一覧.txt
+  カスタム変数を変数名だけで直接指定したい  speechRules記法.txt（カスタム変数の参照）
+  boolean変数を "true"/"false" で比較したい speechRules記法.txt（boolean型注意）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ビルド・テストに関する補足
+
+  build.gradle.kts 設定:
+  - testOptions { unitTests.isReturnDefaultValues = true } を設定済み
+  - testImplementation("org.json:json:20240303") 依存あり
+  - ユニットテスト3ファイル（SafeExpressionEvaluatorTest,
+    SpeechContextTest, TagParserTest）で全15テストをカバー
+  - テスト実行: .\gradlew.bat test（Android Studio同梱JDK(jbr)で動作）

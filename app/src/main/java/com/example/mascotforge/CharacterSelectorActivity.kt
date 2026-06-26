@@ -35,14 +35,16 @@ class CharacterSelectorActivity : AppCompatActivity() {
         val headerLayout = findViewById<View>(R.id.header_layout)
         val rootLayout = findViewById<View>(R.id.root_layout)
 
-        // ✅ 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
+                // ✅ 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // 上部(ノッチ・ステータスバー)
+            // 上部(ノッチ・ステータスバー) — XMLのpaddingTopと最大値を取る
+            val currentTopPadding = headerLayout.paddingTop
+            val requiredTop = systemBars.top.coerceAtLeast(currentTopPadding)
             headerLayout.setPadding(
                 headerLayout.paddingLeft,
-                headerLayout.paddingTop + systemBars.top,
+                requiredTop,
                 headerLayout.paddingRight,
                 headerLayout.paddingBottom
             )

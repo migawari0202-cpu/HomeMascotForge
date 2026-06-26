@@ -308,10 +308,18 @@ data class SpeechContext(
         }
     }
 
-    /**
+        /**
      * 複合条件の簡易チェック（テキストファイルパーサー用）
+     *
+     * カスタム変数は以下の2形式で指定可能:
+     * - "customVars[favorability]" — 従来の明示形式
+     * - "favorability" — 変数名を直接指定（customVarsマップ内に存在すれば一致）
+     *
+     * boolean型カスタム変数:
+     * - value が "true" / "false" の場合、整数値 1 / 0 にマッピングして比較
+     * - 例: customVars["is_happy"] = 1 のとき matches("is_happy", "true") → true
      */
-    fun matches(key: String, value: String): Boolean {
+    fun matches(key: String, value: String, customValues: Map<String, String> = emptyMap()): Boolean {
         return when (key) {
             // 時間系
             "hour" -> isHourInRange(value)
@@ -395,14 +403,38 @@ data class SpeechContext(
             "isFridayNight" -> isFridayNight() == value.toBoolean()
             "isSundayNight" -> isSundayNight() == value.toBoolean()
 
-            // カスタム変数（customVars[varName]形式 — 例: customVars[favorability]）
+            // カスタム変数 — customVars[favorability] 形式 または 直接変数名
+            // boolean条件 "true"/"false" は自動的に整数 1/0 にマッピング
             else -> {
-                if (key.startsWith("customVars[") && key.endsWith("]")) {
-                    val varName = key.substring(11, key.length - 1)
-                    if (varName.isNotEmpty()) {
-                        checkNumberCondition(getCustomVar(varName), value)
+                val isCustomVarFormat = key.startsWith("customVars[") && key.endsWith("]")
+                val varName = if (isCustomVarFormat) {
+                    key.substring(11, key.length - 1)
+                } else if (characterState.customVars.containsKey(key) || customValues.containsKey(key)) {
+                    key
+                } else {
+                    null
+                }
+
+                if (varName != null && varName.isNotEmpty()) {
+                    val strVal = customValues[varName] ?: getCustomVar(varName).toString()
+                    val isBooleanCondition = value == "true" || value == "false"
+                    if (isBooleanCondition) {
+                        val rawVal = getCustomVar(varName)
+                        val expectedInt = if (value == "true") 1 else 0
+                        rawVal == expectedInt
                     } else {
-                        false
+                        val isNumericCondition = value.startsWith(">=") ||
+                                value.startsWith("<=") ||
+                                value.startsWith(">") ||
+                                value.startsWith("<") ||
+                                (value.contains("-") && !value.startsWith("-"))
+
+                        if (isNumericCondition || value.toIntOrNull() != null) {
+                            val actualInt = strVal.toIntOrNull() ?: 0
+                            checkNumberCondition(actualInt, value)
+                        } else {
+                            strVal == value
+                        }
                     }
                 } else {
                     false
@@ -431,15 +463,15 @@ data class SpeechContext(
     /**
      * 複数条件をまとめてチェック
      */
-    fun matchesAll(conditions: Map<String, String>): Boolean {
-        return conditions.all { (key, value) -> matches(key, value) }
+    fun matchesAll(conditions: Map<String, String>, customValues: Map<String, String> = emptyMap()): Boolean {
+        return conditions.all { (key, value) -> matches(key, value, customValues) }
     }
 
     /**
      * いずれかの条件に合致するか
      */
-    fun matchesAny(conditions: Map<String, String>): Boolean {
-        return conditions.any { (key, value) -> matches(key, value) }
+    fun matchesAny(conditions: Map<String, String>, customValues: Map<String, String> = emptyMap()): Boolean {
+        return conditions.any { (key, value) -> matches(key, value, customValues) }
     }
 
 
