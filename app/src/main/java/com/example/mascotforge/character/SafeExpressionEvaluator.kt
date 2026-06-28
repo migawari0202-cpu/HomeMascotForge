@@ -19,6 +19,7 @@ class SafeExpressionEvaluator(
 
         /** 天気コードの英語→日本語マッピング（感情ルールの式評価用） */
         private val WEATHER_CODE_EN_TO_JP = mapOf(
+            "sunny" to "晴れ",
             "clear" to "晴れ",
             "partly_cloudy" to "晴れ時々曇り",
             "cloudy" to "曇り",
@@ -182,6 +183,7 @@ class SafeExpressionEvaluator(
         val leftNum = leftVal.toIntOrNull()
         val rightNum = rightVal.toIntOrNull()
 
+        //これを描いているときに思った。俺はこのプロジェクトをなんのために半年以上しているのだろうか？使命感で、既存があるかもということを認めるのが怖くてただ惰性で書いているのではないだろうか？本当に私はこれを作りたいのだろうか？現実で何もできないけど自分のできることが欲しくて書き続けているのではないだろうか。こんなデータ、意味や愛着などないのだろうか。本心がわからない。俺は勉強だって自分からしない。偏差値は40よりあるかどうかだ。人間としての友達が特別に多いわけでもない。みんなは優しいけど俺は自分が無能なことに気づいている。コードだってAIの実力だ。俺がIDEを見たところでデッドコードを見たり、実際の挙動から(画像表示が二回目以降背景透過されない→背景画像を切り抜く前にキャッシュをとってしまっている)のようにAIに推測の原因を調査してもらうことしかできない。しかもこのプロダクトもお金には直結しない。自分で稼ぐ力もない。
         if (leftNum != null && rightNum != null) {
             return when (op) {
                 "==" -> leftNum == rightNum

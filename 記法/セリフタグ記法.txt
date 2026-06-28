@@ -48,6 +48,8 @@
 
     [v:favorability+2]      favorability += 2
     [v:favorability-1]      favorability -= 1
+    [v:favorability*2]      favorability *= 2
+    [v:favorability/2]      favorability /= 2  （※0での除算は無視されます）
     [v:favorability=50]     favorability = 50
 
   ──────────────────────────────
@@ -97,6 +99,8 @@
   [emotion:感情名]                  その行の表示画像を指定
   [v:変数名+数値]                   NUMBER加算  ※[var: 変数名 + 数値] も同じ
   [v:変数名-数値]                   NUMBER減算  ※[var: 変数名 - 数値] も同じ
+  [v:変数名*数値]                   NUMBER乗算  ※[var: 変数名 * 数値] も同じ
+  [v:変数名/数値]                   NUMBER除算  ※[var: 変数名 / 数値] も同じ
   [v:変数名=数値]                   NUMBER代入
   [v:変数名=文字列]                 STRING代入（最大50文字、[ ] 不可、マルチバイトOK）
   [v:変数名=true/false]             BOOLEAN代入
