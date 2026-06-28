@@ -19,7 +19,7 @@
   {
     "id":              "my_character",      ← 必須。英数字・アンダースコアのみ
     "name":            "マイキャラ",        ← 必須。表示名
-    "version":         "1.0.0",
+    "version":         "1.8",
     "author":          "あなたの名前",
     "description":     "キャラの説明",
     "images":          { ... },             ← 感情名 → 画像ファイル名
@@ -51,7 +51,7 @@
   {
     "id": "sample_char",
     "name": "サンプルちゃん",
-    "version": "1.0.0",
+    "version": "1.8",
     "author": "あなた",
     "images": {
       "normal": "normal.png",
