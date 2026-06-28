@@ -354,6 +354,7 @@ data class SpeechContext(
                 // 英語・日本語両対応
                 val japaneseMap = mapOf(
                     "sunny" to "晴れ",
+                    "clear" to "晴れ",
                     "rain" to "雨",
                     "cloudy" to "曇り",
                     "snow" to "雪",

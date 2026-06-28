@@ -9,7 +9,7 @@ data class Shell(
     val id: String,
     val name: String,
 
-    /**
+ /**
      * このShellが対象とするキャラクターのID。
      * 不一致の場合でも動作するが、ShellRegistryが警告を出す。
      */
