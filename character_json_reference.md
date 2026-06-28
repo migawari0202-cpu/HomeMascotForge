@@ -26,7 +26,7 @@ mychar.zip
 {
   "id":          "my_character",
   "name":        "マイキャラ",
-  "version":     "1.0.0",
+  "version":     "1.8",
   "author":      "あなたの名前",
   "description": "キャラの説明",
   "images":      { ... },
@@ -40,7 +40,7 @@ mychar.zip
 |---|---|---|---|
 | `id` | string | ✅ | 英数字・アンダースコアのみ。重複不可 |
 | `name` | string | ✅ | 表示名 |
-| `version` | string | | デフォルト `"1.0.0"` |
+| `version` | string | | デフォルト `"1.8"` |
 | `author` | string | | デフォルト `"Unknown"` |
 | `description` | string | | |
 | `images` | object | | 感情名 → 画像ファイル名 |
@@ -288,7 +288,7 @@ mychar.zip
 {
   "id": "sample_char",
   "name": "サンプルちゃん",
-  "version": "1.0.0",
+  "version": "1.8",
   "author": "あなた",
   "images": {
     "normal": "normal.png",
