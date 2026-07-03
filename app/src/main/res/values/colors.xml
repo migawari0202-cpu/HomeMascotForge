@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 基本カラー -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- マスコット関連 -->
+    <color name="mascot_bubble_text">#000000</color>
+    <color name="mascot_bubble_bg">#D0F0FF</color>
+    <color name="mascot_text">#5C4033</color>
+    <color name="mascot_supplement_text">#666666</color>
+    <color name="mascot_bubble_supplement_text">#CD853F</color>
+    <integer name="memo_text_max_lines">2</integer>
+
+    <!-- メモ関連 -->
+    <color name="memo_box_bg_translucent">#33FFFFFF</color>
+    <color name="memo_text">#FFFFFF</color>
+    <color name="memo_box_background">#33FFFFFF</color> <!-- 透明度同じでも別用途なら残す -->
+
+    <!-- ウィジェット／バッテリー関連 -->
+    <color name="battery_bar_bg">#AA000000</color>
+    <color name="widget_background_overlay">#33000000</color>
+
+    <!-- res/values/colors.xml -->
+    <color name="bottom_bar_background">#AA000000</color>
+    <color name="text_primary">#FFFFFF</color>
+
+    <color name="character_selected">#E8F5E9</color>  <!-- 薄い緑 -->
+    <color name="character_normal">#FFFFFF</color>     <!-- 白 -->
+</resources>

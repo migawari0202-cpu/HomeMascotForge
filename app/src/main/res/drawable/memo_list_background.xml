@@ -1,0 +1,6 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- 半透明黒：80 ≒ 50%透過、C0 ≒ 25%透過、F0 ≒ 6%透過 -->
+    <solid android:color="#80000000" />
+    <corners android:radius="4dp" />
+</shape>

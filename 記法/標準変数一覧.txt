@@ -1,0 +1,129 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  標準変数一覧
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+以下の変数はセリフ展開（{変数名}）・感情条件式（emotions.rules の "if"）・
+customVariables の "condition" のすべてで使える。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 時刻・日付
+
+  変数名                型        値の例・範囲
+  ─────────────────────────────────────────────
+  hour                  int       0〜23
+  minute                int       0〜59
+  month                 int       1〜12
+  day                   int       1〜31
+  dayOfWeek             string    "月曜日" / "火曜日" ... "日曜日"
+  timeSlot              string    "morning" / "afternoon" / "evening" / "night" / "midnight"
+  season                string    "春" / "梅雨" / "夏" / "秋" / "冬"
+  isWeekend             boolean   土日が true
+  isHoliday             boolean   祝日が true
+  holidayName           string    "元日" など（祝日でなければ空文字）
+  isSpecialDay          boolean   特別な日（バレンタイン等）
+  specialDayName        string    "バレンタインデー" など
+
+  timeSlot の時間帯:
+    midnight  0:00〜4:59
+    morning   5:00〜11:59
+    afternoon 12:00〜16:59
+    evening   17:00〜20:59
+    night     21:00〜23:59
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 天気
+
+  変数名                型        値の例
+  ─────────────────────────────────────────────
+  weatherCode           string    "晴れ" / "曇り" / "雨" / "小雨" / "雷雨" / "雪" / "霧" / "嵐"
+  weatherEmoji          string    "☀️" / "🌤" / "☁️" / "🌧" など
+  temperature           int       摂氏（℃）
+  temperatureFeeling    string    "暑い" / "少し暑い" / "ちょうどいい" / "少し寒い" / "寒い"
+  humidity              int       0〜100（未実装時は null）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ バッテリー・デバイス
+
+  変数名                型        値の例
+  ─────────────────────────────────────────────
+  batteryLevel          int       0〜100
+  batteryStatus         string    "充電中" / "省電力モード" / "通常"
+  isCharging            boolean
+  isLowBattery          boolean   batteryLevel <= 20 で true
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 起動・使用状況
+
+  変数名                型        値の例
+  ─────────────────────────────────────────────
+  launchCount           int       今日の累計起動回数
+  consecutiveDays       int       連続起動日数
+  lastLaunchHoursAgo    int       前回起動からの時間（時間単位）
+  isFirstLaunchToday    boolean   今日初めての起動なら true
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ タッチ関連
+
+  変数名                型        値の例
+  ─────────────────────────────────────────────
+  touchCount            int       累計タッチ回数（全期間）
+  touchCountToday       int       今日のタッチ回数
+  lastTouchMinutesAgo   int       最後にタッチしてから何分経過したか
+  wasTouched            boolean   1分以内にタッチされていれば true
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ユーザー情報
+
+  変数名                型        備考
+  ─────────────────────────────────────────────
+  userName              string    ユーザー名（設定から取得）
+  userGender            string    現在未実装
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ その他
+
+  変数名                型        備考
+  ─────────────────────────────────────────────
+  isNearBedtime         boolean   21:00〜翌1:59 で true
+  isNearWakeup          boolean   6:00〜8:59 で true
+  moonPhase             string    未実装（null）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 条件式で使える演算子（emotions / customVariables.condition 共通）
+
+  演算子    例
+  ─────────────────────────────────────────────
+  ==        weatherCode == "雨"
+  !=        batteryLevel != 100
+  >         favorability > 70
+  >=        consecutiveDays >= 7
+  <         temperature < 5
+  <=        hour <= 6
+  &&        isWeekend && hour >= 10
+  ||        isHoliday || isWeekend
+  !         !isCharging
+  ()        (hour >= 9 && hour < 18) && !isWeekend
+  数値範囲  batteryLevel in 20..50  （条件式では使えない。>= && <= で代替）
+
+  【評価エンジンの動作仕様】
+
+  - stripSpacesOutsideQuotes: 条件式中のクォート外スペースは評価前に自動除去
+    例: weatherCode == "晴れ 時々 曇り" の " " は保持される
+
+  - ! の評価順: 外側括弧のアンラップ後に判定
+    例: !(hour >= 6 && hour < 12) → 括弧内を先に再帰評価し、その結果を反転
+        これにより !(A && B) のような否定評価が正常動作
+
+  - evaluateSingleCondition 内のNOTチェックなし:
+    単一条件レベルでの ! 判定は行わず、上位の再帰で処理するため
+    evaluateSingleCondition は純粋な比較のみに集中
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ speechRules の conditions / anyOf で使える値
+
+  conditions / anyOf は単純な文字列一致のみ対応（演算子不可）。
+  演算子が必要な条件は emotions の "if" か customVariables の "condition" で使う。
+
+  例:
+    "conditions": { "timeSlot": "morning" }    ← OK
+    "conditions": { "hour": ">= 6" }            ← 使えない（文字列一致しか見ない）

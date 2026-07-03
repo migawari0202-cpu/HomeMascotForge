@@ -1,0 +1,106 @@
+{
+  "id": "default",
+  "name": "みなと",
+  "version": "1.8",
+  "author": "MascotForge",
+  "description": "デフォルトキャラクターのみなとです。時間帯でおしゃべりが変わります。",
+  "images": {
+    "character": "character.png",
+    "happy": "happy.png",
+    "sad": "sad.png",
+    "angry": "angry.png",
+    "shy": "shy.png",
+    "sleepy": "sleepy.png",
+    "worried": "worried.png",
+    "excited": "excited.png"
+  },
+  "customVariables": {
+    "favorability": {
+      "type": "number",
+      "initial": 50,
+      "min": 0,
+      "max": 100,
+      "onChange": [
+        {
+          "trigger": "onTouch",
+          "action": "increment",
+          "value": 1
+        }
+      ]
+    },
+    "isBeingPetted": {
+      "type": "boolean",
+      "initial": false,
+      "onChange": [
+        {
+          "trigger": "onTouch",
+          "action": "SET",
+          "value": true
+        }
+      ]
+    }
+  },
+  "emotions": {
+    "rules": [
+      {
+        "if": "isLowBattery",
+        "emotion": "worried"
+      },
+      {
+        "if": "hour >= 23 || hour < 6",
+        "emotion": "sleepy"
+      },
+      {
+        "default": "normal"
+      }
+    ]
+  },
+  "speechRules": [
+    {
+      "file": "speeches/petting.txt",
+      "conditions": {
+        "isBeingPetted": "true",
+        "consecutiveTouchCount": ">=2"
+      },
+      "priority": 100
+    },
+    {
+      "file": "speeches/midnight.txt",
+      "conditions": {
+        "timeSlot": "midnight"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/morning.txt",
+      "conditions": {
+        "timeSlot": "morning"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/afternoon.txt",
+      "conditions": {
+        "timeSlot": "afternoon"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/evening.txt",
+      "conditions": {
+        "timeSlot": "evening"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/night.txt",
+      "conditions": {
+        "timeSlot": "night"
+      },
+      "priority": 10
+    },
+    {
+      "file": "speeches/default.txt"
+    }
+  ]
+}

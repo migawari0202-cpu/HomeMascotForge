@@ -1,0 +1,168 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  speechRules 記法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+優先度の高いルールから順に評価し、最初にマッチしたルールのファイルを使う。
+conditions / anyOf が両方空のルールはデフォルト（フォールバック）として機能する。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 基本形（1ファイル・AND条件）
+
+  {
+    "file":       "speeches/rainy.txt",
+    "conditions": { "weatherCode": "rain" },
+    "priority":   10
+  }
+
+  - "conditions" 内の全エントリが AND 結合（全部一致で適合）
+  - priority が高いほど優先。省略時は 0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 複数ファイルからランダム選択（"files"）
+
+  {
+    "files": ["speeches/morning1.txt", "speeches/morning2.txt", "speeches/morning3.txt"],
+    "conditions": { "timeSlot": "morning" },
+    "priority": 5
+  }
+
+  - "files" を使うと、マッチ時に候補の中からランダムで1つが選ばれる
+  - "file"（単体）と "files"（複数）は排他。どちらか一方を指定
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ OR条件（"anyOf" / 十分条件）
+
+  {
+    "file":  "speeches/moody.txt",
+    "anyOf": { "isAngry": "true", "mood": "sad" },
+    "priority": 8
+  }
+
+  - "anyOf" 内のいずれか1エントリが一致すれば適合（OR結合）
+  - isAngry が true か、mood が sad か、どちらかで適合
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ AND + OR の組み合わせ
+
+  {
+    "file":       "speeches/night_dark.txt",
+    "conditions": { "timeSlot": "night" },
+    "anyOf":      { "isAngry": "true", "mood": "sad" },
+    "priority":   15
+  }
+
+  - conditions（AND）と anyOf（OR）を両方書いた場合
+  - 「夜帯 かつ (怒ってる OR 悲しい)」でマッチ
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ "conditions" の別名: "allOf"
+
+  "allOf": { "timeSlot": "morning", "isCharging": "true" }
+
+  は "conditions": { ... } と完全に同じ意味。
+  anyOf に対応するキーとして読みやすくしたい場合に使える。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ デフォルトルール（フォールバック）
+
+  {
+    "file": "speeches/default.txt"
+  }
+
+  - "conditions" / "anyOf" を省略（または空）にすると無条件にマッチ
+  - 他の全ルールが外れたときのフォールバックとして必ず1つ書いておくこと
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ conditions / anyOf で使える値の書き方
+
+  【標準変数】
+  文字列一致      "timeSlot": "morning"
+  真偽値          "isCharging": "true"  /  "isCharging": "false"
+  数値（文字列）  "batteryLevel": "20"
+
+  ※ 天気コードは英語・日本語両対応:
+    "weatherCode": "rain" または "雨"
+    "weatherCode": "sunny" または "晴れ"
+    "weatherCode": "cloudy" または "曇り"
+    "weatherCode": "snow" または "雪"
+
+    【カスタム変数の参照（2形式対応）】
+  形式1:  "customVars[varName]": "value"      ← 従来の明示形式
+  形式2:  "varName": "value"                   ← 変数名を直接指定（簡略形）
+
+  例（数値比較）  "customVars[favorability]": ">=70"
+                   "favorability": ">=70"                ← 簡略形でも同じ意味
+  例（等値）      "customVars[mood]": "happy"
+                   "mood": "happy"                       ← 簡略形
+
+  - カスタム変数名は characterState.customVars に存在すれば
+    customVars[ ] で囲まなくても変数名単独で認識される
+  - 数値型の場合: >= / <= / > / < などの比較演算子が使える
+  - 文字列型の場合: 等値比較のみ
+
+  【boolean型カスタム変数の注意】
+  - "true" / "false" は自動的に整数 1 / 0 にマッピングして比較
+  - 例: customVars["is_happy"] = 1 のとき
+        "customVars[is_happy]": "true" → true
+        "is_happy": "true"            → true（簡略形でも同様）
+
+  ※ 複雑な条件式（&&, ||）は使えない。より複雑な条件が必要な場合は
+    emotions の "if" 式か customVariables の "condition" フィールドで書く。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 実用サンプル（全部入り）
+
+  "speechRules": [
+    {
+      "files": ["speeches/angry1.txt", "speeches/angry2.txt"],
+      "anyOf": { "isAngry": "true", "mood": "bad" },
+      "priority": 20
+    },
+    {
+      "file":       "speeches/rainy_morning.txt",
+      "conditions": { "timeSlot": "morning", "weatherCode": "rain" },
+      "priority":   15
+    },
+    {
+      "file":       "speeches/rainy.txt",
+      "conditions": { "weatherCode": "rain" },
+      "priority":   10
+    },
+    {
+      "file":       "speeches/morning.txt",
+      "conditions": { "timeSlot": "morning" },
+      "priority":   5
+    },
+    {
+      "file": "speeches/default.txt"
+    }
+  ]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ カスタム変数を使うサンプル
+
+  "speechRules": [
+    {
+      "file":       "speeches/very_favorable.txt",
+      "conditions": { "customVars[favorability]": ">=80" },
+      "priority":   20
+    },
+    {
+      "file":       "speeches/favorable.txt",
+      "conditions": { "customVars[favorability]": ">=50" },
+      "priority":   15
+    },
+    {
+      "file":       "speeches/mood_happy.txt",
+      "conditions": { "customVars[mood]": "happy" },
+      "priority":   10
+    },
+    {
+      "file":       "speeches/default.txt"
+    }
+  ]
+
+  - favorability（数値）が 80 以上ならspeeches/very_favorable.txt
+  - favorability が 50 以上 80 未満ならspeeches/favorable.txt
+  - mood（文字列）が"happy"ならspeeches/mood_happy.txt
+  - それ以外はデフォルト

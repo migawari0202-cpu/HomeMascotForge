@@ -1,0 +1,19 @@
+<resources>
+    <!-- 共通ベーススタイル -->
+    <style name="Widget">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/widget_padding</item>
+    </style>
+
+    <!-- 既存の MemoText を親付きに変更 -->
+    <style name="Widget.MemoText" parent="Widget">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">#33FFFFFF</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">8sp</item>
+        <item name="android:padding">3dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+    </style>
+</resources>

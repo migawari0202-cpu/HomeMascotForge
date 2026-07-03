@@ -1,0 +1,135 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  customVariables 記法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+キャラ固有の変数を定義する。最大 30個まで。
+値はアプリ内に永続保存される（アンインストールまで消えない）。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 型の種類
+
+  type       initial の型    追加フィールド
+  ─────────────────────────────────────────────
+  "number"   数値             min（省略可）/ max（省略可）
+  "string"   文字列           options（省略可、選択肢リスト）
+  "boolean"  true / false     なし
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 定義サンプル
+
+  "customVariables": {
+
+    "favorability": {
+      "type":    "number",
+      "initial": 50,
+      "min":     0,
+      "max":     100
+    },
+
+    "mood": {
+      "type":    "string",
+      "initial": "neutral",
+      "options": ["happy", "neutral", "sad", "angry"]
+    },
+
+    "isAngry": {
+      "type":    "boolean",
+      "initial": false
+    }
+  }
+
+  ※ options を省略した STRING型は変数操作タグ [var:xxx=値] が使えない（ログ警告）
+  ※ min / max を省略した NUMBER型は上限・下限なし
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ onChange（自動更新ルール）
+
+  特定のタイミングで変数を自動的に更新するルール。
+  1変数に複数ルールを書ける。上から順に全て評価される。
+
+  "favorability": {
+    "type":    "number",
+    "initial": 50,
+    "onChange": [
+      {
+        "trigger":   "onSpeech",
+        "action":    "increment",
+        "value":     1
+      },
+      {
+        "trigger":   "onLaunch",
+        "condition": "consecutiveDays >= 7",
+        "action":    "increment",
+        "value":     5
+      },
+      {
+        "trigger":   "onTouch",
+        "action":    "increment",
+        "value":     2
+      }
+    ]
+  }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ trigger（発火タイミング）
+
+  trigger              発火するタイミング
+  ─────────────────────────────────────────────
+  "onLaunch"           今日初めてアプリが起動したとき
+  "onSpeech"           セリフが表示されるたびに
+  "onConsecutiveDays"  連続起動日数が変化したとき
+  "onTimeSlotChange"   時間帯が変わったとき（morning→afternoon 等）
+  "onTouch"            ウィジェットをタップしたとき
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ action（実行アクション）
+
+  action       対応型      動作
+  ─────────────────────────────────────────────
+  "set"        全型        value の値に直接代入
+  "increment"  number      現在値 + value（value省略時は +1）
+  "decrement"  number      現在値 - value（value省略時は -1）
+  "toggle"     boolean     現在値を反転（true→false、false→true）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ condition（条件式、省略可）
+
+  condition を書いた場合、式が true のときだけ action が実行される。
+  標準変数・カスタム変数どちらも使える。
+
+    "condition": "consecutiveDays >= 7"
+    "condition": "touchCountToday >= 5"
+    "condition": "favorability < 30 && mood == \"sad\""
+
+  → 条件式の書き方は「標準変数一覧.txt」を参照
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 全部入りサンプル
+
+  "customVariables": {
+
+    "favorability": {
+      "type": "number", "initial": 50, "min": 0, "max": 100,
+      "onChange": [
+        { "trigger": "onSpeech", "action": "increment", "value": 1 },
+        { "trigger": "onTouch",  "action": "increment", "value": 2 },
+        { "trigger": "onLaunch", "condition": "consecutiveDays >= 7", "action": "increment", "value": 5 }
+      ]
+    },
+
+    "mood": {
+      "type": "string", "initial": "neutral",
+      "options": ["happy", "neutral", "sad"],
+      "onChange": [
+        { "trigger": "onLaunch", "condition": "favorability >= 80", "action": "set", "value": "happy" },
+        { "trigger": "onLaunch", "condition": "favorability <= 20", "action": "set", "value": "sad"   }
+      ]
+    },
+
+    "isAngry": {
+      "type": "boolean", "initial": false,
+      "onChange": [
+        { "trigger": "onTouch", "condition": "touchCountToday >= 10", "action": "set", "value": true }
+      ]
+    }
+  }

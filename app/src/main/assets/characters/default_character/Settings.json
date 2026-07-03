@@ -1,0 +1,8 @@
+{
+  "imageCutout": {
+    "defaultTolerance": 30,
+    "byTag": {
+      "*": ["#fc0000"]
+    }
+  }
+}

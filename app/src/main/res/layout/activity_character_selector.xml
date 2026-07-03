@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#f5f5f5"
+    android:fitsSystemWindows="false">
+
+        <!-- ヘッダー -->
+    <LinearLayout
+        android:id="@+id/header_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#6200EE"
+        android:paddingLeft="16dp"
+        android:paddingRight="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="10dp">
+
+        <!-- タイトル・サブタイトル -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="キャラクター選択"
+                android:textSize="22sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="使いたいキャラクターを選んでね"
+                android:textSize="13sp"
+                android:textColor="#E0E0E0"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- キャラ管理ボタン -->
+        <Button
+            android:id="@+id/btn_manage_characters"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚙ キャラ管理"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:background="@android:color/transparent"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp" />
+    </LinearLayout>
+
+    <!-- キャラクター一覧 -->
+    <ListView
+        android:id="@+id/character_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#E0E0E0"
+        android:dividerHeight="1dp"
+        android:padding="8dp" />
+
+</LinearLayout>

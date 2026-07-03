@@ -1,0 +1,12 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 完全な白 -->
+    <solid android:color="#FFFFFFFF"/>
+
+    <!-- 角丸 -->
+    <corners android:radius="8dp"/>
+
+    <!-- 枠線（不透明） -->
+    <stroke
+        android:width="2dp"
+        android:color="#FF000000"/>  <!-- ← 黒の枠線 -->
+</shape>
