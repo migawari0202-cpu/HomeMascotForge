@@ -1,7 +1,9 @@
 package com.example.mascotforge
 
+import android.app.AlertDialog
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,12 +15,17 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.mascotforge.characters.CharacterRegistry
+import com.example.mascotforge.installer.CharacterInstaller
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.WidgetUpdateCoordinator
 
@@ -26,6 +33,17 @@ class CharacterSelectorActivity : AppCompatActivity() {
 
     private val selectedWidgets = mutableSetOf<Int>()
     private lateinit var widgetIds: IntArray
+    private lateinit var adapter: CharacterAdapter
+    private var factories: List<CharacterFactory> = emptyList()
+    private var currentId: String = ""
+
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            installCharacterFromZip(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,8 +52,9 @@ class CharacterSelectorActivity : AppCompatActivity() {
         val listView = findViewById<ListView>(R.id.character_list)
         val headerLayout = findViewById<View>(R.id.header_layout)
         val rootLayout = findViewById<View>(R.id.root_layout)
+        val manageButton = findViewById<Button>(R.id.manage_button)
 
-                // ✅ 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
+        // ✅ 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
@@ -66,9 +85,9 @@ class CharacterSelectorActivity : AppCompatActivity() {
             ComponentName(this, TimeWidgetProvider::class.java)
         )
 
-        // CharacterFactoryの一覧を取得
-        val factories = CharacterRegistry.getFactories(this)
-        val currentId = CharacterPreferences.getSelectedCharacterId(this)
+                // CharacterFactoryの一覧を取得
+        factories = CharacterRegistry.getFactories(this)
+        currentId = CharacterPreferences.getSelectedCharacterId(this)
 
         // 🐛 デバッグログ追加
         Log.d("CharacterSelector", "=== キャラクター選択画面 ===")
@@ -80,7 +99,7 @@ class CharacterSelectorActivity : AppCompatActivity() {
         }
 
         // カスタムアダプター
-        val adapter = CharacterAdapter(factories, currentId, widgetIds.size)
+        adapter = CharacterAdapter(factories, currentId, widgetIds.size)
         listView.adapter = adapter
 
         // クリックで選択
@@ -108,6 +127,147 @@ class CharacterSelectorActivity : AppCompatActivity() {
 
             // 複数ウィジェットの場合は選択画面を表示
             showWidgetSelectionForCharacter(view, newId)
+        }
+
+        // 長押しで削除
+        listView.setOnItemLongClickListener { _, _, position, _ ->
+            val factory = factories[position]
+            val entry = CharacterRegistry.getEntries(this@CharacterSelectorActivity)
+                .find { it.factory.getCharacterId() == factory.getCharacterId() }
+
+            if (entry != null && !entry.isBuiltIn) {
+                showDeleteDialog(factory)
+            } else {
+                Toast.makeText(this@CharacterSelectorActivity, "内蔵キャラクターは削除できません", Toast.LENGTH_SHORT).show()
+            }
+            true
+        }
+
+        // キャラ管理ボタン
+        manageButton.setOnClickListener {
+            try {
+                filePickerLauncher.launch("application/zip")
+            } catch (e: Exception) {
+                Log.e("CharacterSelector", "ファイルピッカー起動失敗", e)
+                Toast.makeText(this, "ファイルピッカーを開けませんでした", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshCharacterList()
+    }
+
+    private fun refreshCharacterList() {
+        factories = CharacterRegistry.getFactories(this)
+        currentId = CharacterPreferences.getSelectedCharacterId(this)
+        adapter.factories = factories
+        adapter.selectedId = currentId
+        adapter.notifyDataSetChanged()
+    }
+
+    private fun installCharacterFromZip(uri: Uri) {
+        val progressDialog = AlertDialog.Builder(this)
+            .setTitle("インストール中")
+            .setMessage("キャラクターをインストールしています...")
+            .setCancelable(false)
+            .create()
+
+        progressDialog.show()
+
+        lifecycleScope.launch {
+            try {
+                val installer = CharacterInstaller(this@CharacterSelectorActivity)
+                val result = withContext(Dispatchers.IO) {
+                    installer.installFromZip(uri)
+                }
+
+                progressDialog.dismiss()
+
+                result.onSuccess { info ->
+                    runOnUiThread {
+                        refreshCharacterList()
+                        Toast.makeText(
+                            this@CharacterSelectorActivity,
+                            "「${info.name}」をインストールしました",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+                result.onFailure { e ->
+                    runOnUiThread {
+                        val message = e.message ?: "インストールに失敗しました"
+                        AlertDialog.Builder(this@CharacterSelectorActivity)
+                            .setTitle("インストール失敗")
+                            .setMessage(message)
+                            .setPositiveButton("OK") { d, _ -> d.dismiss() }
+                            .show()
+                    }
+                }
+            } catch (e: Exception) {
+                progressDialog.dismiss()
+                runOnUiThread {
+                    Toast.makeText(
+                        this@CharacterSelectorActivity,
+                        "エラー: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun showDeleteDialog(factory: CharacterFactory) {
+        val charId = factory.getCharacterId()
+        val charName = factory.getDisplayName(this)
+
+        AlertDialog.Builder(this)
+            .setTitle("キャラクター削除")
+            .setMessage("「$charName」を削除してもよろしいですか？\nこの操作は元に戻せません。")
+            .setPositiveButton("削除") { _, _ ->
+                deleteCharacter(charId)
+            }
+            .setNegativeButton("キャンセル") { d, _ -> d.dismiss() }
+            .show()
+    }
+
+    private fun deleteCharacter(charId: String) {
+        lifecycleScope.launch {
+            try {
+                val installer = CharacterInstaller(this@CharacterSelectorActivity)
+                val success = withContext(Dispatchers.IO) {
+                    installer.uninstall(charId)
+                }
+
+                if (success) {
+                    runOnUiThread {
+                        refreshCharacterList()
+                        Toast.makeText(
+                            this@CharacterSelectorActivity,
+                            "削除しました",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@CharacterSelectorActivity,
+                            "削除に失敗しました",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(
+                        this@CharacterSelectorActivity,
+                        "エラー: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
@@ -187,9 +347,9 @@ class CharacterSelectorActivity : AppCompatActivity() {
     /**
      * キャラクター一覧用のカスタムアダプター
      */
-    private inner class CharacterAdapter(
-        private val factories: List<CharacterFactory>,
-        private val selectedId: String,
+        private inner class CharacterAdapter(
+        var factories: List<CharacterFactory>,
+        var selectedId: String,
         private val widgetCount: Int
     ) : ArrayAdapter<CharacterFactory>(
         this@CharacterSelectorActivity,

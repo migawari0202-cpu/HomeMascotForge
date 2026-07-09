@@ -50,7 +50,20 @@ class ZipExtractor(private val validator: ZipSecurityValidator) {
                 if (entry.isDirectory) {
                     destFile.mkdirs()
                 } else {
-                    destFile.parentFile?.mkdirs()
+                    // ----- 🛡️ 修正: 末尾スラッシュなしディレクトリエントリ対策 -----
+                                        // サイズ0 のエントリはディレクトリとみなす（キャラクターZIPでは空ファイル不要）
+                                        // Note: 圧縮方式が DEFLATED でサイズ0のディレクトリエントリを作成する
+                                        //  ZIPツール（一部のPythonライブラリ等）に対応するため、メソッドはチェックしない
+                                        if (entry.size == 0L) {
+                                            destFile.mkdirs()
+                                            Log.w(TAG, "サイズ0エントリをディレクトリとして扱います: ${entry.name} (method=${entry.method})")
+                                            zip.closeEntry()
+                                            entry = zip.nextEntry
+                                            fileCount-- // fileCount++ を打ち消す
+                                            continue
+                                        }
+                                        // ----- 修正ここまで -----
+                                        destFile.parentFile?.mkdirs()
 
                     val totalRead = saveEntrySecurely(zip, destFile)
 
@@ -111,8 +124,21 @@ class ZipExtractor(private val validator: ZipSecurityValidator) {
     /**
      * character.jsonを探す
      */
-    fun findMetadataFile(dir: File): File? {
-        val rootMeta = File(dir, "character.json")
-        return if (rootMeta.exists() && rootMeta.isFile) rootMeta else null
+        fun findMetadataFile(dir: File): File? {
+        // 1. ルート直下をチェック（大文字小文字無視）
+        dir.listFiles()?.firstOrNull {
+            it.isFile && it.name.equals("character.json", ignoreCase = true)
+        }?.let { return it }
+
+        // 2. 直下にディレクトリが1つだけある場合、フォルダごと圧縮対策で中を探索
+        val subDirs = dir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+        if (subDirs.size == 1) {
+            return File(subDirs[0], "character.json").takeIf { it.isFile }
+                ?: subDirs[0].listFiles()?.firstOrNull {
+                    it.isFile && it.name.equals("character.json", ignoreCase = true)
+                }
+        }
+
+        return null
     }
 }

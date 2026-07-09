@@ -275,27 +275,27 @@ class ZipSecurityValidator(
         val id = json.getString("id")
         if (!Companion.isValidCharacterId(id)) throw SecurityException("INVALID_ID_FORMAT")
 
-        // ヘルパー: images/ 以下のファイル名を検証
-        fun validateImagePath(filename: String) {
-            if (filename.contains("..") || filename.startsWith("/") || filename.contains("\\") || filename.contains(":")) {
-                throw SecurityException(ERR_JSON_TRAVERSAL)
-            }
-            val targetFile = File(rootDir, "images/$filename")
-            if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $filename")
-            if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
-        }
+        // ヘルパー: images/ 以下の画像ファイル名を検証
+                fun validateImagePath(filename: String) {
+                    if (filename.contains("..") || filename.startsWith("/") || filename.contains("\\") || filename.contains(":")) {
+                        throw SecurityException(ERR_JSON_TRAVERSAL)
+                    }
+                    val targetFile = File(rootDir, "images/$filename")
+                    if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $filename")
+                    if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
+                }
 
-        // ヘルパー: speeches/ を含むルート相対パスを検証（例: "speeches/default.txt"）
-        fun validateSpeechPath(path: String) {
-            if (path.contains("..") || path.startsWith("/") || path.contains("\\") || path.contains(":")) {
-                throw SecurityException(ERR_JSON_TRAVERSAL)
-            }
-            val targetFile = File(rootDir, path)
-            if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $path")
-            if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
-        }
+                // ヘルパー: speeches/ 以下の音声/テキストファイル名を検証
+                fun validateSpeechPath(path: String) {
+                    if (path.contains("..") || path.startsWith("/") || path.contains("\\") || path.contains(":")) {
+                        throw SecurityException(ERR_JSON_TRAVERSAL)
+                    }
+                    val targetFile = File(rootDir, "speeches/$path")
+                    if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $path")
+                    if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
+                }
 
-        // images: オブジェクト形式（感情名 → images/ 以下のファイル名）
+        // images: オブジェクト形式（感情名 → images/ 以下の画像ファイル名）
         if (json.has("images")) {
             val images = json.optJSONObject("images") ?: throw SecurityException(ERR_IMAGES_NOT_OBJECT)
             images.keys().forEach { key ->
@@ -342,14 +342,15 @@ class ZipSecurityValidator(
     }
 
     fun validateImageFiles(dir: File) {
-        val imagesDir = File(dir, "images")
-        if (!imagesDir.exists()) return
-
-        val imageFiles = mutableListOf<File>()
-        imagesDir.walkTopDown()
-            .maxDepth(MAX_DIRECTORY_DEPTH)
-            .filter { it.isFile }
-            .forEach { imageFiles.add(it) }
+            val imagesDir = File(dir, "images")
+            if (!imagesDir.exists() || !imagesDir.isDirectory) {
+                return
+            }
+            val imageFiles = mutableListOf<File>()
+            imagesDir.walkTopDown()
+                .maxDepth(MAX_DIRECTORY_DEPTH)
+                .filter { it.isFile }
+                .forEach { imageFiles.add(it) }
 
         if (imageFiles.size > 100) {
             throw SecurityException("TOO_MANY_IMAGE_FILES")

@@ -19,7 +19,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.mascotforge.ui.CharacterInstallActivity
+
 import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.WidgetUpdateScheduler
 import com.example.mascotforge.widget.cache.UserWeatherCache
@@ -36,9 +36,8 @@ class Karioki : ComponentActivity() {
         private const val KEY_FIRST_LAUNCH = "first_launch"
     }
 
-    private enum class CompletionTarget {
+        private enum class CompletionTarget {
         FINISH,
-        LAUNCH_CHARACTER_INSTALL,
         LAUNCH_CHARACTER_SELECTOR
     }
 
@@ -220,9 +219,8 @@ class Karioki : ComponentActivity() {
         initializationCompleted = true
         Log.d(TAG, "初期化処理完了")
 
-        when (completionTarget) {
+                when (completionTarget) {
             CompletionTarget.FINISH -> finish()
-            CompletionTarget.LAUNCH_CHARACTER_INSTALL -> launchCharacterInstall()
             CompletionTarget.LAUNCH_CHARACTER_SELECTOR -> launchCharacterSelector()
         }
     }
@@ -246,14 +244,7 @@ class Karioki : ComponentActivity() {
         }
     }
 
-    private fun launchCharacterInstall() {
-        startActivity(
-            Intent(this, CharacterInstallActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-        )
-        finish()
-    }
+    
 
     private fun launchCharacterSelector() {
         startActivity(

@@ -94,13 +94,13 @@ class ShellInstaller(private val context: Context) {
     }
 
     /**
-     * shell.jsonのパースと検証。
-     * - id: 必須、キャラクターIDと同じ形式
-     * - name: 必須
-     * - emotionMapping: 必須オブジェクト。値はimages/以下のファイル名
-     * - targetCharacterId: 省略可
-     * - r18: 省略可（デフォルトfalse）
-     */
+         * shell.jsonのパースと検証。
+         * - id: 必須、キャラクターIDと同じ形式
+         * - name: 必須
+         * - emotionMapping: 必須オブジェクト。値は images/ 以下の画像ファイル名
+         * - targetCharacterId: 省略可
+         * - r18: 省略可（デフォルトfalse）
+         */
     private fun parseAndValidateShellJson(file: File, rootDir: File): ShellData {
         if (file.length() > ZipSecurityValidator.MAX_SINGLE_FILE_SIZE) {
             throw SecurityException("CONFIG_TOO_LARGE")
@@ -138,10 +138,10 @@ class ShellInstaller(private val context: Context) {
                     throw SecurityException("INVALID_IMAGE_PATH_IN_MAPPING: $key")
                 }
                 val imageFile = File(rootDir, "images/$value")
-                if (!imageFile.isFile) {
-                    throw SecurityException("MISSING_IMAGE_FILE: $value")
-                }
-                put(key, value)
+                                if (!imageFile.isFile) {
+                                    throw SecurityException("MISSING_IMAGE_FILE: $value")
+                                }
+                                put(key, value)
             }
         }
 
