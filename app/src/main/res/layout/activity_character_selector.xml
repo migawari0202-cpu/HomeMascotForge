@@ -4,37 +4,70 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#f5f5f5"
+    android:background="#F5F5F5"
     android:fitsSystemWindows="false">
 
-        <!-- ヘッダー -->
+    <!-- ヘッダー -->
     <LinearLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#6200EE"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="10dp">
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="16dp">
 
-        <TextView
+        <!-- タイトル + 管理ボタン -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="キャラクター選択"
-            android:textSize="22sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="キャラクター選択"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="24sp" />
+
+            <Button
+                android:id="@+id/manage_button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:minWidth="96dp"
+                android:text="管理"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#7C4DFF"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp" />
+
+        </LinearLayout>
+
+        <!-- サブタイトル -->
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:text="使いたいキャラクターを選んでね"
-            android:textSize="13sp"
-            android:textColor="#E0E0E0"
-            android:layout_marginTop="2dp" />
+            android:textColor="#E8E8E8"
+            android:textSize="14sp" />
+
     </LinearLayout>
+
+    <!-- 区切り線 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" />
 
     <!-- キャラクター一覧 -->
     <ListView
@@ -42,8 +75,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:padding="8dp"
         android:divider="#E0E0E0"
         android:dividerHeight="1dp"
-        android:padding="8dp" />
+        android:clipToPadding="false"
+        android:scrollbarStyle="outsideOverlay" />
 
 </LinearLayout>

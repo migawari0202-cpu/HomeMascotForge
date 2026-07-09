@@ -130,6 +130,14 @@ class CharacterInstaller(private val context: Context) {
             if (file.length() > ZipSecurityValidator.MAX_SINGLE_FILE_SIZE) {
                 throw CharacterInstallException("METADATA_TOO_LARGE", "character.json のサイズが大きすぎます。", file.path)
             }
+            // 空ファイルチェック
+            if (file.length() == 0L) {
+                throw CharacterInstallException(
+                    "METADATA_EMPTY",
+                    "character.json が空です。ZIPにディレクトリエントリが混入している可能性があります。",
+                    file.path
+                )
+            }
 
             val metadata = SafeCharacterLoader(context).parseMetadata(file.readText(Charsets.UTF_8))
             if (!ZipSecurityValidator.isValidCharacterId(metadata.id)) {
