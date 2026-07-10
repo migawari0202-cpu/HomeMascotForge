@@ -86,6 +86,11 @@ class WeatherUpdateWorker(
     private val weatherRepository = WeatherRepository()
     private val locationResolver = WeatherLocationResolver(applicationContext)
 
+    private fun isDaytime(): Boolean {
+        val hour = java.time.LocalTime.now().hour
+        return hour in 6..17   // 6:00～17:59を昼
+    }
+
     override suspend fun doWork(): Result {
         Log.d(TAG, "Weather update started")
 
@@ -113,16 +118,15 @@ class WeatherUpdateWorker(
     }
 
     private fun getWeatherEmoji(weatherId: Int): String = when (weatherId) {
-        800 -> "\u2600\uFE0F"
-        in 801..804 -> "\u2601\uFE0F"
-        in 500..531 -> "\uD83C\uDF27\uFE0F"
-        in 200..232 -> "\u26C8\uFE0F"
-        in 600..622 -> "\u2744\uFE0F"
-        in 701..781 -> "\uD83C\uDF2B\uFE0F"
-        in 300..321 -> "\uD83C\uDF26\uFE0F"
-        else -> "\u2600\uFE0F"
+        800 -> if (isDaytime()) "☀️" else "🌙"
+        in 801..804 -> "☁️"
+        in 500..531 -> "🌧️"
+        in 200..232 -> "⛈️"
+        in 600..622 -> "❄️"
+        in 701..781 -> "🌫️"
+        in 300..321 -> "🌦️"
+        else ->  "?"
     }
-
     private fun getWeatherCode(weatherId: Int): String = when (weatherId) {
         in 200..232 -> "thunder"
         in 300..321 -> "drizzle"
