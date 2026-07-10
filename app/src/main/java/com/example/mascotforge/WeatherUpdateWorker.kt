@@ -86,11 +86,6 @@ class WeatherUpdateWorker(
     private val weatherRepository = WeatherRepository()
     private val locationResolver = WeatherLocationResolver(applicationContext)
 
-    private fun isDaytime(): Boolean {
-        val hour = java.time.LocalTime.now().hour
-        return hour in 6..17   // 6:00～17:59を昼
-    }
-
     override suspend fun doWork(): Result {
         Log.d(TAG, "Weather update started")
 
