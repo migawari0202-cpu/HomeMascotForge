@@ -2,6 +2,11 @@ package com.example.mascotforge.speech
 
 import com.example.mascotforge.character.CharacterState
 
+private fun isDaytime(): Boolean {
+    val hour = java.time.LocalTime.now().hour
+    return hour in 6..17
+}
+
 /**
  * エンジンが「必ず知ってる」情報だけ渡す
  * → キャラパックはこれを元に「自分で拡張」
@@ -196,7 +201,8 @@ data class SpeechContext(
     fun isSnowing(): Boolean = weatherCode.contains("雪") || weatherEmoji.contains("⛄")
 
     /** 快晴 */
-    fun isSunny(): Boolean = weatherCode == "晴れ" || weatherEmoji == "☀️"
+    fun isSunny(): Boolean =
+        (weatherCode == "晴れ" && isDaytime()) || weatherEmoji == "☀️"
 
     /** 曇り */
     fun isCloudy(): Boolean = weatherCode.contains("曇") || weatherEmoji.contains("☁")
