@@ -7,42 +7,75 @@ import com.example.mascotforge.CharacterFactory
 import com.example.mascotforge.CharacterProvider
 import com.example.mascotforge.character.CharacterMetadata
 import com.example.mascotforge.character.CharacterSource
+import com.example.mascotforge.character.DynamicCharacter
 import com.example.mascotforge.character.SafeCharacterLoader
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 object CharacterRegistry {
 
     private const val TAG = "CharacterRegistry"
+
+    @Volatile
+    private var entriesCache: List<CharacterEntry>? = null
+
+    private val characterInstanceCache = ConcurrentHashMap<String, CharacterProvider>()
+    private val lock = Any()
+
+    /**
+     * インストール / アンインストール / 定義更新時に呼ぶ。
+     * メタデータと DynamicCharacter インスタンスの両方を破棄する。
+     */
+    fun invalidate(characterId: String? = null) {
+        synchronized(lock) {
+            if (characterId == null) {
+                entriesCache = null
+                characterInstanceCache.clear()
+                Log.d(TAG, "Registry cache fully invalidated")
+            } else {
+                // エントリ一覧はディレクトリ構成が変わっている可能性があるので丸ごと捨てる
+                entriesCache = null
+                characterInstanceCache.remove(characterId)
+                Log.d(TAG, "Registry cache invalidated for: $characterId")
+            }
+        }
+    }
 
     fun getFactories(context: Context): List<CharacterFactory> {
         return getEntries(context).map { it.factory }
     }
 
     fun getEntries(context: Context): List<CharacterEntry> {
-        val assetsEntries = getAssetsEntries(context)
-        val assetIds = assetsEntries.map { it.metadata.id }.toSet()
-        val installedEntries = getInstalledEntries(context)
-            .filterNot { entry ->
-                val isDuplicate = entry.metadata.id in assetIds
-                if (isDuplicate) {
-                    Log.w(TAG, "Skipping installed character with built-in duplicate id: ${entry.metadata.id}")
+        entriesCache?.let { return it }
+        synchronized(lock) {
+            entriesCache?.let { return it }
+            val appCtx = context.applicationContext
+            val assetsEntries = getAssetsEntries(appCtx)
+            val assetIds = assetsEntries.map { it.metadata.id }.toSet()
+            val installedEntries = getInstalledEntriesInternal(appCtx)
+                .filterNot { entry ->
+                    val isDuplicate = entry.metadata.id in assetIds
+                    if (isDuplicate) {
+                        Log.w(TAG, "Skipping installed character with built-in duplicate id: ${entry.metadata.id}")
+                    }
+                    isDuplicate
                 }
-                isDuplicate
-            }
 
-        return buildList {
-            addAll(assetsEntries)
-            addAll(installedEntries)
-        }.also {
+            val all = buildList {
+                addAll(assetsEntries)
+                addAll(installedEntries)
+            }
+            entriesCache = all
             Log.d(
                 TAG,
-                "Total characters: ${it.size} (Assets: ${assetsEntries.size}, Installed: ${installedEntries.size})"
+                "Cached characters: ${all.size} (Assets: ${assetsEntries.size}, Installed: ${installedEntries.size})"
             )
+            return all
         }
     }
 
     fun getInstalledEntries(context: Context): List<CharacterEntry> {
-        return getInstalledEntriesInternal(context)
+        return getEntries(context).filterNot { it.isBuiltIn }
     }
 
     fun getInstalledMetadata(context: Context): List<CharacterMetadata> {
@@ -93,18 +126,12 @@ object CharacterRegistry {
                 ?.mapNotNull { charDir ->
                     try {
                         val charId = charDir.name
-                        val meta = loader.loadMetadata(
-                            CharacterSource.InstalledFiles("installed_characters/$charId")
-                        )
+                        val source = CharacterSource.InstalledFiles("installed_characters/$charId")
+                        val meta = loader.loadMetadata(source)
 
                         if (meta != null) {
                             Log.d(TAG, "Loaded installed character: $charId")
-                            val source = CharacterSource.InstalledFiles("installed_characters/$charId")
-                            val factory = InstalledCharacterFactory(
-                                meta,
-                                context,
-                                source
-                            )
+                            val factory = InstalledCharacterFactory(meta, context, source)
                             CharacterEntry(meta, source, isBuiltIn = false, factory = factory)
                         } else {
                             Log.w(TAG, "Failed to load metadata for: $charId")
@@ -122,33 +149,37 @@ object CharacterRegistry {
     }
 
     fun getInternalCharacters(context: Context): List<CharacterProvider> {
-        return getFactories(context).mapNotNull { factory ->
+        return getEntries(context).mapNotNull { entry ->
             try {
-                factory.create(context)
+                getCharacterById(context, entry.metadata.id)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to create character: ${factory.getCharacterId()}", e)
+                Log.e(TAG, "Failed to create character: ${entry.metadata.id}", e)
                 null
             }
         }
     }
 
     fun hasCharacter(context: Context, id: String): Boolean {
-        return getFactories(context).any { it.getCharacterId() == id }
+        return getEntries(context).any { it.metadata.id == id }
     }
 
     fun getCharacterById(context: Context, id: String): CharacterProvider? {
-        return getFactories(context)
-            .find { it.getCharacterId() == id }
-            ?.create(context)
+        characterInstanceCache[id]?.let { return it }
+
+        val entry = getEntries(context).find { it.metadata.id == id } ?: return null
+        return characterInstanceCache.getOrPut(id) {
+            entry.factory.create(context.applicationContext)
+        }
     }
 
     fun getDefaultCharacterId(context: Context): String {
-        return getFactories(context).firstOrNull()?.getCharacterId()
+        return getEntries(context).firstOrNull()?.metadata?.id
             ?: error("No characters available")
     }
 
     fun getDefaultCharacter(context: Context): CharacterProvider {
-        return getFactories(context).firstOrNull()?.create(context)
+        val id = getDefaultCharacterId(context)
+        return getCharacterById(context, id)
             ?: error("No characters available")
     }
 }
@@ -163,8 +194,8 @@ data class CharacterEntry(
 class InstalledCharacterFactory(
     private val metadata: CharacterMetadata,
     private val context: Context,
-    private val source: com.example.mascotforge.character.CharacterSource =
-        com.example.mascotforge.character.CharacterSource.InstalledFiles("installed_characters/${metadata.id}")
+    private val source: CharacterSource =
+        CharacterSource.InstalledFiles("installed_characters/${metadata.id}")
 ) : CharacterFactory {
 
     override fun getCharacterId(): String = metadata.id
@@ -177,9 +208,12 @@ class InstalledCharacterFactory(
 
     override fun getVersion(): String = metadata.version
 
+    /**
+     * Registry で既にパース済みの metadata を使い、character.json を再読込しない。
+     */
     override fun create(context: Context): CharacterProvider {
-        val loader = SafeCharacterLoader(context)
-        return loader.loadCharacter(source)
+        val appCtx = context.applicationContext
+        return SafeCharacterLoader(appCtx).createFromMetadata(source, metadata)
             ?: throw IllegalStateException("Failed to load character: ${metadata.id}")
     }
 
@@ -196,7 +230,7 @@ class InstalledCharacterFactory(
             ).distinct()
 
             val imageFile = when (source) {
-                is com.example.mascotforge.character.CharacterSource.Assets -> {
+                is CharacterSource.Assets -> {
                     for (imageName in candidates) {
                         try {
                             val assetPath = "${source.basePath}/images/$imageName"
@@ -214,7 +248,7 @@ class InstalledCharacterFactory(
                     return null
                 }
 
-                is com.example.mascotforge.character.CharacterSource.InstalledFiles -> {
+                is CharacterSource.InstalledFiles -> {
                     candidates
                         .map { File(context.filesDir, "${source.basePath}/images/$it") }
                         .firstOrNull { it.exists() }
@@ -222,10 +256,10 @@ class InstalledCharacterFactory(
             }
 
             if (imageFile != null && imageFile.exists()) {
-                return android.graphics.drawable.Drawable.createFromPath(imageFile.absolutePath)
+                return Drawable.createFromPath(imageFile.absolutePath)
             }
 
-            if (source is com.example.mascotforge.character.CharacterSource.InstalledFiles) {
+            if (source is CharacterSource.InstalledFiles) {
                 val imagesDir = File(context.filesDir, "${source.basePath}/images")
                 val firstImage = imagesDir.listFiles()
                     ?.firstOrNull {
@@ -234,7 +268,7 @@ class InstalledCharacterFactory(
 
                 if (firstImage != null) {
                     Log.d("InstalledFactory", "Using first available image: ${firstImage.name}")
-                    return android.graphics.drawable.Drawable.createFromPath(firstImage.absolutePath)
+                    return Drawable.createFromPath(firstImage.absolutePath)
                 }
             }
 

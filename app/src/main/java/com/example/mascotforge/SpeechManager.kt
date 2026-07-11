@@ -19,11 +19,32 @@ import java.io.InputStreamReader
  * - loadSpeechFile()をpublicに変更してDynamicCharacterから呼べるように
  * - DynamicCharacterにloaderへの参照を渡すように修正
  */
-class SafeCharacterLoader(private val context: Context) {
+class SafeCharacterLoader(context: Context) {
 
-        companion object {
+    private val context = context.applicationContext
+
+    companion object {
         private const val TAG = "SafeCharacterLoader"
         private const val MAX_LINES = 10000
+
+        /** basePath → パース済みメタデータ（プロセス内共有） */
+        private val metadataCache = java.util.concurrent.ConcurrentHashMap<String, CharacterMetadata>()
+
+        /** speech path → 行リスト */
+        private val speechFileCache = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
+
+        fun invalidateMetadataCache(basePath: String? = null) {
+            if (basePath == null) {
+                metadataCache.clear()
+                speechFileCache.clear()
+            } else {
+                metadataCache.remove(basePath)
+                speechFileCache.keys
+                    .filter { it.startsWith(basePath) }
+                    .forEach { speechFileCache.remove(it) }
+            }
+            Log.d(TAG, "Metadata/speech cache invalidated: ${basePath ?: "ALL"}")
+        }
     }
 
     /**
@@ -34,16 +55,18 @@ class SafeCharacterLoader(private val context: Context) {
     }
 
     /**
-     * キャッシュクリア（キャッシュ廃止に伴い空実装）
+     * メタデータ / セリフファイルのメモリキャッシュをクリア
      */
     fun clearCache() {
-        Log.d(TAG, "Cache cleared (no-op)") 
+        invalidateMetadataCache()
     }
 
     /**
-     * メタデータ読み込み（公開メソッド）
+     * メタデータ読み込み（公開メソッド）。同一 basePath はプロセス内で1回だけパースする。
      */
     fun loadMetadata(source: CharacterSource): CharacterMetadata? {
+        metadataCache[source.basePath]?.let { return it }
+
         return try {
             val jsonStr = when (source) {
                 is CharacterSource.Assets -> context.assets.open("${source.basePath}/character.json")
@@ -59,7 +82,9 @@ class SafeCharacterLoader(private val context: Context) {
                 }
             }
 
-            parseMetadata(jsonStr)
+            parseMetadata(jsonStr).also { meta ->
+                metadataCache[source.basePath] = meta
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error loading metadata: ${source.basePath}", e)
             null
@@ -91,16 +116,27 @@ class SafeCharacterLoader(private val context: Context) {
                 Log.e(TAG, "Failed to load metadata for: ${source.basePath}")
                 return null
             }
-
-            if (meta.speechRules.isNotEmpty()) {
-                Log.d(TAG, "Using SpeechRules system for: ${source.basePath}")
-                return loadCharacterWithRules(source, meta)
-            } else {
-                Log.d(TAG, "Using legacy system for: ${source.basePath}")
-                return loadCharacterLegacy(source, meta)
-            }
+            createFromMetadata(source, meta)
         } catch (e: Exception) {
             Log.e(TAG, "Error loading character: ${source.basePath}", e)
+            null
+        }
+    }
+
+    /**
+     * 既にパース済みのメタデータから DynamicCharacter を組み立てる（JSON 再読込なし）
+     */
+    fun createFromMetadata(source: CharacterSource, meta: CharacterMetadata): CharacterProvider? {
+        return try {
+            if (meta.speechRules.isNotEmpty()) {
+                Log.d(TAG, "Using SpeechRules system for: ${source.basePath}")
+                loadCharacterWithRules(source, meta)
+            } else {
+                Log.d(TAG, "Using legacy system for: ${source.basePath}")
+                loadCharacterLegacy(source, meta)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating character from metadata: ${source.basePath}", e)
             null
         }
     }
@@ -294,6 +330,8 @@ class SafeCharacterLoader(private val context: Context) {
      * DynamicCharacterから動的に呼ばれる
      */
     fun loadSpeechFile(path: String, source: CharacterSource): List<String> {
+        speechFileCache[path]?.let { return it }
+
         return try {
             // パストラバーサル防止
             if (path.contains("..") || !path.startsWith(source.basePath)) {
@@ -322,6 +360,9 @@ class SafeCharacterLoader(private val context: Context) {
                 .filter { it.isNotEmpty() && !it.startsWith("#") }
 
             Log.d(TAG, "Loaded ${filteredLines.size} speeches from: $path")
+            if (filteredLines.isNotEmpty()) {
+                speechFileCache[path] = filteredLines
+            }
             filteredLines
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load speech file: $path", e)
