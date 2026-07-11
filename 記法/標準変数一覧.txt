@@ -5,6 +5,9 @@
 以下の変数はセリフ展開（{変数名}）・感情条件式（emotions.rules の "if"）・
 customVariables の "condition" のすべてで使える。
 
+speechRules の conditions / anyOf でも多くのキーが使えるが、
+書ける値の形式が異なる（末尾「speechRules の conditions / anyOf」を参照）。
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ 時刻・日付
 
@@ -21,7 +24,7 @@ customVariables の "condition" のすべてで使える。
   isHoliday             boolean   祝日が true
   holidayName           string    "元日" など（祝日でなければ空文字）
   isSpecialDay          boolean   特別な日（バレンタイン等）
-  specialDayName        string    "バレンタインデー" など
+  specialDayName        string    "バレンタイン" など（該当しなければ空文字）
 
   timeSlot の時間帯:
     midnight  0:00〜4:59
@@ -35,11 +38,22 @@ customVariables の "condition" のすべてで使える。
 
   変数名                型        値の例
   ─────────────────────────────────────────────
-  weatherCode           string    "晴れ" / "曇り" / "雨" / "小雨" / "雷雨" / "雪" / "霧" / "嵐"
+  weatherCode           string    下記「天気コードの値」
   weatherEmoji          string    "☀️" / "🌤" / "☁️" / "🌧" など
   temperature           int       摂氏（℃）
   temperatureFeeling    string    "暑い" / "少し暑い" / "ちょうどいい" / "少し寒い" / "寒い"
-  humidity              int       0〜100（未実装時は null）
+  humidity              int?      0〜100。現状API未取得のため常に null
+
+  【天気コードの値（実行時は日本語に正規化される）】
+    "晴れ" / "晴れ時々曇り" / "曇り" / "雨" / "小雨" /
+    "雷雨" / "雪" / "霧" / "嵐"
+
+  【null / 未取得時の扱い】
+    humidity:
+      - セリフ展開 {humidity} → 空文字
+      - 条件式（emotions / condition）→ "0" として比較される
+    moonPhase:
+      - 未実装。セリフ展開は空文字、条件式では ""
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ バッテリー・デバイス
@@ -51,6 +65,12 @@ customVariables の "condition" のすべてで使える。
   isCharging            boolean
   isLowBattery          boolean   batteryLevel <= 20 で true
 
+  【batteryStatus の判定（OSの省電力設定ではない）】
+    - 充電中              → "充電中"
+    - 残量 <= 15%        → "省電力モード"（ラベル名のみ）
+    - それ以外            → "通常"
+    ※ isLowBattery（<=20）と閾値が異なる点に注意
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ 起動・使用状況
 
@@ -58,8 +78,12 @@ customVariables の "condition" のすべてで使える。
   ─────────────────────────────────────────────
   launchCount           int       今日の累計起動回数
   consecutiveDays       int       連続起動日数
-  lastLaunchHoursAgo    int       前回起動からの時間（時間単位）
+  lastLaunchHoursAgo    int?      前回起動からの時間（時間単位）。初回は null
   isFirstLaunchToday    boolean   今日初めての起動なら true
+
+  【null 時の扱い（lastLaunchHoursAgo）】
+    - セリフ展開 {lastLaunchHoursAgo} → "0"
+    - 条件式 → "0" として比較される
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ タッチ関連
@@ -70,6 +94,9 @@ customVariables の "condition" のすべてで使える。
   touchCountToday       int       今日のタッチ回数
   lastTouchMinutesAgo   int       最後にタッチしてから何分経過したか
   wasTouched            boolean   1分以内にタッチされていれば true
+  consecutiveTouchCount int       短時間（約10秒以内）の連続タッチ回数
+  pettingLevel          int       撫で段階 0〜3（連続タッチ強度）
+  isBeingPetted         boolean   短時間の連続タッチ中なら true
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ ユーザー情報
@@ -77,7 +104,7 @@ customVariables の "condition" のすべてで使える。
   変数名                型        備考
   ─────────────────────────────────────────────
   userName              string    ユーザー名（設定から取得）
-  userGender            string    現在未実装
+  userGender            string    現在未実装（常に空）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ その他
@@ -86,7 +113,7 @@ customVariables の "condition" のすべてで使える。
   ─────────────────────────────────────────────
   isNearBedtime         boolean   21:00〜翌1:59 で true
   isNearWakeup          boolean   6:00〜8:59 で true
-  moonPhase             string    未実装（null）
+  moonPhase             string    未実装（null / 空文字）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ 条件式で使える演算子（emotions / customVariables.condition 共通）
@@ -108,7 +135,7 @@ customVariables の "condition" のすべてで使える。
   【評価エンジンの動作仕様】
 
   - stripSpacesOutsideQuotes: 条件式中のクォート外スペースは評価前に自動除去
-    例: weatherCode == "晴れ 時々 曇り" の " " は保持される
+    例: weatherCode == "晴れ 時々 曇り" のクォート内スペースは保持される
 
   - ! の評価順: 外側括弧のアンラップ後に判定
     例: !(hour >= 6 && hour < 12) → 括弧内を先に再帰評価し、その結果を反転
@@ -118,12 +145,38 @@ customVariables の "condition" のすべてで使える。
     単一条件レベルでの ! 判定は行わず、上位の再帰で処理するため
     evaluateSingleCondition は純粋な比較のみに集中
 
+  【emotions 条件での weatherCode 英語エイリアス】
+    右辺に英語を書いた場合も日本語値と照合される:
+      sunny / clear → 晴れ
+      partly_cloudy → 晴れ時々曇り
+      cloudy → 曇り
+      rain → 雨
+      drizzle → 小雨
+      thunder → 雷雨
+      snow → 雪
+      fog → 霧
+      storm → 嵐
+
+    例: weatherCode == "rain" は weatherCode == "雨" と同じ結果
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ speechRules の conditions / anyOf で使える値
 
-  conditions / anyOf は単純な文字列一致のみ対応（演算子不可）。
-  演算子が必要な条件は emotions の "if" か customVariables の "condition" で使う。
+  speechRules は emotions の "if" のような自由な式（&&, ||）は書けない。
+  代わりに「キー → 値」のマップで、キーごとに決まった比較が行われる。
 
-  例:
-    "conditions": { "timeSlot": "morning" }    ← OK
-    "conditions": { "hour": ">= 6" }            ← 使えない（文字列一致しか見ない）
+  詳細・一覧は「speechRules記法.txt」を参照。概要のみ:
+
+  【値の書き方の例】
+    文字列一致      "timeSlot": "morning"
+    真偽値          "isCharging": "true" / "false"
+    数値の等値      "batteryLevel": "20"
+    数値の比較      "batteryLevel": ">=20"  /  "temperature": "<5"
+    時刻の範囲      "hour": "7-9"           ← ">= 6" 形式は不可
+    日付の範囲      "day": "1-3"
+
+  【使えない例】
+    "conditions": { "hour": ">= 6" }     ← hour は範囲 "開始-終了" か単一時刻のみ
+    "conditions": { "a": "x", ... } に && を埋め込む ← マップの各キーが AND されるだけ
+
+  複雑な論理が必要な場合は emotions の "if" か customVariables の "condition" を使う。
