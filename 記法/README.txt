@@ -31,14 +31,17 @@
   「AまたはB」の条件でファイル分岐したい  speechRules記法.txt（anyOf）
   同じ条件で複数セリフファイルをランダム  speechRules記法.txt（files）
   セリフ中に変数の値を表示したい          セリフタグ記法.txt（{変数名}）
+  条件で表示文言を切り替えたい            セリフタグ記法.txt（三項演算子）
   セリフを表示したとき変数を増やしたい    セリフタグ記法.txt（[v:]）
   文字列・真偽値変数をセリフから変更したい セリフタグ記法.txt（[v:xxx=値]）
+  そのセリフだけ画像を変えたい            セリフタグ記法.txt（[emotion:] / [e:]）
   タップしたとき変数を変えたい            customVariables記法.txt（onTouch）
   好感度が高いと画像を変えたい            emotions記法.txt
   毎日起動したらボーナスを与えたい        customVariables記法.txt（onLaunch）
   条件式で !(A && B) の否定を使いたい     emotions記法.txt / 標準変数一覧.txt
   カスタム変数を変数名だけで直接指定したい  speechRules記法.txt（カスタム変数の参照）
   boolean変数を "true"/"false" で比較したい speechRules記法.txt（boolean型注意）
+  使える変数名を全部見たい                標準変数一覧.txt
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ ビルド・テストに関する補足

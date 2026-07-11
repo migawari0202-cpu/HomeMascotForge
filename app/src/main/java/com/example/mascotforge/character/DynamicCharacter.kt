@@ -34,6 +34,10 @@ class DynamicCharacter(
 
     companion object {
         private const val TAG = "DynamicCharacter"
+        private const val TRIGGER_PREFS = "dynamic_char_triggers"
+        private const val KEY_LAST_CONSECUTIVE_DAYS = "last_consecutive_days_"
+        /** SharedPreferences 未記録時のセンチネル（初回はベースラインのみ保存して発火しない） */
+        private const val UNSET_CONSECUTIVE_DAYS = Int.MIN_VALUE
     }
 
     private val appContext: Context = context.applicationContext
@@ -52,6 +56,10 @@ class DynamicCharacter(
 
     private val stateManager by lazy {
         CharacterStateManager(appContext)
+    }
+
+    private val triggerPrefs by lazy {
+        appContext.getSharedPreferences(TRIGGER_PREFS, Context.MODE_PRIVATE)
     }
 
     @Volatile
@@ -73,7 +81,8 @@ class DynamicCharacter(
     private val shownSpeeches = mutableSetOf<String>()
 
     override suspend fun getSpeech(ctx: SpeechContext): String? {
-        fireSpeechTriggers(ctx)
+        // 環境系トリガー（起動・連続日数変化・時間帯）はセリフ有無に関係なく評価
+        fireEnvironmentTriggers(ctx)
 
         val speeches = getSpeeches(ctx)
         if (speeches.isEmpty()) {
@@ -95,11 +104,17 @@ class DynamicCharacter(
 
         val expandedSpeech = expandVariables(parsedSpeech.cleanedText, ctx)
 
+        // onSpeech: セリフが実際に表示されるときだけ発火（タグ操作の後）
+        fireOnSpeechTrigger(ctx)
+
         Log.d(TAG, "[$charId] Speech: $expandedSpeech")
         return expandedSpeech
     }
 
-    private fun fireSpeechTriggers(ctx: SpeechContext) {
+    /**
+     * 起動・連続日数・時間帯など、セリフ本文の有無に依存しないトリガー。
+     */
+    private fun fireEnvironmentTriggers(ctx: SpeechContext) {
         if (ctx.isFirstLaunchToday) {
             Log.d(TAG, "[$charId] First launch today - triggering ON_LAUNCH")
             variableManager.triggerRules(
@@ -108,10 +123,7 @@ class DynamicCharacter(
             )
         }
 
-        variableManager.triggerRules(
-            trigger = CustomVariable.ChangeRule.Trigger.ON_CONSECUTIVE_DAYS,
-            speechContext = ctx
-        )
+        fireOnConsecutiveDaysIfChanged(ctx)
 
         if (lastTimeSlot != null && lastTimeSlot != ctx.timeSlot) {
             Log.d(TAG, "[$charId] TimeSlot changed: $lastTimeSlot -> ${ctx.timeSlot}")
@@ -122,6 +134,41 @@ class DynamicCharacter(
         }
 
         lastTimeSlot = ctx.timeSlot
+    }
+
+    /**
+     * 連続起動日数が前回観測値から変化したときだけ ON_CONSECUTIVE_DAYS を発火する。
+     * プロセス再起動をまたいでも正しく検知するため SharedPreferences に前回値を保持する。
+     * 初回観測時はベースラインとして保存するのみ（「変化」ではない）。
+     */
+    private fun fireOnConsecutiveDaysIfChanged(ctx: SpeechContext) {
+        val key = KEY_LAST_CONSECUTIVE_DAYS + charId
+        val lastConsecutive = triggerPrefs.getInt(key, UNSET_CONSECUTIVE_DAYS)
+        val current = ctx.consecutiveDays
+
+        if (lastConsecutive == UNSET_CONSECUTIVE_DAYS) {
+            triggerPrefs.edit().putInt(key, current).apply()
+            Log.d(TAG, "[$charId] Baseline consecutiveDays=$current (ON_CONSECUTIVE_DAYS not fired)")
+            return
+        }
+
+        if (lastConsecutive != current) {
+            Log.d(TAG, "[$charId] consecutiveDays changed: $lastConsecutive -> $current - triggering ON_CONSECUTIVE_DAYS")
+            variableManager.triggerRules(
+                trigger = CustomVariable.ChangeRule.Trigger.ON_CONSECUTIVE_DAYS,
+                speechContext = ctx
+            )
+            triggerPrefs.edit().putInt(key, current).apply()
+        }
+    }
+
+    /** セリフ表示時トリガー */
+    private fun fireOnSpeechTrigger(ctx: SpeechContext) {
+        Log.d(TAG, "[$charId] Speech displayed - triggering ON_SPEECH")
+        variableManager.triggerRules(
+            trigger = CustomVariable.ChangeRule.Trigger.ON_SPEECH,
+            speechContext = ctx
+        )
     }
 
     private fun pickSpeechTemplate(speeches: List<String>, ctx: SpeechContext): String? {
