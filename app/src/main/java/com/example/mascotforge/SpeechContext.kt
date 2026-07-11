@@ -1,7 +1,17 @@
 package com.example.mascotforge.speech
 
 import com.example.mascotforge.character.CharacterState
-import com.example.mascotforge.isDaytime
+import com.example.mascotforge.isAlmostMidnight as checkAlmostMidnight
+import com.example.mascotforge.isBedtime as checkBedtime
+import com.example.mascotforge.isDaytime as checkDaytime
+import com.example.mascotforge.isDusk as checkDusk
+import com.example.mascotforge.isEarlyMorning as checkEarlyMorning
+import com.example.mascotforge.isExactMidnight as checkExactMidnight
+import com.example.mascotforge.isLateNight as checkLateNight
+import com.example.mascotforge.isLunchTime as checkLunchTime
+import com.example.mascotforge.isRushHour as checkRushHour
+import com.example.mascotforge.isSnackTime as checkSnackTime
+import com.example.mascotforge.isWakeupTime as checkWakeupTime
 
 /**
  * エンジンが「必ず知ってる」情報だけ渡す
@@ -103,37 +113,37 @@ data class SpeechContext(
     fun isVeryLongTimeNoSee(): Boolean = (lastLaunchHoursAgo ?: 0) >= 168
 
 
-    // ===== 時間帯判定 =====
+    // ===== 時間帯判定（定義は TimeUtils.kt） =====
 
     /** 深夜（1〜4時） */
-    fun isLateNight(): Boolean = hour in 1..4
+    fun isLateNight(): Boolean = checkLateNight(hour)
 
     /** 早朝（5〜6時） */
-    fun isEarlyMorning(): Boolean = hour in 5..6
+    fun isEarlyMorning(): Boolean = checkEarlyMorning(hour)
 
     /** 通勤ラッシュ時間 */
-    fun isRushHour(): Boolean = !isWeekend && (hour in 7..9 || hour in 17..19)
+    fun isRushHour(): Boolean = checkRushHour(hour, isWeekend)
 
     /** お昼休み時間 */
-    fun isLunchTime(): Boolean = hour == 12 || (hour == 11 && minute >= 30)
+    fun isLunchTime(): Boolean = checkLunchTime(hour, minute)
 
     /** おやつ時間 */
-    fun isSnackTime(): Boolean = hour == 15 || hour == 10
+    fun isSnackTime(): Boolean = checkSnackTime(hour)
 
     /** もうすぐ日付が変わる */
-    fun isAlmostMidnight(): Boolean = hour == 23 && minute >= 50
+    fun isAlmostMidnight(): Boolean = checkAlmostMidnight(hour, minute)
 
     /** ちょうど00:00 */
-    fun isExactMidnight(): Boolean = hour == 0 && minute == 0
+    fun isExactMidnight(): Boolean = checkExactMidnight(hour, minute)
 
     /** 就寝時間帯（22時〜翌2時） */
-    fun isBedtime(): Boolean = hour >= 22 || hour <= 2
+    fun isBedtime(): Boolean = checkBedtime(hour)
 
     /** 起床時間帯（6時〜8時） */
-    fun isWakeupTime(): Boolean = hour in 6..8
+    fun isWakeupTime(): Boolean = checkWakeupTime(hour)
 
     /** 夕暮れ時（17時〜19時） */
-    fun isDusk(): Boolean = hour in 17..19
+    fun isDusk(): Boolean = checkDusk(hour)
 
 
     // ===== 季節イベント =====
@@ -197,8 +207,8 @@ data class SpeechContext(
     fun isSnowing(): Boolean = weatherCode.contains("雪") || weatherEmoji.contains("⛄")
 
     /** 快晴 */
-        fun isSunny(): Boolean =
-        (weatherCode == "晴れ" && isDaytime()) || weatherEmoji == "☀️"
+    fun isSunny(): Boolean =
+        (weatherCode == "晴れ" && checkDaytime(hour)) || weatherEmoji == "☀️"
 
     /** 曇り */
     fun isCloudy(): Boolean = weatherCode.contains("曇") || weatherEmoji.contains("☁")

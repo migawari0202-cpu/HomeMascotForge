@@ -8,6 +8,9 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.mascotforge.character.CharacterStateManager
+import com.example.mascotforge.getTimeSlot
+import com.example.mascotforge.isNearBedtime
+import com.example.mascotforge.isNearWakeup
 import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
@@ -166,12 +169,10 @@ object SpeechContextFactory {
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // その他コンテキスト
+        // その他コンテキスト（時間帯判定は TimeUtils）
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 就寝時刻を22:00と仮定
-        val isNearBedtime = hour >= 21 || hour <= 1
-        // 起床時刻を7:00と仮定
-        val isNearWakeup = hour in 6..8
+        val nearBedtime = isNearBedtime(hour)
+        val nearWakeup = isNearWakeup(hour)
         // 月齢（簡易版、実装は省略）
         val moonPhase: String? = null  // TODO: 月齢計算APIを使用
 
@@ -206,8 +207,8 @@ object SpeechContextFactory {
             consecutiveDays = consecutiveDays,
             userName = userName,
             userGender = null,
-            isNearBedtime = isNearBedtime,
-            isNearWakeup = isNearWakeup,
+            isNearBedtime = nearBedtime,
+            isNearWakeup = nearWakeup,
             moonPhase = moonPhase,
             lastTouchMinutesAgo = lastTouchMinutesAgo,
             touchCountToday = touchCountToday,
@@ -223,17 +224,6 @@ object SpeechContextFactory {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // プライベートヘルパー関数
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    /**
-     * 時間帯を判定
-     */
-    private fun getTimeSlot(hour: Int): String = when(hour) {
-        in 5..11 -> "morning"
-        in 12..16 -> "afternoon"
-        in 17..20 -> "evening"
-        in 21..23 -> "night"
-        else -> "midnight"
-    }
 
     /**
      * 曜日を文字列に変換
