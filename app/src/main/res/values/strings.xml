@@ -5,75 +5,30 @@
     <!-- アプリ基本情報 -->
     <!-- =================================== -->
     <string name="app_name">HomeMascot</string>
-    <string name="widget_name">時計＆メモウィジェット</string>
 
     <!-- =================================== -->
     <!-- メモ関連 -->
     <!-- =================================== -->
-    <string name="memo_input_title">メモを追加</string>
-    <string name="memo_hint">ここにメモを入力してください...</string>
-    <string name="button_save">保存</string>
-    <string name="button_cancel">キャンセル</string>
-    <string name="memo_saved">メモを保存しました</string>
-    <string name="memo_save_failed">保存に失敗しました</string>
-    <string name="memo_empty_error">メモを入力してください</string>
-    <string name="memo_too_long_error">メモは200文字以内で入力してください</string>
-    <string name="memo_placeholder">メモはありません</string>
 
     <!-- =================================== -->
     <!-- ウィジェット説明用アクセシビリティ -->
     <!-- =================================== -->
-    <string name="cd_widget_clock">ウィジェット時計</string>
-    <string name="cd_widget_clock_compact">ウィジェット時計(小)</string>
-    <string name="cd_battery_icon">バッテリーアイコン</string>
-    <string name="cd_placeholder_image">プレースホルダ画像</string>
-    <string name="cd_game_button">ゲームボタン</string>
-    <string name="cd_memo_button">メモボタン</string>
     <string name="widget_description">時計、天気、キャラクターのセリフを表示</string>
 
     <!-- =================================== -->
     <!-- 天気関連 -->
     <!-- =================================== -->
-    <string name="weather_sunny_emoji">☀️</string>
-    <string name="weather_temp_default">--℃</string>
 
     <!-- =================================== -->
     <!-- バッテリー関連 -->
     <!-- =================================== -->
-    <string name="battery_percent_default">100%</string>
 
     <!-- =================================== -->
     <!-- アプリ全体テーマ -->
     <!-- =================================== -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- 全体の文字色や背景を設定したい場合はここに追加 -->
-    </style>
 
     <!-- =================================== -->
     <!-- ウィジェット用共通スタイル -->
     <!-- =================================== -->
-    <style name="Widget.MemoText2">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">#33FFFFFF</item>
-        <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:textSize">10sp</item>
-        <item name="android:padding">3dp</item>
-        <item name="android:layout_marginBottom">2dp</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
-    <style name="Widget.ClockText">
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:gravity">center</item>
-    </style>
-
-    <style name="Widget.WeatherText">
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:textSize">22sp</item>
-        <item name="android:gravity">center</item>
-    </style>
 
 </resources>
