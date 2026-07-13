@@ -35,6 +35,19 @@ class WidgetUpdateCoordinator(private val context: Context) {
 
     enum class WidgetLayoutType { COMPACT, NORMAL }
 
+    /**
+     * 1ウィジェット分の作業に必要な情報をひとまとめにしたもの。
+     * これを作る場所を createWidgetContext() の1箇所に集約する。
+     */
+    data class WidgetContext(
+        val widgetId: Int,
+        val layoutType: WidgetLayoutType,
+        val size: WidgetSize,
+        val layoutId: Int,
+        val views: RemoteViews,
+        val updaterLayoutType: WidgetViewUpdater.LayoutType
+    )
+
     // ---- layout helpers ----
 
     private fun getWidgetSize(widgetId: Int): WidgetSize {
@@ -45,12 +58,15 @@ class WidgetUpdateCoordinator(private val context: Context) {
         return WidgetSize(minWidth, minHeight)
     }
 
+    private fun determineLayoutType(size: WidgetSize): WidgetLayoutType = when {
+        size.widthDp >= NORMAL_WIDTH_THRESHOLD -> WidgetLayoutType.NORMAL
+        else -> WidgetLayoutType.COMPACT
+    }
+
+    /** widgetIdからサイズ取得込みで判定したいときはこちら（ログ付き） */
     private fun determineLayoutType(widgetId: Int): WidgetLayoutType {
         val size = getWidgetSize(widgetId)
-        val layoutType = when {
-            size.widthDp >= NORMAL_WIDTH_THRESHOLD -> WidgetLayoutType.NORMAL
-            else -> WidgetLayoutType.COMPACT
-        }
+        val layoutType = determineLayoutType(size)
         Log.d(TAG, "widgetId=$widgetId → layoutType=$layoutType (width=${size.widthDp}dp)")
         return layoutType
     }
@@ -65,7 +81,23 @@ class WidgetUpdateCoordinator(private val context: Context) {
         WidgetLayoutType.COMPACT -> WidgetViewUpdater.LayoutType.COMPACT
     }
 
-    // ---- iteration helper ----
+    /**
+     * widgetId → layoutType/size/layoutId/RemoteViews をまとめて組み立てる。
+     * 以前は各メソッドでこの4点セットを毎回手書きしていた。
+     */
+    private fun createWidgetContext(
+        widgetId: Int,
+        layoutType: WidgetLayoutType? = null
+    ): WidgetContext {
+        val size = getWidgetSize(widgetId)
+        val resolvedLayoutType = layoutType ?: determineLayoutType(size)
+        val layoutId = getLayoutId(resolvedLayoutType)
+        val views = RemoteViews(context.packageName, layoutId)
+        val updaterLayoutType = resolvedLayoutType.toUpdaterLayoutType()
+        return WidgetContext(widgetId, resolvedLayoutType, size, layoutId, views, updaterLayoutType)
+    }
+
+    // ---- iteration helpers ----
 
     private fun allWidgetIds(): IntArray =
         appWidgetManager.getAppWidgetIds(ComponentName(context, TimeWidgetProvider::class.java))
@@ -80,6 +112,27 @@ class WidgetUpdateCoordinator(private val context: Context) {
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating $errorTag for widget $widgetId", e)
             }
+        }
+    }
+
+    /**
+     * "全ウィジェットをループ → WidgetContextを組み立て → block内で編集 → 部分更新を反映"
+     * という updateXxxOnly() 系メソッドで繰り返されていたパターンをまとめたもの。
+     * normalOnly=true にすると COMPACT レイアウトはスキップする（以前の
+     * `if (layoutType != NORMAL) return@forEachWidget` を置き換える）。
+     */
+    private suspend fun updateWidgetsPartially(
+        errorTag: String,
+        normalOnly: Boolean = false,
+        block: suspend (WidgetContext) -> Unit
+    ) {
+        forEachWidget(errorTag) { widgetId ->
+            val ctx = createWidgetContext(widgetId)
+            if (normalOnly && ctx.layoutType != WidgetLayoutType.NORMAL) return@forEachWidget
+
+            block(ctx)
+
+            appWidgetManager.partiallyUpdateAppWidget(widgetId, ctx.views)
         }
     }
 
@@ -112,47 +165,6 @@ class WidgetUpdateCoordinator(private val context: Context) {
         viewUpdater.updateMemoViews(views, memoTexts, memoTextSize, layoutId)
     }
 
-    // ---- public API ----
-
-    suspend fun updateAllWidgets() {
-        val widgetIds = allWidgetIds()
-        if (widgetIds.isEmpty()) {
-            Log.w(TAG, "No widgets found")
-            return
-        }
-        widgetIds.forEach { widgetId ->
-            val layoutType = determineLayoutType(widgetId)
-            updateWidget(widgetId, layoutType)
-        }
-    }
-
-    suspend fun updateWidget(widgetId: Int, layoutType: WidgetLayoutType = WidgetLayoutType.COMPACT) {
-        try {
-            val layoutId = getLayoutId(layoutType)
-            val size = getWidgetSize(widgetId)
-            val views = RemoteViews(context.packageName, layoutId)
-            val updaterLayoutType = layoutType.toUpdaterLayoutType()
-
-            updateClockSection(views, widgetId, size)
-            updateBatterySection(views, updaterLayoutType)
-
-            val weather = weatherCache.getCurrentWeather()
-            viewUpdater.updateWeatherViews(views, weather, size.widthDp, updaterLayoutType)
-
-            if (layoutType == WidgetLayoutType.NORMAL) {
-                updateMemoSection(views, size, layoutId)
-            }
-
-            updateCharacter(views, layoutType, widgetId)
-
-            setupButtonClickListeners(views, widgetId, layoutType)
-
-            appWidgetManager.updateAppWidget(widgetId, views)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating widget $widgetId", e)
-        }
-    }
-
     private suspend fun updateCharacter(views: RemoteViews, layoutType: WidgetLayoutType, widgetId: Int) {
         try {
             val characterId = characterManager.getCharacterIdForWidget(widgetId)
@@ -178,80 +190,88 @@ class WidgetUpdateCoordinator(private val context: Context) {
         }
     }
 
+    // ---- public API ----
+
+    suspend fun updateAllWidgets() {
+        val widgetIds = allWidgetIds()
+        if (widgetIds.isEmpty()) {
+            Log.w(TAG, "No widgets found")
+            return
+        }
+        widgetIds.forEach { widgetId ->
+            val layoutType = determineLayoutType(widgetId)
+            updateWidget(widgetId, layoutType)
+        }
+    }
+
+    suspend fun updateWidget(widgetId: Int, layoutType: WidgetLayoutType = WidgetLayoutType.COMPACT) {
+        try {
+            val ctx = createWidgetContext(widgetId, layoutType)
+
+            updateClockSection(ctx.views, widgetId, ctx.size)
+            updateBatterySection(ctx.views, ctx.updaterLayoutType)
+
+            val weather = weatherCache.getCurrentWeather()
+            viewUpdater.updateWeatherViews(ctx.views, weather, ctx.size.widthDp, ctx.updaterLayoutType)
+
+            if (layoutType == WidgetLayoutType.NORMAL) {
+                updateMemoSection(ctx.views, ctx.size, ctx.layoutId)
+            }
+
+            updateCharacter(ctx.views, layoutType, widgetId)
+
+            setupButtonClickListeners(ctx.views, widgetId, layoutType)
+
+            appWidgetManager.updateAppWidget(widgetId, ctx.views)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating widget $widgetId", e)
+        }
+    }
+
     suspend fun updateSpeechForWidget(appWidgetId: Int, characterId: String) {
         try {
-            val layoutType = determineLayoutType(appWidgetId)
-            val views = RemoteViews(context.packageName, getLayoutId(layoutType))
+            val ctx = createWidgetContext(appWidgetId)
 
-            updateCharacter(views, layoutType, appWidgetId)
+            updateCharacter(ctx.views, ctx.layoutType, appWidgetId)
+            setupButtonClickListeners(ctx.views, appWidgetId, ctx.layoutType)
 
-            setupButtonClickListeners(views, appWidgetId, layoutType)
-
-            appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views)
+            appWidgetManager.partiallyUpdateAppWidget(appWidgetId, ctx.views)
             Log.d(TAG, "updateSpeechForWidget: Widget $appWidgetId updated for char $characterId")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating speech for single widget $appWidgetId", e)
         }
     }
 
-    suspend fun updateClockOnly() {
-        forEachWidget("clock") { widgetId ->
-            val layoutType = determineLayoutType(widgetId)
-            if (layoutType != WidgetLayoutType.NORMAL) return@forEachWidget
+    suspend fun updateClockOnly() = updateWidgetsPartially("clock", normalOnly = true) { ctx ->
+        updateClockSection(ctx.views, ctx.widgetId, ctx.size)
+        updateBatterySection(ctx.views, ctx.updaterLayoutType)
 
-            val size = getWidgetSize(widgetId)
-            val views = RemoteViews(context.packageName, getLayoutId(layoutType))
-
-            updateClockSection(views, widgetId, size)
-            updateBatterySection(views, WidgetViewUpdater.LayoutType.NORMAL)
-
-            val minute = Calendar.getInstance().get(Calendar.MINUTE)
-            if (minute % 10 == 0 || weatherCache.hasWeatherChanged()) {
-                val weather = weatherCache.getCurrentWeather()
-                viewUpdater.updateWeatherViews(views, weather, size.widthDp, WidgetViewUpdater.LayoutType.NORMAL)
-            }
-
-            setupButtonClickListeners(views, widgetId, layoutType)
-            appWidgetManager.partiallyUpdateAppWidget(widgetId, views)
+        val minute = Calendar.getInstance().get(Calendar.MINUTE)
+        if (minute % 10 == 0 || weatherCache.hasWeatherChanged()) {
+            val weather = weatherCache.getCurrentWeather()
+            viewUpdater.updateWeatherViews(ctx.views, weather, ctx.size.widthDp, ctx.updaterLayoutType)
         }
+
+        setupButtonClickListeners(ctx.views, ctx.widgetId, ctx.layoutType)
     }
 
     suspend fun updateWeatherOnly() {
         contextLoader.clearCache()
-        forEachWidget("weather") { widgetId ->
-            val layoutType = determineLayoutType(widgetId)
-            val size = getWidgetSize(widgetId)
-            val views = RemoteViews(context.packageName, getLayoutId(layoutType))
-
+        updateWidgetsPartially("weather") { ctx ->
             val weather = weatherCache.getCurrentWeather()
-            viewUpdater.updateWeatherViews(views, weather, size.widthDp, layoutType.toUpdaterLayoutType())
-            appWidgetManager.partiallyUpdateAppWidget(widgetId, views)
+            viewUpdater.updateWeatherViews(ctx.views, weather, ctx.size.widthDp, ctx.updaterLayoutType)
         }
     }
 
     suspend fun updateSpeechOnly() {
         contextLoader.clearCache()
-        forEachWidget("speech") { widgetId ->
-            val layoutType = determineLayoutType(widgetId)
-            val views = RemoteViews(context.packageName, getLayoutId(layoutType))
-
-            updateCharacter(views, layoutType, widgetId)
-            appWidgetManager.partiallyUpdateAppWidget(widgetId, views)
+        updateWidgetsPartially("speech") { ctx ->
+            updateCharacter(ctx.views, ctx.layoutType, ctx.widgetId)
         }
     }
 
-    suspend fun updateMemosOnly() {
-        forEachWidget("memos") { widgetId ->
-            val layoutType = determineLayoutType(widgetId)
-            if (layoutType != WidgetLayoutType.NORMAL) return@forEachWidget
-
-            val size = getWidgetSize(widgetId)
-            val layoutId = getLayoutId(layoutType)
-            val views = RemoteViews(context.packageName, layoutId)
-
-            updateMemoSection(views, size, layoutId)
-            appWidgetManager.partiallyUpdateAppWidget(widgetId, views)
-        }
+    suspend fun updateMemosOnly() = updateWidgetsPartially("memos", normalOnly = true) { ctx ->
+        updateMemoSection(ctx.views, ctx.size, ctx.layoutId)
     }
 
     private fun setupCharacterTouchListener(
@@ -273,7 +293,7 @@ class WidgetUpdateCoordinator(private val context: Context) {
 
         val touchPendingIntent = PendingIntent.getBroadcast(
             context,
-            widgetId + characterId.hashCode(),
+            (widgetId * 31) xor characterId.hashCode(),
             touchIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
