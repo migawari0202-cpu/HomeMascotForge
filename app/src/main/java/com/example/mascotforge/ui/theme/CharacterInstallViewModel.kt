@@ -8,13 +8,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.mascotforge.CharacterPreferences
 import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.installer.CharacterInstaller
+import com.example.mascotforge.installer.CommonInstaller
+import com.example.mascotforge.installer.InstallResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CharacterInstallViewModel : ViewModel() {
 
-    private lateinit var installer: CharacterInstaller
+    /** キャラ削除専用。Shellの削除はShellSelectorViewModelが担当する。 */
+    private lateinit var characterInstaller: CharacterInstaller
+    private lateinit var commonInstaller: CommonInstaller
     private lateinit var appContext: Context
 
     // ---- UI State ----
@@ -23,10 +29,11 @@ class CharacterInstallViewModel : ViewModel() {
 
     /** 初期化 */
     fun initialize(context: Context) {
-        if (this::installer.isInitialized) return
+        if (this::commonInstaller.isInitialized) return
 
         appContext = context.applicationContext
-        installer = CharacterInstaller(appContext)
+        characterInstaller = CharacterInstaller(appContext)
+        commonInstaller = CommonInstaller(appContext)
 
         viewModelScope.launch {
             loadInstalledCharacters()
@@ -66,7 +73,9 @@ class CharacterInstallViewModel : ViewModel() {
     /** キャラ削除 */
     fun deleteCharacter(charId: String) {
         viewModelScope.launch {
-            val success = installer.uninstall(charId)
+            val success = withContext(Dispatchers.IO) {
+                characterInstaller.uninstall(charId)
+            }
             if (!success) {
                 _uiState.value = _uiState.value.copy(
                     error = InstallError("削除に失敗しました")
@@ -82,25 +91,36 @@ class CharacterInstallViewModel : ViewModel() {
         }
     }
 
-    /** ZIP からキャラ追加 */
+    /**
+     * ZIPからキャラ / Shell / 両方をインストールする。
+     * CommonInstallerがZIP内の character.json / shell.json を見て自動判別する。
+     */
     fun installCharacter(uri: Uri, context: Context) {
         viewModelScope.launch {
-            // InstallProgress データを作ってセット
             _uiState.value = _uiState.value.copy(
                 installProgress = InstallProgress(
-                    phase = InstallPhase.READING,  // ← enum 値を新しいものに合わせた
+                    phase = InstallPhase.READING,
                     progress = 0f,
                     message = "インストールを開始しています"
                 )
             )
 
+            val result = withContext(Dispatchers.IO) {
+                commonInstaller.install(uri)
+            }
 
-            val result = installer.installFromZip(uri)
-
-            result.onSuccess { info ->
+            result.onSuccess { installResult ->
+                val message = when (installResult) {
+                    is InstallResult.Character ->
+                        "「${installResult.info.name}」をインストールしました"
+                    is InstallResult.Shell ->
+                        "Shell「${installResult.info.name}」をインストールしました"
+                    is InstallResult.Both ->
+                        "「${installResult.character.name}」と Shell「${installResult.shell.name}」をインストールしました"
+                }
                 _uiState.value = _uiState.value.copy(
                     installProgress = null,
-                    successMessage = "「${info.name}」をインストールしました"
+                    successMessage = message
                 )
                 loadInstalledCharacters()
             }
