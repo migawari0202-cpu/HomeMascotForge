@@ -23,6 +23,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.installer.CharacterInstaller
+import com.example.mascotforge.installer.CommonInstaller
+import com.example.mascotforge.installer.InstallResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -170,7 +172,7 @@ class CharacterSelectorActivity : AppCompatActivity() {
     private fun installCharacterFromZip(uri: Uri) {
         val progressDialog = AlertDialog.Builder(this)
             .setTitle("インストール中")
-            .setMessage("キャラクターをインストールしています...")
+            .setMessage("インストールしています...")
             .setCancelable(false)
             .create()
 
@@ -178,21 +180,24 @@ class CharacterSelectorActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val installer = CharacterInstaller(this@CharacterSelectorActivity)
                 val result = withContext(Dispatchers.IO) {
-                    installer.installFromZip(uri)
+                    CommonInstaller(this@CharacterSelectorActivity).install(uri)
                 }
 
                 progressDialog.dismiss()
 
-                result.onSuccess { info ->
+                result.onSuccess { installResult ->
+                    val message = when (installResult) {
+                        is InstallResult.Character ->
+                            "「${installResult.info.name}」をインストールしました"
+                        is InstallResult.Shell ->
+                            "Shell「${installResult.info.name}」をインストールしました"
+                        is InstallResult.Both ->
+                            "「${installResult.character.name}」と Shell「${installResult.shell.name}」をインストールしました"
+                    }
                     runOnUiThread {
                         refreshCharacterList()
-                        Toast.makeText(
-                            this@CharacterSelectorActivity,
-                            "「${info.name}」をインストールしました",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(this@CharacterSelectorActivity, message, Toast.LENGTH_SHORT).show()
                     }
                 }
 
