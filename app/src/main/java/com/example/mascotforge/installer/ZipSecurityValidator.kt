@@ -80,7 +80,8 @@ class ZipSecurityValidator(
             throw SecurityException(ERR_LIMIT_ENTRY_COUNT)
         }
 
-        val rawName = entry.name.trim()
+        // Windows 製 ZIP の "speeches\foo.txt" を Unix 互換の "speeches/foo.txt" に正規化
+        val rawName = entry.name.trim().replace('\\', '/')
 
         // 2. パス名の基本チェック
         if (rawName.isBlank() || rawName.length > 255 || rawName.any { it.code == 0 || (it.code < 32 && it !in listOf('\n', '\r', '\t')) }) {
@@ -285,12 +286,21 @@ class ZipSecurityValidator(
                     if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
                 }
 
-                // ヘルパー: speeches/ 以下の音声/テキストファイル名を検証
+                // ヘルパー: セリフファイルパスを検証
+                // 実行時 (DynamicCharacter) は basePath + "/" + path で読むため、
+                // character.json では "speeches/foo.txt" 形式が正規（記法・デフォルトキャラと一致）。
+                // 互換のためファイル名のみ ("foo.txt") も speeches/ 以下として受け付ける。
+                // 以前は常に "speeches/" を前置しており、正規パスが speeches/speeches/... になっていた。
                 fun validateSpeechPath(path: String) {
                     if (path.contains("..") || path.startsWith("/") || path.contains("\\") || path.contains(":")) {
                         throw SecurityException(ERR_JSON_TRAVERSAL)
                     }
-                    val targetFile = File(rootDir, "speeches/$path")
+                    val relative = when {
+                        path.startsWith("speeches/") -> path
+                        !path.contains("/") -> "speeches/$path"
+                        else -> path
+                    }
+                    val targetFile = File(rootDir, relative)
                     if (!targetFile.isFile) throw SecurityException("JSON_REFERENCED_FILE_MISSING: $path")
                     if (!isWithinDirectorySafe(targetFile, rootDir)) throw SecurityException(ERR_JSON_TRAVERSAL)
                 }
