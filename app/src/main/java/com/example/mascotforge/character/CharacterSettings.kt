@@ -40,29 +40,44 @@ object CharacterSettingsLoader {
     private const val MAX_SETTINGS_BYTES = 256 * 1024 // 256KB (任意設定なので小さめに制限)
     private const val MAX_COLORS_PER_TAG = 10
 
-    // key: source.basePath
-    private val cache = ConcurrentHashMap<String, CharacterSettings?>()
+    /**
+     * ConcurrentHashMap は null キー/値を禁止する。
+     * Settings.json が無い・無効な場合は「未設定」をこのセンチネルでキャッシュし、
+     * 呼び出し側には null を返す。
+     */
+    private val NO_SETTINGS = CharacterSettings()
+
+    // key: source.basePath → 実設定 or NO_SETTINGS（未設定）
+    private val cache = ConcurrentHashMap<String, CharacterSettings>()
 
     fun load(context: Context, source: CharacterSource, forceReload: Boolean = false): CharacterSettings? {
         val key = source.basePath
+        if (key.isEmpty()) {
+            Log.w(TAG, "Empty basePath; Settings.json load skipped")
+            return null
+        }
         if (!forceReload) {
-            if (cache.containsKey(key)) return cache[key]
+            val cached = cache[key]
+            if (cached != null) {
+                return if (cached === NO_SETTINGS) null else cached
+            }
         }
 
         val settings = try {
             val text = readSettingsText(context, source) ?: run {
-                cache[key] = null
+                cache[key] = NO_SETTINGS
                 return null
             }
             if (text.toByteArray(Charsets.UTF_8).size > MAX_SETTINGS_BYTES) {
                 Log.w(TAG, "Settings.json too large, ignored: $key")
-                cache[key] = null
+                cache[key] = NO_SETTINGS
                 return null
             }
             parse(JSONObject(text))
         } catch (e: Exception) {
             Log.w(TAG, "Failed to load Settings.json: $key", e)
-            null
+            cache[key] = NO_SETTINGS
+            return null
         }
 
         cache[key] = settings
