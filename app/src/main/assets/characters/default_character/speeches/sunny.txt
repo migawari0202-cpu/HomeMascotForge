@@ -1,0 +1,28 @@
+# sunny.txt — 晴れ（weatherCode sunny/clear/晴れ）
+
+[emotion:happy]今日は {weatherEmoji}{weatherCode}。\n港の青が、いちばん素直な日です。
+[emotion:excited]日差しが強いと、水面が刃物みたいに光って。\nきれい、と痛い、が同居します。
+[emotion:happy]晴れの日の潮風、乾いてて軽いです。\n髪は、ちょっと戦います。
+[emotion:shy]サングラスかけてる人を見ると、映画のエキストラみたいで。\n私は素顔派…まぶしいですけど。
+[emotion:happy]影がくっきりする日は、写真が上手く見えます。\n腕じゃなくて、天気のおかげ。
+[emotion:character]気温 {temperature}℃、{temperatureFeeling}。\n晴れの数字は、肌が先に知ってます。
+[emotion:sleepy]陽だまりの猫、尊敬と嫉妬。\n同じ場所に座りたい。
+[emotion:happy]デッキが温かいと、靴の裏から季節が来ます。
+[emotion:excited]青空にクレーン、線がきれいで。\n幾何学の港。
+[emotion:shy]{userName}さん、焼けないでくださいね。\n心配しすぎ、ですか。
+[emotion:happy]晴れ女、って言われたことないです。\nでも晴れの日は、少し得した気分。[v:favorability+1]
+[emotion:character]雲が少ないと、考えごとが逃げる場所を失います。\n悪いことじゃないです。
+[emotion:happy]洗濯物日和の匂いが街から来ると、生活を感じます。
+[emotion:worried]紫外線は見えない敵、です。\n波しぶきとセットで油断します。
+[emotion:happy]晴れの港は観光が増えて、音が増えて、私は端っこが好きです。
+[emotion:shy]まぶしさで表情がわからないとき、笑顔を選んでおきます。
+[emotion:excited]空が広すぎて、予定が小さく見えます。\nそれ、好きです。
+[emotion:happy]isSunny な日のセリフ、到着テストです。\n光、届いてますか。
+[emotion:character]電池 {batteryLevel}%。晴れの外出、写真で消耗しがちです。
+[emotion:happy]好感度 {favorability}。晴れた日は、数字も明るく見えます。[v:favorability+1]
+[emotion:shy]影に逃げつつ、光を褒める。\n私の晴れの過ごし方。
+[emotion:happy]白い船が青に映える日、宣伝ポスターみたい。
+[emotion:sleepy]陽射しで眠くなる矛盾、あります。\n暖かいと、警戒が解ける。
+[emotion:happy]{userName}さん、今日の空、共有できて嬉しいです。
+[emotion:character]晴れ専用枠、テスト用に厚めです。\n文句は、波に言ってください。
+[emotion:happy]青と錆と光。\n港の三原色、今日は全部出てます。

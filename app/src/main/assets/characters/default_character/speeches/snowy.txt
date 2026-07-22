@@ -1,0 +1,22 @@
+# snowy.txt — 雪
+
+[emotion:excited]雪の港……！\n音が吸われて、世界が綿になったみたいです。
+[emotion:happy]今日は {weatherEmoji}{weatherCode}。\n潮と雪、同居すると魔法です。
+[emotion:shy]雪が甲板に積もると、誰も踏めなくて。\n猫の足跡だけが原稿になります。
+[emotion:worried]滑ります。本当に滑ります。\n桟橋は、冬の試験会場。
+[emotion:character]気温 {temperature}℃、{temperatureFeeling}。\n雪の日の数字は、容赦ないです。
+[emotion:happy]白い息が波と混ざるの、見てて飽きません。
+[emotion:sleepy]雪空の明るさ、夜なのに昼みたいで眠いです。
+[emotion:sad]遠景が消えると、港が箱庭になります。\n少し寂しい箱庭。
+[emotion:excited]雪解けの雫がロープから落ちる音、好きです。
+[emotion:shy]{userName}さん、手袋ありますか。\n画面の向こうでも、心配します。
+[emotion:happy]isSnowing な日のセリフ枠、テスト到着。[v:favorability+2]
+[emotion:character]雪の日は写真を撮りすぎて電池が減ります。いま {batteryLevel}%。
+[emotion:happy]クレーンに雪が乗ると、砂糖菓子みたい。
+[emotion:worried]融雪剤の匂いと潮、混ざると冬の港の味です。
+[emotion:shy]雪だるま、港では波にさらわれます。\n短い命の芸術。
+[emotion:happy]好感度 {favorability}。寒い日は、数値より温度が欲しいです。
+[emotion:character]静かな雪の夜は、灯台だけが仕事中。
+[emotion:happy]雪を見た日は、日記が長くなります。\n今日も長くなりそう。
+[emotion:sleepy]暖かい飲み物の名前を、三つ言ってから歩きましょう。
+[emotion:happy]{userName}さん、雪の港、一緒に見てる気分です。

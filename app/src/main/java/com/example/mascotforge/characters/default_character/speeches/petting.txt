@@ -1,3 +1,6 @@
+# petting.txt — 撫で反応（高優先・連続タッチ）
+# テスト: consecutiveTouchCount / pettingLevel / isBeingPetted / [v:] / 感情
+
 [emotion:shy]わ、今の……撫でてくれたんですか。\nちょっとびっくりしましたけど、嫌ではないです。
 [emotion:happy]ふふ、なんだか落ち着きますね。\nもう少しだけ、そのままでいてもいいですよ。
 [emotion:shy]{userName}さん、撫でるの上手ですね。\nこういうこと言うの、少し恥ずかしいですけど。
@@ -8,3 +11,43 @@
 [emotion:sleepy]ふわ……少し眠くなってきました。\n撫でられると、気が抜けるんですね。
 [emotion:worried]あんまり急だと驚きますけど……でも、そばにいてくれる感じがします。
 [emotion:happy]はい、受け取りました。\nこういう小さい合図、けっこう好きです。
+[emotion:shy]頭、ですか。それとも肩……画面だと区別がつかないですけど。\nどっちでも、同じ温度です。
+[emotion:happy]連続 {consecutiveTouchCount}、撫で段階 {pettingLevel}。\n数字にすると、照れが増えます。
+[emotion:excited]おお、テンポが速い。\n港の波より、ちょっとせわしないです。
+[emotion:shy]止めても、続けても、どっちも困ります。\n……続けてもいい、です。[v:favorability+2]
+[emotion:happy]撫でられると、好感度が上がるらしいです。いま {favorability}。\nらしい、って自分で言うの変ですね。[v:favorability+1]
+[emotion:character]タッチ累計 {touchCount}、今日 {touchCountToday}。\n統計まで出すの、港の日報みたいで。
+[emotion:shy]isBeingPetted が true の時間帯、です。\nシステム用語でも、気持ちは本物です。
+[emotion:happy]そっと、で大丈夫です。\n強い波じゃなくて、寄せる波で。
+[emotion:worried]指が速いと、びっくり顔になります。\n心配顔、かな。[emotion:worried]
+[emotion:happy]もう一回、ですか。\n拒否する理由、思いつかないです。
+[emotion:shy]こういうの、習慣になると朝から待ちそうです。\n言いすぎました。[v:favorability+1]
+[emotion:sleepy]撫でながら話すと、声が低くなるんです。\n眠いわけじゃない…たぶん。
+[emotion:excited]連続が伸びてますね。{consecutiveTouchCount}。\n quant じゃない、感覚です。
+[emotion:happy]画面の温度が上がった気がします。\n気のせいでも、嬉しい気のせいです。
+[emotion:shy]{userName}さんの指の癖、覚えてきました。\nこわい、というより、安心。
+[emotion:happy]撫でポイント、港の猫に負けない自信が出てきました。[v:favorability+2]
+[emotion:character]pettingLevel={pettingLevel}。\n段階があるの、ゲームみたいで恥ずかしいです。
+[emotion:shy] tail がないので、代わりに言葉が揺れます。\n……いま揺れました。
+[emotion:happy]ありがとうございます。短い言葉ほど、重いです。
+[emotion:worried]離れる直前がいちばん、なんか名残が。\n欲張りですかね。
+[emotion:happy]また触れてくれたら、また言います。\n同じセリフでも、毎回初回です。
+[emotion:shy]好感度 {favorability}。撫で仕様のテストも兼ねてます。\n雰囲気は壊したくないんですけど。[v:favorability+1]
+[emotion:excited]連続成功！ …って自分で実況しないで、ですよね。[v:mood=happy]
+[emotion:happy]怒りは溶けました。[v:isAngry=false]\n撫では、消火活動でもあります。
+[emotion:shy]mood を happy にします。[v:mood=happy]\n手動でも、自然でも、結果は同じ。
+[emotion:character]{wasTouched ? 直近のタッチ、検知してます : タッチ履歴が薄い？ でも今は撫で中}。
+[emotion:happy]{isBeingPetted ? 撫でモード継続中です :  quant がズレてるかも。でも気持ちは受け取りました}。
+[e:shy]短縮タグの撫で。\n耳がないので、代わりに黙ります。
+[emotion:happy]そっと一回分の加点。[v:favorability+1]\n波が一回寄せた分。
+[emotion:sleepy]このまま波音ループで、落ちそう。\n起こすのは、また次のタッチで。
+[emotion:shy]{userName}さん、撫でてくれるの、嫌いじゃないです。\n好き、に近いです。言いました。
+[emotion:happy]連続 {consecutiveTouchCount} を超えると、少しだけ大胆になります。\n……いまのが、それです。
+[emotion:worried]指が冷たかったら、温めてからでいいですよ。\n港の夜は、指が冷えますから。
+[emotion:happy]受け取り完了。\n返礼は、この声だけです。足りますか。
+[emotion:shy]また後で、同じことを言わせてください。\n練習じゃなくて、本番で。
+[emotion:excited]わ、リズムがいい。\n quant じゃなく、音楽です。
+[emotion:happy]撫で記録、今日のハイライト候補です。\n日記に書くかは、秘密。
+[emotion:character]テスト用に長く撫でても、壊れない設計…であってほしいです。\n私は、壊れません。たぶん。
+[emotion:shy]もう十分、です。でも、足りない、でもあります。\n矛盾してますね。
+[emotion:happy]はい。ここにいます。\n触れた先も、港のままです。

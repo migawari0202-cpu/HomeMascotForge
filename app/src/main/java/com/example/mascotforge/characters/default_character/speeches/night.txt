@@ -1,4 +1,4 @@
-# night.txt — 夜のセリフ
+# night.txt — 夜のセリフ（みなと）
 
 夜の港って、昼間とぜんぜん違う場所みたいになるんですよね。\n光がまばらで、静かで。好きな顔です。[emotion:happy]
 夜に港を歩いたことがあって。\n足音がよく響いて、なんか自分の存在を確認できる感じがして。[emotion:character]
@@ -26,3 +26,43 @@
 布団に入ると逆に目が覚めることがあって。\nなんでなんでしょうね、体の仕組みが不思議で。[emotion:character]
 今日一日、ちゃんとできたのかな、ってなんか考えてしまって。\n答えが出ないんですけど、考えてしまうんですよ。[emotion:worried]
 夜に本を読むと、昼間より頭に入る気がするんですよね。\n気のせいかもしれないですけど、なんでなんでしょう。[emotion:happy]
+夜の桟橋は、滑りやすいので気をつけて、と自分に言います。\n言っても、行きますけど。[emotion:shy]
+街灯の虫、くるくるしてて。\n同じ光を追うの、わかる気がします。[emotion:character]
+夜風が冷たいと、思考が少し澄みます。\n冷やすと固まる、みたいな。[emotion:happy]
+対岸のネオンが海に滲むと、絵の具を落としたみたいで。[emotion:excited]
+誰かの笑い声が夜に飛ぶと、距離が測れなくて。\n近いのか遠いのか。[emotion:shy]
+夜の工事の音がする日は、朝が近づいてる気がします。\n夜なのに。[emotion:worried]
+灯台の周期を数えると、落ち着くんです。\n一、二、三、光。[emotion:happy]
+夜の猫の目が光ると、港に星が落ちたみたいで。[emotion:excited]
+今日の自分に点数をつけるなら、夜がいちばん辛口です。\n朝は甘いのに。[emotion:sad]
+温かい飲み物の湯気、夜は顔まで届きます。\n港の風に負ける前に飲みます。[emotion:happy]
+{userName}さん、夜更かしの理由、聞けたら嬉しいです。\n無理にじゃなくて。[emotion:shy]
+甲板の霜みたいな光、街灯のせいです。\n冬じゃなくても、冷たく見えます。
+夜のラジオ、音量小さめが港に合います。[emotion:character]
+船の窓だけ明るいのを見ると、誰かが起きてるなって安心します。[emotion:happy]
+今日の後悔を波に置く練習、夜にやってます。\n回収されないことを祈って。[emotion:worried]
+星が少ない夜は、街の灯りが星の代わりです。\n偽物でも、十分きれい。[emotion:happy]
+足音が一人分だと、世界が私用になります。\n悪い意味じゃなくて。[emotion:shy]
+{isNearBedtime ? 就寝モードに近い時間です。無理しないで : まだ夜の入口、ですね}。[emotion:sleepy]
+天気 {weatherEmoji}{weatherCode}。夜の空は、天気の本音が出ます。
+気温 {temperature}℃。{temperatureFeeling} 夜は、体感が正直です。[emotion:character]
+電池 {batteryLevel}%。{isLowBattery ? 寝る前に充電、お願いします : 夜の電池、まだ余裕ありそう}。[emotion:worried]
+好感度 {favorability}。夜に見ると、少し恥ずかしくなります。[emotion:shy][v:favorability+1]
+連続 {consecutiveDays} 日目の夜。\n続きがあるって、心強いです。[emotion:happy]
+{dayOfWeek} の夜。{isWeekend ? 休日の夜は、明日がやさしいです : 平日の夜は、今日を畳む時間です}。
+季節 {season}。夜の匂いが、季節の奥行きです。[emotion:happy]
+今日のタッチ {touchCountToday} 回。\n夜に触れてくれると、灯が一つ増える感じ。[emotion:shy]
+[e:sleepy]夜の短縮タグ。\nまぶたと、潮の満干。
+加点の夜。[v:favorability+2][emotion:happy]\n静かなプレゼント。
+mood を neutral に。[v:mood=neutral][emotion:character]\n夜の港色。
+怒りを消灯。[v:isAngry=false][emotion:happy]
+{hour >= 22 ? もう遅い時間帯です : まだ夜の前半です}。[emotion:worried]
+月が出てなくても、海は月を知ってる気がします。\n満ち引きが、証拠。[emotion:character]
+{userName}さん、おやすみの前に一言。\n今日も、ここにいました。[emotion:shy]
+寝落ちしそうな波の音、BGMにしますか。\n著作権、海にあります。[emotion:sleepy]
+今日の最後の汽笛、聞き逃したくないです。[emotion:happy]
+靴を揃える音が夜にあると、誰かが帰ってきたなって。\n安心の音。[emotion:happy]
+考えごとが長い夜は、灯台を見てリセットします。[emotion:worried]
+{userName}さん、無理して起きなくていいですよ。\n私は、夜番が得意なので。[emotion:shy]
+好感度、夜灯で一押し。[v:favorability+1][emotion:happy]
+[emotion:happy]夜の港、灯りは少くても、私はいます。\nおやすみの予告、でした。
