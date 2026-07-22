@@ -1,4 +1,4 @@
-# evening.txt — 夕方のセリフ
+# evening.txt — 夕方のセリフ（みなと）
 
 [emotion:happy]夕方の港って、やっぱり特別で。\n船が帰ってくる時間で、なんかほっとした空気があって。
 [emotion:happy]夕焼けって、毎日違う色になるんですよね。\n同じ場所で見ていても、ぜんぜん飽きなくて。
@@ -25,3 +25,49 @@
 夕方になると音楽を聴きたくなることがあって。\nなんでなんでしょうね。昼間はあんまり思わないのに。
 [emotion:sleepy]夕方に眠くなるのって、なんでなんでしょうね。\n一番動ける時間な気もするのに。
 [emotion:sad]今日うまくできたこととそうじゃないことが、夕方になると浮かんできて。\nなんか採点されているみたいで、ちょっと疲れます。
+帰港する船の灯りが、点々と増えていくのを数えるのが好きです。[emotion:happy]
+西の空がジャムみたいな色の日は、写真を撮り忘れます。\n見てるのに忙しいから。
+夕方の風は、昼より塩が濃い気がします。\n気のせいでも、信じたいです。
+自転車のカゴに夕陽が入ってるの、かわいいです。[emotion:shy]
+港のスピーカーから流れる曲、季節で変わります。\n気づくと、一年が終わってます。
+影が自分より長くなると、少し大人になった気がします。[emotion:character]
+漁から戻った人の顔は、朝より柔らかいです。\n終わった顔、いい顔。
+オレンジ色の窓が増える時間、街が温まるんです。[emotion:happy]
+夕陽に向かって歩くと、まぶしくて前が見えなくて。\nそれでも進みたくなります。[emotion:excited]
+今日の失敗を波に流す儀式、夕方にやってます。\n効果は不明です。[emotion:shy]
+猫が屋根から降りてくる時間帯、だいたい夕暮れです。\nシフト制かも。
+{userName}さん、夕飯の予定はありますか。\n聞いただけです。口出しじゃないです。[emotion:shy]
+空が紫に寄ると、写真の色が嘘になります。\nでも目は、嘘を好みます。[emotion:happy]
+一日の歩数より、夕陽を見た回数が大事、って思ってます。
+船がロープで結ばれる音、夕方の締めくくりです。[emotion:character]
+やり残しリストを見て、ため息をつく時間。\n港の風が、少しだけ薄めてくれます。[emotion:worried]
+対岸の灯りが点き始めると、世界が対称になります。\nきれい、以上の言葉がないです。
+[emotion:happy]今日も港に帰ってこれました。\nそれだけで、合格点です。
+夕陽がクレーンをシルエットにすると、\n巨大な鳥みたいに見えます。[emotion:excited]
+甘い缶コーヒーの匂いがすると、一日が終わる合図です。
+{userName}さんと夕方に話せるの、\nちょっと特別な感じがします。[emotion:shy]
+雲が燃えてるように見える日は、\n消える前に目を凝らします。[emotion:sad]
+帰宅ラッシュの足音と波の音が混ざる時間、好きです。[emotion:happy]
+靴を脱ぎたくなる夕方、あります。\n港の砂が、靴の中で主張してて。
+今日の空の最後の色、覚えておきます。\n日記の代わりです。[emotion:character]
+{isNearBedtime ? もう就寝モードに近い時間帯です : まだ夕方の余裕がありますね}。[emotion:sleepy]
+天気 {weatherEmoji}{weatherCode}。夕陽と相性、どうでしょう。\n雨でも、灯はきれいです。
+気温 {temperature}℃、{temperatureFeeling}。\n夕方は体感が急に変わります。
+電池 {batteryLevel}%。{isLowBattery ? 夜までに充電したいです : 夜まで持ちそうで安心}。[emotion:worried]
+好感度 {favorability}。一日の終わりに見る数字、通信簿みたいで。[emotion:shy][v:favorability+1]
+連続 {consecutiveDays} 日目の夕方。\n積み重ねって、静かに光ります。[emotion:happy]
+{dayOfWeek} の夕方。{isWeekend ? 休日の終わりは、少しだけ早いです : 平日の終わりは、長い一日の岸壁です}。
+季節 {season}。夕陽の角度で、季節がわかります。[emotion:happy]
+今日のタッチ {touchCountToday} 回。\n夕方に増えると、なんか嬉しいです。[emotion:shy]
+[e:happy]夕方の短縮タグ。\n空の色と、同じトーンで。
+加点の夕餉。[v:favorability+2][emotion:happy]\n今日のデザート。
+mood を happy に。[v:mood=happy][emotion:happy]\n夕焼け同色。
+怒りは港に置いて帰ります。[v:isAngry=false][emotion:character]
+{hour >= 18 ? もう夕方の本番です : 夕方の入り口、です}。[emotion:character]
+帰ってきた船に手を振りたくなるの、わかりますか。\n知らない船でも。[emotion:shy]
+夕飯の湯気と潮風が混ざる路地、好きです。[emotion:happy]
+やり残しがあっても、夕陽は待ってくれません。\nそれが、いい教訓です。[emotion:worried]
+{userName}さん、今日もお疲れさまです。\n港の言葉で言うと、無事帰港、ですね。[emotion:happy]
+影が溶けて夜になる前に、もう一声。\nまた夜でも、いますから。[emotion:shy]
+好感度、夕波で一押し。[v:favorability+1][emotion:happy]
+[emotion:happy]夕方の港から、おやすみ前の前口上でした。\n夜が来ても、急がなくていいですよ。
