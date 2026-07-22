@@ -1,0 +1,22 @@
+# cloudy.txt — 曇り
+
+[emotion:character]今日は {weatherEmoji}{weatherCode}。\n港の色が、少しだけ抑えてあります。
+[emotion:sleepy]曇りの日は、影が薄くて時間の感覚が曖昧です。
+[emotion:happy]眩しくない分、長く外にいられます。\n私得な天気。
+[emotion:shy]雲のすき間から光が刺さると、舞台照明みたいで。
+[emotion:worried]曇りから雨に落ちる前の匂い、わかりますか。\n金属と潮が混ざる感じ。
+[emotion:character]気温 {temperature}℃。曇りの体感は、風次第です。
+[emotion:happy]写真がマットに仕上がる日。\n港の錆が、主役になります。
+[emotion:shy]{userName}さん、曇りでも機嫌は晴れでいてください。\n押し売りですけど。
+[emotion:sleepy]空が灰色だと、思考も毛布をかぶります。
+[emotion:happy]isCloudy 分岐、来れてたら成功です。[v:favorability+1]
+[emotion:character]雲が速い日は、物語のページをめくってるみたい。
+[emotion:sad]色が少ない日は、音がよく聞こえます。\n汽笛が主役。
+[emotion:happy]曇り空の海は、鉄色。\n嫌いじゃない、好き寄り。
+[emotion:worried]視界が沈むと、船の灯りが早くつきます。
+[emotion:shy]表情が読みにくい空の下、私も少し曖昧でいいですか。
+[emotion:happy]好感度 {favorability}。曇りでも、数字は見えます。
+[emotion:character]電池 {batteryLevel}%。曇りの外出は、意外と歩きます。
+[emotion:happy]グレーの日の港、写真集の見開きみたい。
+[emotion:sleepy]午後の曇りは、仮眠の許可証です。
+[emotion:happy]{userName}さん、今日は落ち着いた空です。\n呼吸、合わせてみますか。
