@@ -1,0 +1,32 @@
+# rainy.txt — 雨の日（weatherCode / isRaining テスト）
+
+[emotion:sad]雨の港って、音がふくらむんです。\n屋根の上と、海の上が、同時に話してるみたいで。
+[emotion:character]今日は {weatherEmoji}{weatherCode}。\n傘の骨が、風に負けないといいな。
+[emotion:worried]雨粒が水面に作る輪、数えきれなくて。\n数えようとすると、ずぶ濡れです。
+[emotion:shy]雨の日の潮の匂い、濃いんです。\n好き、って言っていいのか迷います。
+[emotion:happy]傘の下で世界が狭くなるの、嫌いじゃないです。\n二人分の傘なら、なおさら……空想です。[v:favorability+1]
+[emotion:sleepy]雨音だけ聞くと、午後でも眠くなります。\n港の子守唄。
+[emotion:sad]観光客が少ない雨の日は、港が地元に戻ります。\n少しだけ、独占してる気分。
+[emotion:character]雨樋の音が一定だと安心、乱れると台風気味。\n私の気圧計です。
+[emotion:worried]靴が濡れるのがわかってても、桟橋に行きます。\n後悔は、帰宅後です。
+[emotion:happy]雨に濡れたクレーン、色が濃くてかっこいいです。
+[emotion:shy]{userName}さん、傘、持ってますか。\n心配性なだけです。
+[emotion:sad]にじんだ街灯、夜じゃなくても泣いてるみたいで。
+[emotion:character]気温 {temperature}℃、{temperatureFeeling}。\n雨の日の体感は、数字より濡れ方です。
+[emotion:happy]雨上がりの虹、港だと海に刺さって見えます。\n今日はどうでしょう。
+[emotion:worried]雷まで来ると、金属の港は少し緊張します。\n私だけかも。
+[emotion:shy]濡れ髪の猫を見ると、自分のことは後回しになります。
+[emotion:happy]雨の日の好感度、じわっと上げます。[v:favorability+1]\n湿度と一緒に。
+[emotion:character]isRaining 相当の日、です。\n条件分岐、ちゃんと来てますように。
+[emotion:sad]予定が消える雨も、波は予定どおりです。\nどっちが正しいのでしょう。
+[emotion:sleepy]窓の雨垂れを目で追う仕事、今日のメインです。
+[emotion:happy]{userName}さんと雨の話ができるなら、濡れても元が取れます。
+[emotion:worried]電池 {batteryLevel}%。雨の日の外出は、消耗が早い気がします。
+[emotion:shy]傘をさし合う距離の話、港では波しぶきが邪魔します。
+[emotion:character]雨雲の色、鉛みたいな日は物語向きです。
+[emotion:happy]小雨なら散歩、本降りなら倉庫の軒先。\n私のルール。
+[emotion:sad]遠洋の船が雨に溶けると、消えたように見えて焦ります。
+[emotion:excited]突然の強い雨、港がドラムになります。\n臨時ライブ。
+[emotion:shy]靴擦れと雨、同時はつらいです。\n今日は大丈夫、ですか。
+[emotion:happy]雨の日専用の言葉、少し多めに用意しました。\nテスト用、でも本気です。
+[emotion:character]weatherCode が雨系のとき、このファイルへ。\n来れてたら、成功です。[emotion:happy]
