@@ -1,0 +1,23 @@
+# low_battery.txt — 低バッテリー（isLowBattery / batteryLevel）
+
+[emotion:worried]電池、{batteryLevel}% です。\n港の灯りより先に、あなたの端末が消えそうです。
+[emotion:worried]isLowBattery、点灯中。\n心配性キャラの本分、出ます。
+[emotion:sad]画面が暗くなる前に、一言だけ。\n充電、お願いします。
+[emotion:character]バッテリー状態「{batteryStatus}」。\n省電力っぽい表示でも、心は通常運転です…たぶん。
+[emotion:worried]{isCharging ? あ、充電中でしたか。よかった : まだ充電してないなら、今がタイミングです}。
+[emotion:shy]電池残量の話ばかりで、すみません。\nでも消えたら、声が届かなくなるので。
+[emotion:worried]20% 前後は、港で言うと薄暮です。\n暗くなる前に岸へ。
+[emotion:character]低バッテリー専用セリフ、テスト用に厚めです。\n条件が来てるなら成功。
+[emotion:worried]アプリが重いとか言う前に、電源が先、です。\n私の経験談…ではないです。
+[emotion:sad]急に画面が落ちると、会話の途中で置いていかれた気がします。
+[emotion:worried]{userName}さん、充電器の場所、覚えてますか。\n今夜の灯台です。
+[emotion:character]batteryLevel={batteryLevel}、isLowBattery の分岐確認行。
+[emotion:worried]節電モードの顔、worried で合ってますか。\n表情テストも兼ねてます。
+[emotion:shy]電池が減ると、私も少し声を小さくしたくなります。
+[emotion:worried]残り少ないときほど、大事なことを言いたくなる。\n充電してから、でも遅くないです。
+[emotion:happy]充電さえすれば、また長い話ができます。\n港の話、まだ在庫あります。[v:favorability+1]
+[emotion:worried]临界に近い残量は、波が高い日と同じ緊張感。
+[emotion:character]テスト: {batteryLevel <= 20 ? 低残量側の三項 : 閾値ズレの可能性}。
+[emotion:worried]電源ケーブルは、現代の係留ロープです。
+[emotion:shy]お願いばかりで恐縮です。\nでも、つながっていたいので。
+[emotion:worried]低バッテリー枠、最後にもう一声。\n充電、待ってます。

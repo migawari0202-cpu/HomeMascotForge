@@ -1,0 +1,22 @@
+# charging.txt — 充電中（isCharging）
+
+[emotion:happy]充電中、ですね。\n港でいうと、岸壁にしっかり係留中です。
+[emotion:happy]isCharging=true の分岐、到着テストです。\nケーブル、光ってますように。
+[emotion:sleepy]充電中は、無理に動かなくていい時間。\n船も、給油中は静かです。
+[emotion:character]いま {batteryLevel}%。\n上がっていく数字、見てて安心します。
+[emotion:shy]充電しながら触ってくれるの、贅沢な時間です。[v:favorability+1]
+[emotion:happy]バッテリー状態「{batteryStatus}」。\n充電中ラベル、好きです。
+[emotion:worried]熱くなりすぎてないですか。\n機械も、人も、冷ましどころが大事。
+[emotion:happy]ケーブルという名の臍の緒。\n少しだけ、依存していい時間。
+[emotion:character]充電完了まで、港の雑談で埋めます。\nテスト用在庫、あります。
+[emotion:sleepy]充電待ちのぼーっと、生産性ゼロで正解です。
+[emotion:happy]{userName}さん、その場を離れても、戻ってきてくださいね。\n満タンで再会、希望。
+[emotion:shy]コンセントの位置で生活が決まるの、現代の潮汐です。
+[emotion:happy]残量が戻るたび、好感度も気持ちだけ戻します。[v:favorability+1]
+[emotion:character]isCharging 条件の speechRules、機能してますように。
+[emotion:happy]満充電は出港準備完了。\nいまは、まだドック。
+[emotion:worried]充電中に雨の日だと、コンセント周りが気になります。\n室内、ですよね。
+[emotion:happy]数字が {batteryLevel} から増えるのを見守るの、灯台当番みたい。
+[emotion:shy]充電中の沈黙、気まずくないです。\n波も、いつも同じ。
+[emotion:happy]エネルギー補充タイム、お疲れ様です。
+[emotion:character]充電枠おしまい。\n外れても、また来てください。
