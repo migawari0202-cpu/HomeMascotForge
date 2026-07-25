@@ -133,6 +133,14 @@ README では概要だけ触れ、詳細仕様は `character_json_reference.md` 
 - `character.json` の参照整合性確認
 - 画像マジックバイト検証
 
+## ワッツネクスト
+
+- activityの有効活用(今ココ。clock_modeブランチ)
+- 一部の最適化が特殊な端末への対応
+- APK化や、公開に備えたさらなる品質の向上
+- 記法フォルダの充実、HomeMascotEditerの作成
+- 俺のやる気向上
+
 ## ライセンス
 
 MIT License。詳細は `LICENSE` を参照してください。
