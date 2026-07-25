@@ -23,29 +23,29 @@
         android:lineSpacingExtra="3dp"
         android:text="2026/07/25(土)\n00:00:00"
         android:textColor="#333333"
-        android:textSize="30sp"
+        android:textSize="28sp"
         android:textStyle="bold" />
 
     <!--
-      セリフ(左) + キャラ(右)。
-      左スペーサーで全体をやや右寄せにし、縦画面でも見やすくする。
+      横画面: 左余白を大きめにしてセリフ＋キャラを右寄りに配置。
+        [余白] [セリフ] [キャラ]
     -->
     <LinearLayout
         android:id="@+id/character_area"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="88dp"
+        android:layout_marginTop="72dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="24dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp">
 
-        <!-- 左余白（縦画面は控えめ） -->
+        <!-- 左余白（横画面は広め → 全体が右寄り） -->
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="3" />
 
         <!-- セリフ -->
         <TextView
@@ -53,7 +53,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="16dp"
             android:layout_weight="4"
             android:background="@drawable/speech_bubble_bg"
             android:padding="12dp"
