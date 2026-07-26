@@ -33,9 +33,9 @@ class Karioki : ComponentActivity() {
         private const val KEY_FIRST_LAUNCH = "first_launch"
     }
 
-        private enum class CompletionTarget {
+    private enum class CompletionTarget {
         FINISH,
-        LAUNCH_CHARACTER_SELECTOR
+        LAUNCH_CLOCK
     }
 
     private lateinit var prefs: SharedPreferences
@@ -73,7 +73,7 @@ class Karioki : ComponentActivity() {
 
         if (!launchedFromWidget) {
             enqueueWeatherRefreshIfNeeded()
-            launchCharacterSelector()
+            launchClock()
             return
         }
 
@@ -200,9 +200,9 @@ class Karioki : ComponentActivity() {
         initializationCompleted = true
         Log.d(TAG, "初期化処理完了")
 
-                when (completionTarget) {
+        when (completionTarget) {
             CompletionTarget.FINISH -> finish()
-            CompletionTarget.LAUNCH_CHARACTER_SELECTOR -> launchCharacterSelector()
+            CompletionTarget.LAUNCH_CLOCK -> launchClock()
         }
     }
 
@@ -225,11 +225,9 @@ class Karioki : ComponentActivity() {
         }
     }
 
-    
-
-    private fun launchCharacterSelector() {
+    private fun launchClock() {
         startActivity(
-            Intent(this, CharacterSelectorActivity::class.java).apply {
+            Intent(this, ClockActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
         )
