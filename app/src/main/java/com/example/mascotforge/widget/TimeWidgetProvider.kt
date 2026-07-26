@@ -90,23 +90,6 @@ class TimeWidgetProvider : AppWidgetProvider() {
         }
 
         /**
-         * 時計のみ更新（全ウィジェット）
-         * 用途: 毎分の時刻更新
-         */
-        fun updateClockOnly(context: Context) {
-            ensureScopeActive()
-            scope.launch {
-                try {
-                    WidgetCacheManager.initialize(context)
-                    WidgetUpdateCoordinator(context).updateClockOnly()
-                    Log.d(TAG, "Clock updated")
-                } catch (e: Exception) {
-                    Log.e(TAG, "updateClockOnly failed", e)
-                }
-            }
-        }
-
-        /**
          * 天気のみ更新（全ウィジェット）
          * 用途: 1時間ごとの天気更新
          */
@@ -216,7 +199,6 @@ class TimeWidgetProvider : AppWidgetProvider() {
 
         // 定期更新をスケジュール
         val scheduler = WidgetUpdateScheduler(context)
-        scheduler.scheduleClockUpdate()    // 毎分
         scheduler.scheduleWeatherUpdate()  // 1時間ごと
         scheduler.scheduleSpeechUpdate()   // 10分ごと
     }

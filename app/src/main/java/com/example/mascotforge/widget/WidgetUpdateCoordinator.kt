@@ -10,11 +10,9 @@ import android.widget.RemoteViews
 import com.example.mascotforge.R
 import com.example.mascotforge.CharacterManager
 import com.example.mascotforge.character.SafeCharacterLoader
-import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.UserWeatherCache
 import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.flow.first
-import java.util.*
 
 class WidgetUpdateCoordinator(private val context: Context) {
 
@@ -138,17 +136,6 @@ class WidgetUpdateCoordinator(private val context: Context) {
 
     // ---- section update helpers ----
 
-    private fun updateClockSection(views: RemoteViews, widgetId: Int, size: WidgetSize) {
-        val cal = Calendar.getInstance()
-        val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-        val clockCache = if (prefs.getBoolean("use_clock_cache", true)) ClockCache else null
-        viewUpdater.updateClockViews(
-            views, clockCache, widgetId,
-            cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
-            size.widthDp
-        )
-    }
-
     private fun updateBatterySection(views: RemoteViews, updaterLayoutType: WidgetViewUpdater.LayoutType) {
         val batteryLevel = batteryManager.getBatteryLevel().coerceIn(0, 100)
         val isCharging = batteryManager.isCharging()
@@ -208,7 +195,6 @@ class WidgetUpdateCoordinator(private val context: Context) {
         try {
             val ctx = createWidgetContext(widgetId, layoutType)
 
-            updateClockSection(ctx.views, widgetId, ctx.size)
             updateBatterySection(ctx.views, ctx.updaterLayoutType)
 
             val weather = weatherCache.getCurrentWeather()
@@ -240,19 +226,6 @@ class WidgetUpdateCoordinator(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error updating speech for single widget $appWidgetId", e)
         }
-    }
-
-    suspend fun updateClockOnly() = updateWidgetsPartially("clock", normalOnly = true) { ctx ->
-        updateClockSection(ctx.views, ctx.widgetId, ctx.size)
-        updateBatterySection(ctx.views, ctx.updaterLayoutType)
-
-        val minute = Calendar.getInstance().get(Calendar.MINUTE)
-        if (minute % 10 == 0 || weatherCache.hasWeatherChanged()) {
-            val weather = weatherCache.getCurrentWeather()
-            viewUpdater.updateWeatherViews(ctx.views, weather, ctx.size.widthDp, ctx.updaterLayoutType)
-        }
-
-        setupButtonClickListeners(ctx.views, ctx.widgetId, ctx.layoutType)
     }
 
     suspend fun updateWeatherOnly() {
