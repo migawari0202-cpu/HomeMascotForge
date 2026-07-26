@@ -7,7 +7,6 @@ import android.util.TypedValue
 import android.widget.RemoteViews
 import com.example.mascotforge.R
 import java.util.*
-import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
@@ -65,49 +64,8 @@ class WidgetViewUpdater(private val context: Context) {
             LayoutType.COMPACT -> R.id.widget_character_image_compact
         }
 
-        fun clock(layoutType: LayoutType): Int? = when (layoutType) {
-            LayoutType.NORMAL -> R.id.widget_clock_normal
-            else -> null
-        }
     }
 
-
-    /**
-     * 時計表示を更新（NORMAL・COMPACT対応）
-     */
-    fun updateClockViews(
-        views: RemoteViews,
-        clockCache: Any?,
-        widgetId: Int,
-        hour: Int,
-        minute: Int,
-        minWidth: Int
-    ) {
-        try {
-            // NORMAL または COMPACT のいずれかで時計を更新
-            val clockViewId = ViewIds.clock(LayoutType.NORMAL)
-                ?: ViewIds.clock(LayoutType.COMPACT)
-                ?: return
-
-            val bitmap: Bitmap? = if (clockCache != null && clockCache is ClockCache) {
-                ClockCache.getClockBitmap(context, hour, minute)
-            } else {
-                null
-            }
-
-            if (bitmap != null && !bitmap.isRecycled) {
-                views.safeSetImageBitmap(clockViewId, bitmap)
-                Log.v(TAG, "Clock: ${bitmap.width}x${bitmap.height}")
-            } else {
-                Log.w(TAG, "Clock bitmap null, using fallback")
-                val timeText = String.format(Locale.JAPAN, "%02d:%02d", hour, minute)
-                val fallbackBitmap = createTextBitmap(timeText, 200, 200, 48f)
-                views.safeSetImageBitmap(clockViewId, fallbackBitmap)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "updateClockViews failed", e)
-        }
-    }
 
     /**
      * バッテリー表示を更新（レイアウトタイプ対応）
@@ -242,21 +200,6 @@ class WidgetViewUpdater(private val context: Context) {
     // -------------------------
     // ヘルパー関数
     // -------------------------
-
-    private fun createTextBitmap(text: String, width: Int, height: Int, textSize: Float): Bitmap {
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
-            this.textSize = textSize
-            textAlign = android.graphics.Paint.Align.CENTER
-            isAntiAlias = true
-        }
-        val xPos = width / 2f
-        val yPos = (height / 2f - (paint.descent() + paint.ascent()) / 2f)
-        canvas.drawText(text, xPos, yPos, paint)
-        return bitmap
-    }
 
     private fun RemoteViews.safeSetText(viewId: Int, text: CharSequence?) {
         try { setTextViewText(viewId, text ?: "") } catch (e: Exception) {
