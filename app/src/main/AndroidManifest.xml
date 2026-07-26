@@ -96,14 +96,6 @@
         </receiver>
 
         <receiver
-            android:name="com.example.mascotforge.widget.ClockUpdateReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.example.homemascot.UPDATE_CLOCK" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name="com.example.mascotforge.widget.WeatherUpdateReceiver"
             android:exported="false">
             <intent-filter>

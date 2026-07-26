@@ -6,7 +6,6 @@ import android.content.IntentFilter
 import android.util.Log
 import com.example.mascotforge.widget.cache.BatteryManager
 import com.example.mascotforge.widget.cache.BatteryReceiver
-import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.MemoCache
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -72,9 +71,6 @@ object WidgetCacheManager {
         }
     }
 
-    val clockCache: ClockCache
-        get() = ClockCache
-
     val batteryManager: BatteryManager
         get() = _batteryManager
 
@@ -86,8 +82,6 @@ object WidgetCacheManager {
      */
     fun clearAll() {
         Log.d(TAG, "Clearing all caches")
-
-        ClockCache.clear()
 
         if (initialized.get()) {
             runCatching { _batteryManager.clearCache() }
@@ -126,7 +120,6 @@ object WidgetCacheManager {
             appendLine("  initialized: ${initialized.get()}")
             appendLine("  batteryManager: ${if (initialized.get()) "ready" else "not ready"}")
             appendLine("  memoCache: ${if (initialized.get()) "ready" else "not ready"}")
-            appendLine("  clockCache: always ready")
         }
     }
 }
