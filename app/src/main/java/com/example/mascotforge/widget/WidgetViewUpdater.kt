@@ -10,7 +10,9 @@ import java.util.*
 import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
- * WidgetViewUpdater - 繝ｬ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懃沿・井ｿｮ豁｣迚茨ｼ・ * COMPACT 繝｢繝ｼ繝峨・View ID繧呈ｭ｣縺励￥險ｭ螳・ */
+ * WidgetViewUpdater - レイアウトタイプ対応版（修正版）
+ * COMPACT モードのView IDを正しく設定
+ */
 class WidgetViewUpdater(private val context: Context) {
 
     companion object {
@@ -23,7 +25,9 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * View ID繧偵Ξ繧､繧｢繧ｦ繝医ち繧､繝励↓蠢懊§縺ｦ蜿門ｾ・     * 笨・COMPACT繝｢繝ｼ繝峨・ID繧呈ｭ｣縺励￥險ｭ螳・     */
+     * View IDをレイアウトタイプに応じて取得
+     * ✅ COMPACTモードのIDを正しく設定
+     */
     private object ViewIds {
 
         fun batteryIcon(layoutType: LayoutType): Int? = when (layoutType) {
@@ -64,7 +68,8 @@ class WidgetViewUpdater(private val context: Context) {
 
 
     /**
-     * 繝舌ャ繝・Μ繝ｼ陦ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
+     * バッテリー表示を更新（レイアウトタイプ対応）
+     */
     fun updateBatteryViews(
         views: RemoteViews,
         level: Int,
@@ -86,7 +91,8 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * 螟ｩ豌苓｡ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
+     * 天気表示を更新（レイアウトタイプ対応）
+     */
     fun updateWeatherViews(
         views: RemoteViews,
         weather: Any?,
@@ -99,7 +105,7 @@ class WidgetViewUpdater(private val context: Context) {
 
             val cached = UserWeatherCache(context).getCurrentWeather()
             val emoji = cached?.weatherEmoji ?: "--"
-            val tempStr = if (cached != null) "${formatTemp(cached.temperature)}ﾂｰC" else "--"
+            val tempStr = if (cached != null) "${formatTemp(cached.temperature)}°C" else "--"
 
             views.safeSetText(iconViewId, emoji)
             views.safeSetTextSizeSp(iconViewId, if (layoutType == LayoutType.COMPACT) 23f else 23f)
@@ -113,7 +119,8 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * 繝｡繝｢陦ｨ遉ｺ繧呈峩譁ｰ・磯壼ｸｸ迚医・縺ｿ・・     */
+     * メモ表示を更新（通常版のみ）
+     */
     fun updateMemoViews(views: RemoteViews, memoTexts: List<String>, textSize: Float, layoutId: Int) {
         if (layoutId != R.layout.widget_normal) return
 
@@ -125,7 +132,7 @@ class WidgetViewUpdater(private val context: Context) {
         memoViewIds.forEachIndexed { index, viewId ->
             if (index < memoTexts.size && memoTexts[index].isNotEmpty()) {
                 val text = if (memoTexts[index].length > 15) {
-                    memoTexts[index].substring(0, 15) + "窶ｦ"
+                    memoTexts[index].substring(0, 15) + "…"
                 } else {
                     memoTexts[index]
                 }
@@ -141,7 +148,8 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * 繧ｻ繝ｪ繝戊｡ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
+     * セリフ表示を更新（レイアウトタイプ対応）
+     */
     fun updateSpeechViews(views: RemoteViews, speech: String, layoutType: LayoutType) {
         try {
             val speechViewId = ViewIds.speech(layoutType) ?: return
@@ -166,7 +174,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * 繧ｭ繝｣繝ｩ繧ｯ繧ｿ繝ｼ逕ｻ蜒上ｒ譖ｴ譁ｰ
+     * キャラクター画像を更新
      */
     fun updateCharacterImageViews(
         views: RemoteViews,
@@ -190,7 +198,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     // -------------------------
-    // 繝倥Ν繝代・髢｢謨ｰ
+    // ヘルパー関数
     // -------------------------
 
     private fun RemoteViews.safeSetText(viewId: Int, text: CharSequence?) {
@@ -231,7 +239,7 @@ class WidgetViewUpdater(private val context: Context) {
 
     private fun getBatteryIconResource(level: Int, isCharging: Boolean): Int {
 
-        // 繝輔Ν縺ｮ縺ｨ縺阪□縺大・騾壹い繧､繧ｳ繝ｳ
+        // フルのときだけ共通アイコン
         if (level >= 80) return R.drawable.b5
 
         val prefix = if (isCharging) "bc" else "b"
@@ -256,4 +264,3 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
 }
-
