@@ -71,8 +71,6 @@ WEATHER_API_KEY=your_api_key_here
 
 この値は `BuildConfig.WEATHER_API_KEY` として参照されます。
 
-代わりにビルド環境で環境変数 `WEATHER_API_KEY` を設定することもできます。優先順は `local.properties` の値が最優先で、見つからない場合は環境変数が使用されます。
-
 ### ビルド
 
 Windows:

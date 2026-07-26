@@ -4,15 +4,13 @@ import android.content.Context
 import com.example.mascotforge.characters.CharacterRegistry
 
 /**
- * キャラクター管理クラス。
- *
- * MVP: Widget / Activity ともグローバル選択（[CharacterPreferences.getSelectedCharacterId]）を使う。
- * widgetId 付き API は呼び出し互換のため残し、内部は共通選択に委譲する。
+ * キャラクター管理クラス
  */
 class CharacterManager(private val context: Context) {
 
     /**
-     * 現在選択されているキャラクタープロバイダーを取得（Widget/Activity 共通）
+     * 現在選択されているキャラクタープロバイダーを取得
+     * @deprecated ウィジェットIDを指定する getProviderForWidget を使用してください
      */
     fun getCurrentProvider(): CharacterProvider {
         val selectedId = CharacterPreferences.getSelectedCharacterId(context)
@@ -23,10 +21,14 @@ class CharacterManager(private val context: Context) {
     }
 
     /**
-     * MVP: widgetId は無視し [getCurrentProvider] と同じ。
+     * 特定ウィジェット用のキャラクタープロバイダーを取得
      */
     fun getProviderForWidget(widgetId: Int): CharacterProvider {
-        return getCurrentProvider()
+        val selectedId = CharacterPreferences.getCharacterIdForWidget(context, widgetId)
+        val allProviders = getAllProviders()
+        return allProviders.find { it.id == selectedId }
+            ?: allProviders.firstOrNull()
+            ?: error("No characters available")
     }
 
     /**
@@ -37,16 +39,17 @@ class CharacterManager(private val context: Context) {
     }
 
     /**
-     * 現在選択されているキャラのIDを取得（Widget/Activity 共通）
+     * 現在選択されているキャラのIDを取得
+     * @deprecated ウィジェットIDを指定する getCharacterIdForWidget を使用してください
      */
     fun getCurrentCharacterId(): String {
         return CharacterPreferences.getSelectedCharacterId(context)
     }
 
     /**
-     * MVP: widgetId は無視し [getCurrentCharacterId] と同じ。
+     * 特定ウィジェットのキャラIDを取得
      */
     fun getCharacterIdForWidget(widgetId: Int): String {
-        return getCurrentCharacterId()
+        return CharacterPreferences.getCharacterIdForWidget(context, widgetId)
     }
 }
