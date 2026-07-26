@@ -21,13 +21,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // APIキー読み込み: 優先順は local.properties の WEATHER_API_KEY -> 環境変数 WEATHER_API_KEY
+        // APIキー読み込み
         val localProperties = rootProject.file("local.properties").takeIf { it.exists() }?.reader()?.use {
             Properties().apply { load(it) }
         }
-        val propKey = localProperties?.getProperty("WEATHER_API_KEY")?.takeIf { it.isNotBlank() }
-        val envKey = System.getenv("WEATHER_API_KEY") ?: ""
-        val apiKey = propKey ?: envKey
+        val apiKey = localProperties?.getProperty("WEATHER_API_KEY") ?: ""
         buildConfigField("String", "WEATHER_API_KEY", "\"$apiKey\"")
 
     }
