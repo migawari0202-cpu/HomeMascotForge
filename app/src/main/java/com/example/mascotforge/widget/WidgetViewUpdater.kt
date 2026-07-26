@@ -7,13 +7,10 @@ import android.util.TypedValue
 import android.widget.RemoteViews
 import com.example.mascotforge.R
 import java.util.*
-import com.example.mascotforge.widget.cache.ClockCache
 import com.example.mascotforge.widget.cache.UserWeatherCache
 
 /**
- * WidgetViewUpdater - レイアウトタイプ対応版（修正版）
- * COMPACT モードのView IDを正しく設定
- */
+ * WidgetViewUpdater - 繝ｬ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懃沿・井ｿｮ豁｣迚茨ｼ・ * COMPACT 繝｢繝ｼ繝峨・View ID繧呈ｭ｣縺励￥險ｭ螳・ */
 class WidgetViewUpdater(private val context: Context) {
 
     companion object {
@@ -26,9 +23,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * View IDをレイアウトタイプに応じて取得
-     * ✅ COMPACTモードのIDを正しく設定
-     */
+     * View ID繧偵Ξ繧､繧｢繧ｦ繝医ち繧､繝励↓蠢懊§縺ｦ蜿門ｾ・     * 笨・COMPACT繝｢繝ｼ繝峨・ID繧呈ｭ｣縺励￥險ｭ螳・     */
     private object ViewIds {
 
         fun batteryIcon(layoutType: LayoutType): Int? = when (layoutType) {
@@ -65,53 +60,11 @@ class WidgetViewUpdater(private val context: Context) {
             LayoutType.COMPACT -> R.id.widget_character_image_compact
         }
 
-        fun clock(layoutType: LayoutType): Int? = when (layoutType) {
-            LayoutType.NORMAL -> R.id.widget_clock_normal
-            else -> null
-        }
     }
 
 
     /**
-     * 時計表示を更新（NORMAL・COMPACT対応）
-     */
-    fun updateClockViews(
-        views: RemoteViews,
-        clockCache: Any?,
-        widgetId: Int,
-        hour: Int,
-        minute: Int,
-        minWidth: Int
-    ) {
-        try {
-            // NORMAL または COMPACT のいずれかで時計を更新
-            val clockViewId = ViewIds.clock(LayoutType.NORMAL)
-                ?: ViewIds.clock(LayoutType.COMPACT)
-                ?: return
-
-            val bitmap: Bitmap? = if (clockCache != null && clockCache is ClockCache) {
-                ClockCache.getClockBitmap(context, hour, minute)
-            } else {
-                null
-            }
-
-            if (bitmap != null && !bitmap.isRecycled) {
-                views.safeSetImageBitmap(clockViewId, bitmap)
-                Log.v(TAG, "Clock: ${bitmap.width}x${bitmap.height}")
-            } else {
-                Log.w(TAG, "Clock bitmap null, using fallback")
-                val timeText = String.format(Locale.JAPAN, "%02d:%02d", hour, minute)
-                val fallbackBitmap = createTextBitmap(timeText, 200, 200, 48f)
-                views.safeSetImageBitmap(clockViewId, fallbackBitmap)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "updateClockViews failed", e)
-        }
-    }
-
-    /**
-     * バッテリー表示を更新（レイアウトタイプ対応）
-     */
+     * 繝舌ャ繝・Μ繝ｼ陦ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
     fun updateBatteryViews(
         views: RemoteViews,
         level: Int,
@@ -133,8 +86,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * 天気表示を更新（レイアウトタイプ対応）
-     */
+     * 螟ｩ豌苓｡ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
     fun updateWeatherViews(
         views: RemoteViews,
         weather: Any?,
@@ -147,7 +99,7 @@ class WidgetViewUpdater(private val context: Context) {
 
             val cached = UserWeatherCache(context).getCurrentWeather()
             val emoji = cached?.weatherEmoji ?: "--"
-            val tempStr = if (cached != null) "${formatTemp(cached.temperature)}°C" else "--"
+            val tempStr = if (cached != null) "${formatTemp(cached.temperature)}ﾂｰC" else "--"
 
             views.safeSetText(iconViewId, emoji)
             views.safeSetTextSizeSp(iconViewId, if (layoutType == LayoutType.COMPACT) 23f else 23f)
@@ -161,8 +113,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * メモ表示を更新（通常版のみ）
-     */
+     * 繝｡繝｢陦ｨ遉ｺ繧呈峩譁ｰ・磯壼ｸｸ迚医・縺ｿ・・     */
     fun updateMemoViews(views: RemoteViews, memoTexts: List<String>, textSize: Float, layoutId: Int) {
         if (layoutId != R.layout.widget_normal) return
 
@@ -174,7 +125,7 @@ class WidgetViewUpdater(private val context: Context) {
         memoViewIds.forEachIndexed { index, viewId ->
             if (index < memoTexts.size && memoTexts[index].isNotEmpty()) {
                 val text = if (memoTexts[index].length > 15) {
-                    memoTexts[index].substring(0, 15) + "…"
+                    memoTexts[index].substring(0, 15) + "窶ｦ"
                 } else {
                     memoTexts[index]
                 }
@@ -190,8 +141,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * セリフ表示を更新（レイアウトタイプ対応）
-     */
+     * 繧ｻ繝ｪ繝戊｡ｨ遉ｺ繧呈峩譁ｰ・医Ξ繧､繧｢繧ｦ繝医ち繧､繝怜ｯｾ蠢懶ｼ・     */
     fun updateSpeechViews(views: RemoteViews, speech: String, layoutType: LayoutType) {
         try {
             val speechViewId = ViewIds.speech(layoutType) ?: return
@@ -216,7 +166,7 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     /**
-     * キャラクター画像を更新
+     * 繧ｭ繝｣繝ｩ繧ｯ繧ｿ繝ｼ逕ｻ蜒上ｒ譖ｴ譁ｰ
      */
     fun updateCharacterImageViews(
         views: RemoteViews,
@@ -240,23 +190,8 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
     // -------------------------
-    // ヘルパー関数
+    // 繝倥Ν繝代・髢｢謨ｰ
     // -------------------------
-
-    private fun createTextBitmap(text: String, width: Int, height: Int, textSize: Float): Bitmap {
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(bitmap)
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
-            this.textSize = textSize
-            textAlign = android.graphics.Paint.Align.CENTER
-            isAntiAlias = true
-        }
-        val xPos = width / 2f
-        val yPos = (height / 2f - (paint.descent() + paint.ascent()) / 2f)
-        canvas.drawText(text, xPos, yPos, paint)
-        return bitmap
-    }
 
     private fun RemoteViews.safeSetText(viewId: Int, text: CharSequence?) {
         try { setTextViewText(viewId, text ?: "") } catch (e: Exception) {
@@ -296,7 +231,7 @@ class WidgetViewUpdater(private val context: Context) {
 
     private fun getBatteryIconResource(level: Int, isCharging: Boolean): Int {
 
-        // フルのときだけ共通アイコン
+        // 繝輔Ν縺ｮ縺ｨ縺阪□縺大・騾壹い繧､繧ｳ繝ｳ
         if (level >= 80) return R.drawable.b5
 
         val prefix = if (isCharging) "bc" else "b"
@@ -321,3 +256,4 @@ class WidgetViewUpdater(private val context: Context) {
     }
 
 }
+

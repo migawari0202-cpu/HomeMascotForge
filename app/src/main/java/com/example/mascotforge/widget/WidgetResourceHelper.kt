@@ -38,10 +38,6 @@ import com.example.mascotforge.widget.WidgetConstants
         }
     }
 
-    fun getClockId(): Int {
-        return R.id.widget_clock_normal
-    }
-
     fun getWeatherFontSizes(isCompact: Boolean): Pair<Float, Float> {
         return if (isCompact) {
             Pair(

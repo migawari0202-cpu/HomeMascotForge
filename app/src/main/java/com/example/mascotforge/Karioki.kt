@@ -20,8 +20,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 
-import com.example.mascotforge.widget.TimeWidgetProvider
-import com.example.mascotforge.widget.WidgetUpdateScheduler
 import com.example.mascotforge.widget.cache.UserWeatherCache
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +30,6 @@ class Karioki : ComponentActivity() {
         private const val PREFS_NAME = "app_init_prefs"
 
         private const val KEY_PERMISSIONS_REQUESTED = "permissions_requested"
-        private const val KEY_CLOCK_SCHEDULED = "clock_scheduled"
         private const val KEY_FIRST_LAUNCH = "first_launch"
     }
 
@@ -160,23 +157,7 @@ class Karioki : ComponentActivity() {
 
     private fun scheduleWeatherAndClockUpdates() {
         scheduleWeatherUpdates()
-        requestClockScheduling()
-    }
-
-    private fun requestClockScheduling() {
-        executeClockScheduling()
         completeInitialization()
-    }
-
-    private fun executeClockScheduling() {
-        try {
-            WidgetUpdateScheduler(this).scheduleClockUpdate()
-            TimeWidgetProvider.updateClockOnly(this)
-        } catch (e: Exception) {
-            Log.e(TAG, "時計更新スケジュール失敗", e)
-        }
-
-        prefs.edit().putBoolean(KEY_CLOCK_SCHEDULED, true).apply()
     }
 
     private fun scheduleWeatherUpdates() {
