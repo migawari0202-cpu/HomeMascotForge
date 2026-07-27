@@ -52,6 +52,13 @@
             android:theme="@style/Theme.Homemascot.NoActionBar"
             android:exported="false" />
 
+        <!-- キャラ時計画面（2回目以降の起動先） -->
+        <activity
+            android:name="com.example.mascotforge.ClockActivity"
+            android:label="時計"
+            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:exported="false" />
+
         <!-- キャラクター選択画面 -->
         <activity
             android:name="com.example.mascotforge.CharacterSelectorActivity"
