@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <!-- 設定ボタン。マージンは WindowInsets で動的に付与 -->
+    <Button
+        android:id="@+id/button_settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:text="設定" />
+
+    <!-- 日付(曜日) / 時刻。設定ボタンの移動分は右上に配置 -->
+    <TextView
+        android:id="@+id/text_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:gravity="end"
+        android:lineSpacingExtra="3dp"
+        android:text="2026/07/25(土)\n00:00:00"
+        android:textColor="#333333"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <!--
+      横画面: 左余白を大きめにしてセリフ＋キャラを右寄りに配置。
+        [余白] [セリフ] [キャラ]
+    -->
+    <LinearLayout
+        android:id="@+id/character_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="72dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp">
+
+        <!-- 左余白（横画面は広め → 全体が右寄り） -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="3" />
+
+        <!-- セリフ -->
+        <TextView
+            android:id="@+id/widget_speech_compact"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="4"
+            android:background="@drawable/speech_bubble_bg"
+            android:padding="12dp"
+            android:text="..."
+            android:textColor="#333333"
+            android:textSize="16sp" />
+
+        <!-- キャラクター画像 -->
+        <ImageView
+            android:id="@+id/widget_character_image_compact"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:adjustViewBounds="true"
+            android:contentDescription="キャラクター画像"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+</FrameLayout>
