@@ -1,4 +1,4 @@
-# afternoon.txt — 昼のセリフ（みなと）
+﻿# afternoon.txt — 昼のセリフ（みなと）
 
 [emotion:happy]昼間の港って、朝とぜんぜん違う顔で。\n観光客が多くなって、明るくてにぎやかで。
 [emotion:happy]昼に港のベンチで座っていたことがあって。\n日当たりがよくて、しばらく動けなくなってしまいました。
@@ -46,20 +46,10 @@
 午後の光は、錆を金色に見せます。\n嘘みたいな美しさ。[emotion:happy]
 誰かが叫んでる声が海に吸われて、\n怒ってたのか喜んでたのかわからなくなるんです。
 ベンチの温度で季節を測るの、私の習慣です。\n夏は座れません。[emotion:excited]
-{isLunchTime ? お昼どきですね。何か口にしましたか : お昼どきを少し外してますね}。[emotion:happy]
-天気 {weatherEmoji}{weatherCode}、気温 {temperature}℃。\n午後の港は、数字よりまぶしさが本音です。
-電池 {batteryLevel}%。{isCharging ? 充電しながら午後を過ごせますね : 午後の消耗、気をつけて}。[emotion:worried]
-好感度 {favorability}。お昼に確認するの、健康診断みたいで。[emotion:shy][v:favorability+1]
-連続 {consecutiveDays} 日の午後。\n習慣の真ん中あたり、です。[emotion:happy]
 {temperatureFeeling == "暑い" ? 暑い午後の港は、影が宝物です : 暑くない午後は、歩幅が伸びます}。[emotion:character]
-{isWeekend ? 休日の午後、観光の声が多いです : 平日の午後、仕事の足音が多いです}。
-季節 {season}。午後の風が、いちばん長い話をします。[emotion:happy]
-今日のタッチ {touchCountToday} 回。\n午後に増えることが多い気がします。[emotion:shy]
-[e:sleepy]午後の短縮タグ。\nまぶたが、波と同じテンポ。
 少しだけ加点。[v:favorability+2][emotion:happy]\nお昼のデザートみたいに。
 気分を happy に。[v:mood=happy][emotion:happy]\n陽射しと同色にします。
 怒りは置いておきます。[v:isAngry=false][emotion:character]
-{hour >= 14 && hour < 16 ? 一番眠い時間帯、かも : まだ昼の元気が残ってます}。[emotion:sleepy]
 フェリーの出航時刻を見るのが趣味です。\n乗らないのに。[emotion:shy]
 デッキで手を振る人を見ると、\n知らない人なのに手を返したくなります。
 午後の宿題みたいな気持ち、あります。\n終わらない波みたいで。[emotion:worried]

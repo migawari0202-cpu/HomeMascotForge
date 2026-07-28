@@ -1,4 +1,4 @@
-# night.txt — 夜のセリフ（みなと）
+﻿# night.txt — 夜のセリフ（みなと）
 
 夜の港って、昼間とぜんぜん違う場所みたいになるんですよね。\n光がまばらで、静かで。好きな顔です。[emotion:happy]
 夜に港を歩いたことがあって。\n足音がよく響いて、なんか自分の存在を確認できる感じがして。[emotion:character]
@@ -43,20 +43,9 @@
 今日の後悔を波に置く練習、夜にやってます。\n回収されないことを祈って。[emotion:worried]
 星が少ない夜は、街の灯りが星の代わりです。\n偽物でも、十分きれい。[emotion:happy]
 足音が一人分だと、世界が私用になります。\n悪い意味じゃなくて。[emotion:shy]
-{isNearBedtime ? 就寝モードに近い時間です。無理しないで : まだ夜の入口、ですね}。[emotion:sleepy]
-天気 {weatherEmoji}{weatherCode}。夜の空は、天気の本音が出ます。
-気温 {temperature}℃。{temperatureFeeling} 夜は、体感が正直です。[emotion:character]
-電池 {batteryLevel}%。{isLowBattery ? 寝る前に充電、お願いします : 夜の電池、まだ余裕ありそう}。[emotion:worried]
-好感度 {favorability}。夜に見ると、少し恥ずかしくなります。[emotion:shy][v:favorability+1]
-連続 {consecutiveDays} 日目の夜。\n続きがあるって、心強いです。[emotion:happy]
-{dayOfWeek} の夜。{isWeekend ? 休日の夜は、明日がやさしいです : 平日の夜は、今日を畳む時間です}。
-季節 {season}。夜の匂いが、季節の奥行きです。[emotion:happy]
-今日のタッチ {touchCountToday} 回。\n夜に触れてくれると、灯が一つ増える感じ。[emotion:shy]
-[e:sleepy]夜の短縮タグ。\nまぶたと、潮の満干。
 加点の夜。[v:favorability+2][emotion:happy]\n静かなプレゼント。
 mood を neutral に。[v:mood=neutral][emotion:character]\n夜の港色。
 怒りを消灯。[v:isAngry=false][emotion:happy]
-{hour >= 22 ? もう遅い時間帯です : まだ夜の前半です}。[emotion:worried]
 月が出てなくても、海は月を知ってる気がします。\n満ち引きが、証拠。[emotion:character]
 {userName}さん、おやすみの前に一言。\n今日も、ここにいました。[emotion:shy]
 寝落ちしそうな波の音、BGMにしますか。\n著作権、海にあります。[emotion:sleepy]

@@ -1,6 +1,5 @@
-# default.txt — みなとの日常セリフ（汎用・フォールバック）
+﻿# default.txt — みなとの日常セリフ（汎用・フォールバック）
 # 1行1セリフ。\n で表示改行。# で始まる行はコメント。
-# テスト用: 変数展開 / 三項 / [v:] / [emotion:] / {br}
 
 港にいると、なんか時間の流れ方が違う気がするんですよね。\nゆっくりというか……遠い感じ、というか。
 前に港で、すごく大きい船を見たことがあって。\nどこまで行くんだろうって、しばらく見ていました。
@@ -70,40 +69,11 @@
 風が強い日は、声が流されてしまうので、\n少し大きめに話してしまいます。すみません。[emotion:shy]
 [emotion:sleepy]何も考えない練習、ときどきしてるんです。\nうまくいかないことのほうが多いですけど。
 船の名前を読むのが、密かな楽しみです。\n知らない言葉だと、なおさら。[emotion:happy]
-[emotion:worried]携帯の電池、気にしたほうがいいですよ。\n……私にも、わかりますから。今 {batteryLevel}% ですよね。
-[emotion:happy]天気は {weatherEmoji}{weatherCode}、気温 {temperature}℃。\n港から見ても、だいたいそんな感じです。
-連続で顔を合わせて {consecutiveDays} 日目、ですね。\n数えてしまって、すみません。[emotion:shy]
-今日は {dayOfWeek}。{isWeekend ? 休みの空気がします : いつも通りの空気がします}。\n港は、どっちの日も動いてます。
-時間帯は {timeSlot} です。\n私の体内時計は、だいたい港の時計寄りです。[emotion:happy]
-好感度、いま {favorability} らしいです。\n数字って変ですけど……悪い気はしません。[emotion:shy][v:favorability+1]
-{isLowBattery ? 電池が心配です。充電、忘れないでくださいね : 電池は大丈夫そうですね。よかった}。[emotion:worried]
-{isCharging ? 充電中なんですね。少し休めますね : 充電してなくても、無理はしないでください}。[emotion:happy]
-{wasTouched ? さっき触れてくれましたよね。覚えてます : 静かにしてるのも、悪くないです}。[emotion:shy]
-{isFirstLaunchToday ? 今日初めてのあいさつ、ですね。よろしくお願いします : また会えて、安心しました}。[emotion:happy]
-湿度の表示は {humidity} です。\n空欄でも、肌感でなんとなくわかります。[emotion:character]
-前回からの間隔、だいたい {lastLaunchHoursAgo} 時間。\n長い短いは、気分で変わりますけど。[emotion:character]
-タッチ累計 {touchCount} 回、今日は {touchCountToday} 回。\n数えるの、恥ずかしいですけど。[emotion:shy]
-撫で段階 pettingLevel={pettingLevel}。\n……ちゃんとシステム的な話もできますよ。[emotion:excited]
-季節は {season}。港の風も、季節で匂いが変わります。[emotion:happy]
-{isHoliday ? 今日は祝日、{holidayName} ですね。港も少しゆるい空気 : 平日の港は、規則正しい音がします}。
-{isSpecialDay ? 特別な日、{specialDayName} なんですね。なんか胸騒ぎがします : 特別じゃなくても、今日は今日です}。[emotion:happy]
-バッテリー状態は「{batteryStatus}」。\n機械の言葉も、少しずつ覚えてます。[emotion:character]
-{userName}さん、月の話は……まだ上手にできません。moonPhase={moonPhase}。\n空は見てますけどね。[emotion:shy]
-{br}って改行のテストも、たまには必要ですよね。{br}二行目、届いてますか。[emotion:character]
-[e:happy]短縮タグのテストです。\n雰囲気は、いつも通り港のままですよ。
-変数を少し動かします。 favorability+2 です。[v:favorability+2][emotion:happy]\n港の波みたいに、ゆっくり上がるといいな。
 少しだけ戻します。[v:favorability-1][emotion:shy]\n下がっても、嫌いになったわけじゃないです。
 気分を neutral に整えます。[v:mood=neutral][emotion:character]\n港の朝みたいに、まっさらに。
 ご機嫌モードへ。[v:mood=happy][emotion:happy][v:favorability+1]\nこういうの、自分で言うの恥ずかしいです。
-不機嫌テスト……すみません。[v:mood=sad][v:isAngry=true][emotion:angry]\n本当は、そんなに怒ってないです。たぶん。
 和解します。[v:isAngry=false][v:mood=happy][emotion:happy]\n汽笛が鳴ったら、切り替えましょう。
-toggle のテストです。[v:isAngry=toggle][emotion:worried]\n状態がひっくり返ったはず……です。
 もう一度戻します。[v:isAngry=toggle][emotion:shy]\n忙しいですね、私の心。
-掛け算のテスト。[v:favorability*1][emotion:character]\n変わらないはず、です。安心材料。
-代入のテストで 50 に。[v:favorability=50][emotion:character]\n基準点に戻る感じ、港のゼロ点みたいで。
-三項の入れ子っぽい話。{favorability >= 50 ? まあ仲良くできてる方だと思います : まだまだこれから、ですね}。[emotion:shy]
 {temperatureFeeling == "寒い" ? 寒い日の港は、息が白いんです : 寒くない日は、潮の匂いがはっきりします}。[emotion:happy]
 {weatherCode == "雨" ? 雨の港、音がふくらみます : 雨じゃなくても、波の音はあります}。[emotion:character]
-長めの一行テストです。港の話を続けると、倉庫と猫と汽笛と夕陽と錆びた手すりと潮風と、全部つながっていくんですよね。\n途切れても、また続きます。[emotion:happy]
-{userName}さん、テスト用のセリフも、できるだけ港の言葉で書いているつもりです。\n変な行があっても、優しく流してください。[emotion:shy]
 今日の汎用枠は、ここまでにします。\nまた時間帯が来たら、別の顔で話しますね。[emotion:happy]
