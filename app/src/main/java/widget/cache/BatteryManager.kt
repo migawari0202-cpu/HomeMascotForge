@@ -1,8 +1,5 @@
 package com.example.mascotforge.widget.cache
 
-import android.content.Context
-import android.content.Intent
-import android.os.BatteryManager as SystemBatteryManager
 import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger

@@ -7,7 +7,6 @@ import com.example.mascotforge.CharacterFactory
 import com.example.mascotforge.CharacterProvider
 import com.example.mascotforge.character.CharacterMetadata
 import com.example.mascotforge.character.CharacterSource
-import com.example.mascotforge.character.DynamicCharacter
 import com.example.mascotforge.character.SafeCharacterLoader
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap

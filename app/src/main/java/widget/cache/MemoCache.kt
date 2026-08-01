@@ -2,12 +2,10 @@ package com.example.mascotforge.widget.cache
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import com.example.mascotforge.widget.database.MemoEntity
 import com.example.mascotforge.widget.database.MemoRepository
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 data class WidgetMemo(
     val id: String,

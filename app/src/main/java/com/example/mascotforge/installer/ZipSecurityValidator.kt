@@ -1,7 +1,6 @@
 package com.example.mascotforge.installer
 
 import android.util.Log
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.InputStream

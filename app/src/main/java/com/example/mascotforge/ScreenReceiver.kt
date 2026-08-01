@@ -10,7 +10,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.mascotforge.WeatherUpdateWorker
-import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.cache.UserWeatherCache
 
 class ScreenReceiver : BroadcastReceiver() {

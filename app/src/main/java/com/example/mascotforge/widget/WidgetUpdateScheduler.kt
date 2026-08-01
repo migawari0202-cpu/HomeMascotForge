@@ -5,11 +5,10 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.work.ExistingWorkPolicy
-import com.example.mascotforge.WeatherUpdateWorker
-import com.example.mascotforge.widget.TimeWidgetProvider
 import android.os.Build
 import android.util.Log
+import androidx.work.ExistingWorkPolicy
+import com.example.mascotforge.WeatherUpdateWorker
 
 class WidgetUpdateScheduler(private val context: Context) {
 
