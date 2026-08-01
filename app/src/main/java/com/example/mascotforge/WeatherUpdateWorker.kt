@@ -21,12 +21,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.mascotforge.weather.WeatherRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.cache.UserWeatherCache
 import com.example.mascotforge.widget.cache.WeatherInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 
