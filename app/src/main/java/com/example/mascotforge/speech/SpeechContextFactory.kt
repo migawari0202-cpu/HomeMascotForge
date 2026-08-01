@@ -2,16 +2,16 @@ package com.example.mascotforge.speech
 
 import android.content.Context
 import android.util.Log
-import com.example.mascotforge.widget.WidgetCacheManager
-import java.time.LocalDateTime
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import com.example.mascotforge.character.CharacterStateManager
 import com.example.mascotforge.getTimeSlot
 import com.example.mascotforge.isNearBedtime
 import com.example.mascotforge.isNearWakeup
+import com.example.mascotforge.widget.WidgetCacheManager
 import com.example.mascotforge.widget.cache.UserWeatherCache
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * SpeechContextを生成するヘルパー
