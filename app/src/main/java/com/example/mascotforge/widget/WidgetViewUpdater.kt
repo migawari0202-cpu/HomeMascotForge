@@ -6,8 +6,8 @@ import android.util.Log
 import android.util.TypedValue
 import android.widget.RemoteViews
 import com.example.mascotforge.R
-import java.util.*
 import com.example.mascotforge.widget.cache.UserWeatherCache
+import java.util.Locale
 
 /**
  * WidgetViewUpdater - レイアウトタイプ対応版（修正版）

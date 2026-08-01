@@ -3,10 +3,10 @@ package com.example.mascotforge.widget.cache
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.BatteryManager as SystemBatteryManager
 import android.util.Log
-import com.example.mascotforge.widget.WidgetCacheManager
 import com.example.mascotforge.widget.TimeWidgetProvider
+import com.example.mascotforge.widget.WidgetCacheManager
+import android.os.BatteryManager as SystemBatteryManager
 
 /**
  * バッテリー変更のシステムブロードキャストを受信し、キャッシュを更新するレシーバー

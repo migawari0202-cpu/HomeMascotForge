@@ -4,11 +4,11 @@ package com.example.mascotforge.character
 
 import android.content.Context
 import android.util.Log
-import com.example.mascotforge.speech.SpeechContext
-import org.json.JSONObject
-import com.example.mascotforge.speech.SpeechContextFactory
-import java.io.BufferedReader
 import com.example.mascotforge.CharacterProvider
+import com.example.mascotforge.speech.SpeechContext
+import com.example.mascotforge.speech.SpeechContextFactory
+import org.json.JSONObject
+import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 

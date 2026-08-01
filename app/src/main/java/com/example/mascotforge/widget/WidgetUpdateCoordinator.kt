@@ -1,14 +1,14 @@
 package com.example.mascotforge.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.app.PendingIntent
 import android.util.Log
 import android.widget.RemoteViews
-import com.example.mascotforge.R
 import com.example.mascotforge.CharacterManager
+import com.example.mascotforge.R
 import com.example.mascotforge.character.SafeCharacterLoader
 import com.example.mascotforge.widget.cache.UserWeatherCache
 import com.example.mascotforge.widget.database.MemoRepository

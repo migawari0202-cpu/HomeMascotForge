@@ -9,11 +9,17 @@ import android.os.Bundle
 import android.util.Log
 import com.example.mascotforge.R
 import com.example.mascotforge.WeatherUpdateWorker
-import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.character.CharacterStateManager
 import com.example.mascotforge.character.DynamicCharacter
+import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.speech.SpeechContextFactory
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Mascot Forge ウィジェットの AppWidgetProvider（完全版）
