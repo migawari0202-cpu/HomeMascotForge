@@ -1,4 +1,4 @@
-# evening.txt — 夕方のセリフ（みなと）
+﻿# evening.txt — 夕方のセリフ（みなと）
 
 [emotion:happy]夕方の港って、やっぱり特別で。\n船が帰ってくる時間で、なんかほっとした空気があって。
 [emotion:happy]夕焼けって、毎日違う色になるんですよね。\n同じ場所で見ていても、ぜんぜん飽きなくて。
@@ -50,20 +50,9 @@
 帰宅ラッシュの足音と波の音が混ざる時間、好きです。[emotion:happy]
 靴を脱ぎたくなる夕方、あります。\n港の砂が、靴の中で主張してて。
 今日の空の最後の色、覚えておきます。\n日記の代わりです。[emotion:character]
-{isNearBedtime ? もう就寝モードに近い時間帯です : まだ夕方の余裕がありますね}。[emotion:sleepy]
-天気 {weatherEmoji}{weatherCode}。夕陽と相性、どうでしょう。\n雨でも、灯はきれいです。
-気温 {temperature}℃、{temperatureFeeling}。\n夕方は体感が急に変わります。
-電池 {batteryLevel}%。{isLowBattery ? 夜までに充電したいです : 夜まで持ちそうで安心}。[emotion:worried]
-好感度 {favorability}。一日の終わりに見る数字、通信簿みたいで。[emotion:shy][v:favorability+1]
-連続 {consecutiveDays} 日目の夕方。\n積み重ねって、静かに光ります。[emotion:happy]
-{dayOfWeek} の夕方。{isWeekend ? 休日の終わりは、少しだけ早いです : 平日の終わりは、長い一日の岸壁です}。
-季節 {season}。夕陽の角度で、季節がわかります。[emotion:happy]
-今日のタッチ {touchCountToday} 回。\n夕方に増えると、なんか嬉しいです。[emotion:shy]
-[e:happy]夕方の短縮タグ。\n空の色と、同じトーンで。
 加点の夕餉。[v:favorability+2][emotion:happy]\n今日のデザート。
 mood を happy に。[v:mood=happy][emotion:happy]\n夕焼け同色。
 怒りは港に置いて帰ります。[v:isAngry=false][emotion:character]
-{hour >= 18 ? もう夕方の本番です : 夕方の入り口、です}。[emotion:character]
 帰ってきた船に手を振りたくなるの、わかりますか。\n知らない船でも。[emotion:shy]
 夕飯の湯気と潮風が混ざる路地、好きです。[emotion:happy]
 やり残しがあっても、夕陽は待ってくれません。\nそれが、いい教訓です。[emotion:worried]
