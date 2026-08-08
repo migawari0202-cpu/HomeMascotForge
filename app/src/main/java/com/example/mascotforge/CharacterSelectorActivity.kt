@@ -1,8 +1,6 @@
 package com.example.mascotforge
 
 import android.app.AlertDialog
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -11,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
@@ -31,10 +28,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * キャラクター選択画面。
+ *
+ * MVP: Widget / Activity 共通のグローバル選択のみ。
+ * 選択結果は [CharacterPreferences.setSelectedCharacterId] に保存し、
+ * 配置中の Widget があればまとめて更新する。
+ */
 class CharacterSelectorActivity : AppCompatActivity() {
 
-    private val selectedWidgets = mutableSetOf<Int>()
-    private lateinit var widgetIds: IntArray
     private lateinit var adapter: CharacterAdapter
     private var factories: List<CharacterFactory> = emptyList()
     private var currentId: String = ""
@@ -56,11 +58,10 @@ class CharacterSelectorActivity : AppCompatActivity() {
         val rootLayout = findViewById<View>(R.id.root_layout)
         val manageButton = findViewById<Button>(R.id.manage_button)
 
-        // ✅ 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
+        // 安全領域(WindowInsets)適用 — ノッチ/ナビバー対応
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // 上部(ノッチ・ステータスバー) — XMLのpaddingTopと最大値を取る
             val currentTopPadding = headerLayout.paddingTop
             val requiredTop = systemBars.top.coerceAtLeast(currentTopPadding)
             headerLayout.setPadding(
@@ -70,7 +71,6 @@ class CharacterSelectorActivity : AppCompatActivity() {
                 headerLayout.paddingBottom
             )
 
-            // 下部(ナビゲーションバー)
             view.setPadding(
                 view.paddingLeft,
                 view.paddingTop,
@@ -81,54 +81,35 @@ class CharacterSelectorActivity : AppCompatActivity() {
             insets
         }
 
-        // ウィジェットIDを取得
-        val appWidgetManager = AppWidgetManager.getInstance(this)
-        widgetIds = appWidgetManager.getAppWidgetIds(
-            ComponentName(this, TimeWidgetProvider::class.java)
-        )
-
-                // CharacterFactoryの一覧を取得
         factories = CharacterRegistry.getFactories(this)
         currentId = CharacterPreferences.getSelectedCharacterId(this)
 
-        // 🐛 デバッグログ追加
         Log.d("CharacterSelector", "=== キャラクター選択画面 ===")
         Log.d("CharacterSelector", "現在選択中: $currentId")
         Log.d("CharacterSelector", "利用可能なキャラ数: ${factories.size}")
-        Log.d("CharacterSelector", "ウィジェット数: ${widgetIds.size}")
         factories.forEachIndexed { index, factory ->
-            Log.d("CharacterSelector", "  [$index] ${factory.getCharacterId()} - ${factory.getDisplayName(this)}")
+            Log.d(
+                "CharacterSelector",
+                "  [$index] ${factory.getCharacterId()} - ${factory.getDisplayName(this)}"
+            )
         }
 
-        // カスタムアダプター
-        adapter = CharacterAdapter(factories, currentId, widgetIds.size)
+        adapter = CharacterAdapter(factories, currentId)
         listView.adapter = adapter
 
-        // クリックで選択
-        listView.setOnItemClickListener { _, view, position, _ ->
+        // クリックで共通選択を適用（Widget / Activity とも同じ ID）
+        listView.setOnItemClickListener { _, _, position, _ ->
             val selectedFactory = factories[position]
             val newId = selectedFactory.getCharacterId()
 
-            Log.d("CharacterSelector", "キャラクター選択: $newId")
+            Log.d("CharacterSelector", "キャラクター選択(共通): $newId")
+            CharacterPreferences.setSelectedCharacterId(this, newId)
 
-            // ウィジェットが1個以下の場合は直接適用
-            if (widgetIds.size <= 1) {
-                if (widgetIds.isEmpty()) {
-                    CharacterPreferences.setSelectedCharacterId(this, newId)
-                } else {
-                    CharacterPreferences.setCharacterIdForWidget(this, widgetIds[0], newId)
-                }
-
-                lifecycleScope.launch {
-                    WidgetUpdateCoordinator(this@CharacterSelectorActivity).updateAllWidgets()
-                }
-
-                finish()
-                return@setOnItemClickListener
+            lifecycleScope.launch {
+                WidgetUpdateCoordinator(this@CharacterSelectorActivity).updateAllWidgets()
             }
 
-            // 複数ウィジェットの場合は選択画面を表示
-            showWidgetSelectionForCharacter(view, newId)
+            finish()
         }
 
         // 長押しで削除
@@ -140,12 +121,15 @@ class CharacterSelectorActivity : AppCompatActivity() {
             if (entry != null && !entry.isBuiltIn) {
                 showDeleteDialog(factory)
             } else {
-                Toast.makeText(this@CharacterSelectorActivity, "内蔵キャラクターは削除できません", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@CharacterSelectorActivity,
+                    "内蔵キャラクターは削除できません",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             true
         }
 
-        // キャラ管理ボタン
         manageButton.setOnClickListener {
             try {
                 filePickerLauncher.launch("application/zip")
@@ -276,86 +260,9 @@ class CharacterSelectorActivity : AppCompatActivity() {
         }
     }
 
-    private fun showWidgetSelectionForCharacter(itemView: View, characterId: String) {
-        // すでにウィジェット選択UIが表示されているか確認
-        val existingLayout = itemView.findViewById<View>(R.id.widget_selection_container)
-        if (existingLayout != null) {
-            // 既に表示されている場合は閉じる
-            (itemView as ViewGroup).removeView(existingLayout)
-            return
-        }
-
-        // ウィジェット選択UIを追加
-        val widgetSelectionLayout = layoutInflater.inflate(
-            R.layout.widget_selection_inline,
-            itemView as ViewGroup,
-            false
-        )
-
-        val characterManager = CharacterManager(this)
-        val container = widgetSelectionLayout.findViewById<ViewGroup>(R.id.widget_checkboxes)
-
-        // ウィジェットごとにチェックボックスを作成
-        widgetIds.forEach { widgetId ->
-            val checkBox = CheckBox(this).apply {
-                val currentCharId = characterManager.getCharacterIdForWidget(widgetId)
-                val currentCharName = CharacterRegistry.getFactories(this@CharacterSelectorActivity)
-                    .find { it.getCharacterId() == currentCharId }
-                    ?.getDisplayName(this@CharacterSelectorActivity) ?: "不明"
-
-                text = "ウィジェット $widgetId (現在: $currentCharName)"
-                textSize = 14f
-                setPadding(16, 8, 16, 8)
-
-                setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked) {
-                        selectedWidgets.add(widgetId)
-                    } else {
-                        selectedWidgets.remove(widgetId)
-                    }
-                }
-            }
-            container.addView(checkBox)
-        }
-
-        // 適用ボタン
-        val applyButton = widgetSelectionLayout.findViewById<Button>(R.id.apply_button)
-        applyButton.setOnClickListener {
-            if (selectedWidgets.isNotEmpty()) {
-                CharacterPreferences.setCharacterIdForWidgets(
-                    this,
-                    selectedWidgets.toList(),
-                    characterId
-                )
-
-                lifecycleScope.launch {
-                    Log.d("CharacterSelector", "ウィジェット更新開始: $selectedWidgets")
-                    WidgetUpdateCoordinator(this@CharacterSelectorActivity).updateAllWidgets()
-                    Log.d("CharacterSelector", "ウィジェット更新完了")
-                }
-
-                selectedWidgets.clear()
-                finish()
-            }
-        }
-
-        // キャンセルボタン
-        val cancelButton = widgetSelectionLayout.findViewById<Button>(R.id.cancel_button)
-        cancelButton.setOnClickListener {
-            selectedWidgets.clear()
-            (itemView as ViewGroup).removeView(widgetSelectionLayout)
-        }
-
-        itemView.addView(widgetSelectionLayout)
-    }
-
-    /**
-     * キャラクター一覧用のカスタムアダプター
-     */
-        private inner class CharacterAdapter(
+    private inner class CharacterAdapter(
         var factories: List<CharacterFactory>,
-        var selectedId: String,
-        private val widgetCount: Int
+        var selectedId: String
     ) : ArrayAdapter<CharacterFactory>(
         this@CharacterSelectorActivity,
         R.layout.character_list_item,
@@ -368,7 +275,6 @@ class CharacterSelectorActivity : AppCompatActivity() {
 
             val factory = factories[position]
 
-            // サムネイル
             val thumbnailView = view.findViewById<ImageView>(R.id.character_thumbnail)
             val thumbnail = factory.getThumbnail(context)
             if (thumbnail != null) {
@@ -378,29 +284,21 @@ class CharacterSelectorActivity : AppCompatActivity() {
                 thumbnailView.setBackgroundColor(0xFFE0E0E0.toInt())
             }
 
-            // チェックマーク（ウィジェットが1個以下の場合のみ表示）
             val checkMark = view.findViewById<TextView>(R.id.check_mark)
-            if (widgetCount <= 1) {
-                checkMark.visibility = if (factory.getCharacterId() == selectedId) {
-                    View.VISIBLE
-                } else {
-                    View.INVISIBLE
-                }
+            checkMark.visibility = if (factory.getCharacterId() == selectedId) {
+                View.VISIBLE
             } else {
-                checkMark.visibility = View.GONE
+                View.INVISIBLE
             }
 
-            // 名前
             view.findViewById<TextView>(R.id.character_name)
                 .text = factory.getDisplayName(context)
 
-            // 説明
             val descView = view.findViewById<TextView>(R.id.character_description)
             val description = factory.getDescription(context)
             descView.text = description
             descView.visibility = if (description.isNotEmpty()) View.VISIBLE else View.GONE
 
-            // 作者
             val authorView = view.findViewById<TextView>(R.id.character_author)
             val author = factory.getAuthor(context)
             if (author.isNotEmpty()) {
