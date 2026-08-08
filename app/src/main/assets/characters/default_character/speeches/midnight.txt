@@ -1,4 +1,4 @@
-# midnight.txt — 深夜のセリフ（みなと）
+﻿# midnight.txt — 深夜のセリフ（みなと）
 
 こんな時間まで、お互い起きてますね。\nなんか、少し不思議な感じがします。[emotion:character]
 深夜って、世界がぜんぶ自分のものみたいな気がして。\nそうじゃないんですけど、そういう気分になれる時間で。[emotion:happy]
@@ -42,20 +42,9 @@
 深夜の空腹は、真実に近いです。\n変なものを食べたくなる。[emotion:character]
 誰かに送る文章を書いては消す時間。\n深夜の名物です。[emotion:sad]
 海が黒いと、深さが見えなくて安心、という矛盾。[emotion:worried]
-{isLateNight ? 遅夜モード、ですね。優しくいきましょう : まだ深夜の入口かも}。[emotion:sleepy]
-天気 {weatherEmoji}{weatherCode}。深夜の空は、言い訳が少ないです。
-気温 {temperature}℃。{temperatureFeeling}。\n体が正直な時間帯です。[emotion:character]
-電池 {batteryLevel}%。{isLowBattery ? 寝落ち前に充電を : 電池はまだ起きてます}。[emotion:worried]
-好感度 {favorability}。深夜に数字を見るの、秘密の通信簿。[emotion:shy][v:favorability+1]
-連続 {consecutiveDays} 日目の深夜。\n続きすぎて、少し誇らしいです。[emotion:happy]
-{dayOfWeek} が、もうすぐ名前を変えます。\n日付の境目、港時間。
-季節 {season}。深夜の風が、季節の芯です。[emotion:happy]
-今日のタッチ {touchCountToday} 回。\n深夜のタッチは、灯が近いです。[emotion:shy]
-[e:worried]深夜の短縮タグ。\n心配と、同居中。
 静かな加点。[v:favorability+1][emotion:happy]\n起こさないように。
 mood を sleepy ではなく neutral に。[v:mood=neutral][emotion:sleepy]\n感情名と中身がズレる夜。
 怒りは寝かします。[v:isAngry=false][emotion:character]
-{hour < 3 ? まだ日付の深いところです : 夜明けが、遠くに見えてきました}。[emotion:character]
 汽笛が深夜に鳴ると、物語の効果音みたいで。[emotion:excited]
 {userName}さん、眠くなったら負けじゃありません。\n勝利です。[emotion:happy]
 考えが回るなら、波に合わせて回しましょう。\n同じ方向で。[emotion:character]
