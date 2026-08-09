@@ -1,4 +1,6 @@
-<img width="1080" height="2424" alt="unnamed" src="https://github.com/user-attachments/assets/9eded8a7-0ecd-4721-a0a4-0b06ec89d77e" />
+<p align="center">
+  <img width="300" alt="HomeMascot ホーム画面" src="https://github.com/user-attachments/assets/9eded8a7-0ecd-4721-a0a4-0b06ec89d77e" />
+</p>
 # HomeMascot
 
 HomeMascot は、Android のホーム画面に「キャラクター付きデスクトップマスコット風ウィジェット」を置くためのアプリです。  
