@@ -143,7 +143,7 @@ README では概要だけ触れ、詳細仕様は `character_json_reference.md` 
 
 - 一部の最適化が特殊な端末への対応
 - APK化や、公開に備えたさらなる品質の向上
-- 記法フォルダの充実、HomeMascotEditerの作成
+- 記法フォルダの充実、HomeMascotEditorの作成
 - 俺のやる気向上
 - やりたいことを見つける。
 
