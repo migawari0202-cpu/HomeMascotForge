@@ -3,6 +3,11 @@
 </p>
 # HomeMascot
 
+![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue?logo=kotlin)
+![Android](https://img.shields.io/badge/Android-API%2026%2B-green?logo=android)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+
 HomeMascot は、Android のホーム画面に「キャラクター付きデスクトップマスコット風ウィジェット」を置くためのアプリです。  
 時計・天気・バッテリー・メモをまとめて表示しつつ、キャラクターが状況に応じてセリフや表情を変えます。
 
@@ -14,7 +19,7 @@ HomeMascot は、Android のホーム画面に「キャラクター付きデス�
 - ZIP 配布された追加キャラクターのインストール
 - ウィジェットごとのキャラクター設定とデフォルトキャラクター管理
 - 起動後や再起動後の更新スケジュール維持
-- activityでの置時計モード
+- Activityでの置時計モード
 
 ## 主な特徴
 
