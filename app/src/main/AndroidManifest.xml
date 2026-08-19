@@ -5,25 +5,14 @@
     <!-- ネットワーク・位置情報・アラーム権限 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-
-    <!-- ストレージ権限（キャラクターZIPインストール用） -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
+                android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Homemascot"
-        android:requestLegacyExternalStorage="true">
+        android:theme="@style/Theme.Homemascot">
 
         <!-- 起動用 MainActivity -->
         <activity
@@ -82,9 +71,7 @@
                 <data android:mimeType="application/zip" />
                 <data android:mimeType="application/x-zip-compressed" />
             </intent-filter>
-        </activity>
-
-
+                </activity>
 
         <!-- メインウィジェットプロバイダー -->
         <receiver
