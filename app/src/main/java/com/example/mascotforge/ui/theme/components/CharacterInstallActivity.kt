@@ -3,7 +3,6 @@ package com.example.mascotforge.ui
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,22 +42,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mascotforge.ui.components.CharacterCard
-import kotlinx.coroutines.flow.SharedFlow
 import mascotforge.ui.components.InstallProgressDialog
 
 class CharacterInstallActivity : AppCompatActivity() {
 
-    private lateinit var permissionHandler: StoragePermissionHandler
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 権限ハンドラー初期化
-        permissionHandler = requestStoragePermission(
-            onDenied = {
-                Toast.makeText(this, "ストレージへのアクセスが拒否されました", Toast.LENGTH_SHORT).show()
-            }
-        )
 
         setContent {
             MaterialTheme {
@@ -70,10 +59,8 @@ class CharacterInstallActivity : AppCompatActivity() {
                     viewModel.initialize(applicationContext)
                 }
 
-                CharacterInstallScreen(
+                                CharacterInstallScreen(
                     onBack = { finish() },
-                    onRequestPermission = { permissionHandler.checkAndRequestPermissions() },
-                    permissionEventFlow = permissionHandler.permissionEvent,
                     viewModel = viewModel
                 )
             }
@@ -85,8 +72,6 @@ class CharacterInstallActivity : AppCompatActivity() {
 @Composable
 fun CharacterInstallScreen(
     onBack: () -> Unit,
-    onRequestPermission: () -> Unit,
-    permissionEventFlow: SharedFlow<Boolean>,
     viewModel: CharacterInstallViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -96,16 +81,8 @@ fun CharacterInstallScreen(
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
+                if (uri != null) {
             viewModel.installCharacter(uri, context)
-        }
-    }
-
-    LaunchedEffect(permissionEventFlow) {
-        permissionEventFlow.collect { granted ->
-            if (granted) {
-                filePickerLauncher.launch("application/zip")
-            }
         }
     }
 
@@ -125,9 +102,9 @@ fun CharacterInstallScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+                        ExtendedFloatingActionButton(
                 onClick = {
-                    onRequestPermission()
+                    filePickerLauncher.launch("application/zip")
                 },
                 icon = { Icon(Icons.Default.Add, "追加") },
                 text = { Text("キャラ追加") }
