@@ -22,6 +22,7 @@ import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.installer.CharacterInstaller
 import com.example.mascotforge.installer.CommonInstaller
 import com.example.mascotforge.installer.InstallResult
+import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.WidgetUpdateCoordinator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
