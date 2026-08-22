@@ -49,6 +49,10 @@
   build.gradle.kts 設定:
   - testOptions { unitTests.isReturnDefaultValues = true } を設定済み
   - testImplementation("org.json:json:20240303") 依存あり
-  - ユニットテスト3ファイル（SafeExpressionEvaluatorTest,
-    SpeechContextTest, TagParserTest）で全15テストをカバー
+    - ユニットテストは8ファイル・全26テスト:
+    TimeUtilsTest(6) / ZipSecurityValidatorTest(5) /
+    SafeExpressionEvaluatorTest(3) / TagParserTest(3) /
+    CharacterSettingsTest(3) / BatteryManagerTest(3) /
+    SpeechContextTest(2) / ExampleUnitTest(1)
+    ※ androidTest 側に ExampleInstrumentedTest(1) が別途ある
   - テスト実行: .\gradlew.bat test（Android Studio同梱JDK(jbr)で動作）
