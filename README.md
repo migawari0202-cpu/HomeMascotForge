@@ -60,7 +60,7 @@ HomeMascot は、Android のホーム画面に「キャラクター付きデス�
 
 - Android Studio
 - Android SDK
-- JDK 11
+- JDK 17+（`compileSdk = 36` のビルド実行には JDK 17 以上が必要。Android Studio 同梱の JBR で動作。`sourceCompatibility` / `targetCompatibility` は Java 11 相当）
 - Android 8.0 以上を対象にしたビルド環境
 
 このプロジェクトの Android 設定は以下です。
@@ -113,8 +113,11 @@ macOS / Linux:
 追加キャラクターは `character.json` と `speeches/`, `images/` を含む ZIP として配布できます。
 
 - 仕様メモ: `character_json_reference.md`
+- 記法リファレンス: `記法/` フォルダ
 - インストール処理: `app/src/main/java/com/example/mascotforge/installer/`
 - 安全検証: `app/src/main/java/com/example/mascotforge/installer/ZipSecurityValidator.kt`
+
+**意図的に空のセリフファイルを作るとき**は、完全な空ファイルではなく `#`（コメント1行だけ）の中身のファイルを作成してください。動作は同じですが、意図が明確になります。
 
 README では概要だけ触れ、詳細仕様は `character_json_reference.md` に分離しています。
 

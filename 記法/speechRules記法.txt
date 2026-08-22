@@ -26,8 +26,10 @@ conditions / anyOf が両方空のルールはデフォルト（フォールバ�
     "priority": 5
   }
 
-  - "files" を使うと、マッチ時に候補の中からランダムで1つが選ばれる
-  - "file"（単体）と "files"（複数）は排他。どちらか一方を指定
+    - "files" を使うと、マッチ時に候補の中からランダムで1つが選ばれる
+  - "file"（単体）と "files"（複数）はどちらか一方を指定すること。
+    ※両方書いた場合はエラーにならず "files" が優先され、"file" は無視される
+    （ZIPバリデータも両方の同時指定を通す）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ OR条件（"anyOf" / 十分条件）
@@ -96,10 +98,15 @@ conditions / anyOf が両方空のルールはデフォルト（フォールバ�
       touchCount, touchCountToday, lastTouchMinutesAgo,
       consecutiveTouchCount, pettingLevel
 
-    例:
+        例:
       "batteryLevel": ">=20"
       "temperature": "<5"
       "touchCountToday": "3"
+
+    【null 変数の注意】
+      humidity / lastLaunchHoursAgo は値が null のとき
+      常に不一致（false）になる。
+      emotions 条件式での "0" 扱いとは挙動が異なる点に注意。
 
   【hour / day の特別形式】
     hour:
