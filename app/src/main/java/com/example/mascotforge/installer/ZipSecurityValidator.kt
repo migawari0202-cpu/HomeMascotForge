@@ -25,7 +25,6 @@ class ZipSecurityValidator(
         const val ERR_PATH_TRAVERSAL = "PATH_TRAVERSAL_ATTEMPT"
         const val ERR_SYSTEM_FILE = "SYSTEM_FILE_NOT_ALLOWED"
         const val ERR_DIR_DEPTH = "DIR_DEPTH_EXCEEDED"
-        const val ERR_SYMLINK = "SYMLINK_NOT_ALLOWED"
         const val ERR_EXTENSION = "EXTENSION_NOT_ALLOWED"
         const val ERR_EXTENSION_REQUIRED = "EXTENSION_REQUIRED"
         const val ERR_DOUBLE_EXTENSION = "DANGEROUS_DOUBLE_EXTENSION"
@@ -42,10 +41,6 @@ class ZipSecurityValidator(
 
         private val ALLOWED_EXTENSIONS = setOf("json", "txt", "png", "jpg", "jpeg", "webp", "gif")
         private val DANGEROUS_EXTENSIONS = setOf("apk", "dex", "so", "jar", "class", "exe", "sh", "bat", "js", "html", "htm", "php")
-
-        // Unix file type masks
-        private const val FILE_TYPE_FLAG = 0xF000
-        private const val LINK_FLAG = 0xA000
 
         /**
          * キャラクターIDの検証 (静的メソッド)
@@ -118,19 +113,14 @@ class ZipSecurityValidator(
         // 5. ディレクトリの深さチェック (【改善】Splitベースで正確に計算)
         validateDirectoryDepth(safeRelativePath)
 
-        // 6. Symlink検出
-        if (isSymlink(entry)) {
-            throw SecurityException(ERR_SYMLINK)
-        }
-
         if (entry.isDirectory) {
             return safeRelativePath
         }
 
-        // 7. ファイル拡張子のチェック (【改善】拡張子なしを拒否)
+        // 6. ファイル拡張子のチェック (【改善】拡張子なしを拒否)
         validateFileExtension(safeRelativePath)
 
-        // 8. サイズチェック (【改善】ヘッダー情報は参考値として扱い、過信しない)
+        // 7. サイズチェック (【改善】ヘッダー情報は参考値として扱い、過信しない)
         if (entry.size != -1L) {
             // Note: entry.size は攻撃者によって偽装可能なため、ここでのチェックは目安。
             // 実際の強制力は trackUncompressedSize() にある。
@@ -153,27 +143,6 @@ class ZipSecurityValidator(
         if (currentTotalUncompressedSize > MAX_TOTAL_UNCOMPRESSED_SIZE) {
             throw SecurityException(ERR_LIMIT_TOTAL_SIZE_RUNTIME)
         }
-    }
-
-    private fun isSymlink(entry: ZipEntry): Boolean {
-        // 標準APIでの検出が困難なため、ヒューリスティックな検出を行う
-        // Note: より確実な検出には Commons Compress の利用を推奨
-        try {
-            val isSymlinkMethod = entry.javaClass.methods.firstOrNull { it.name == "isUnixSymlink" && it.parameterTypes.isEmpty() }
-            if (isSymlinkMethod != null) {
-                return isSymlinkMethod.invoke(entry) as? Boolean == true
-            }
-        } catch (ignore: Exception) {}
-
-        try {
-            val getUnixModeMethod = entry.javaClass.methods.firstOrNull { it.name == "getUnixMode" && it.parameterTypes.isEmpty() }
-            if (getUnixModeMethod != null) {
-                val mode = (getUnixModeMethod.invoke(entry) as? Int) ?: 0
-                if ((mode and FILE_TYPE_FLAG) == LINK_FLAG) return true
-            }
-        } catch (ignore: Exception) {}
-
-        return false
     }
 
     /**
