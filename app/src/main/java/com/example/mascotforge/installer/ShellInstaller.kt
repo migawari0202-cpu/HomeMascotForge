@@ -138,10 +138,10 @@ class ShellInstaller(private val context: Context) {
                     throw SecurityException("INVALID_IMAGE_PATH_IN_MAPPING: $key")
                 }
                 val imageFile = File(rootDir, "images/$value")
-                                if (!imageFile.isFile) {
-                                    throw SecurityException("MISSING_IMAGE_FILE: $value")
-                                }
-                                put(key, value)
+                if (!imageFile.isFile) {
+                    throw SecurityException("MISSING_IMAGE_FILE: $value")
+                }
+                put(key, value)
             }
         }
 
