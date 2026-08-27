@@ -188,6 +188,20 @@ mychar.zip
 | `allOf` | object | | `conditions` の別名。両方書いた場合は `conditions` が優先される |
 | `priority` | int | | 高いほど優先。デフォルト `0` |
 
+`anyOf` の各値は、従来どおり文字列を指定できるほか、同じキーに複数の候補を指定する文字列配列にも対応しています。配列の場合は、現在値が配列内のいずれかと一致すれば適合します。
+
+```json
+"anyOf": {
+  "weatherCode": ["雨", "小雨", "雷雨", "嵐", "霧"]
+}
+```
+
+旧形式も後方互換のため利用できます。
+
+```json
+"anyOf": { "weatherCode": "雨" }
+```
+
 > **注意（null 変数の扱い）**: `conditions` / `anyOf` で `humidity`・`lastLaunchHoursAgo` を使う場合、
 > 値が `null` のときは **常に不一致（false）** になる。emotions 条件式での `"0"` 扱いとは挙動が異なる。
 >

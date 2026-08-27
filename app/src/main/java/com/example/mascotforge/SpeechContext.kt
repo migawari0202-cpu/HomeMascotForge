@@ -483,8 +483,10 @@ data class SpeechContext(
     /**
      * いずれかの条件に合致するか
      */
-    fun matchesAny(conditions: Map<String, String>, customValues: Map<String, String> = emptyMap()): Boolean {
-        return conditions.any { (key, value) -> matches(key, value, customValues) }
+    fun matchesAny(conditions: Map<String, List<String>>, customValues: Map<String, String> = emptyMap()): Boolean {
+        return conditions.any { (key, values) ->
+            values.any { value -> matches(key, value, customValues) }
+        }
     }
 
 

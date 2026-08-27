@@ -38,6 +38,9 @@ class ZipSecurityValidator(
         const val ERR_SPEECH_RULES_NOT_ARRAY = "SPEECH_RULES_MUST_BE_ARRAY"
         const val ERR_SPEECH_RULE_NOT_OBJECT = "SPEECH_RULE_MUST_BE_OBJECT"
         const val ERR_SPEECH_RULE_NO_FILE = "SPEECH_RULE_MISSING_FILE"
+        const val ERR_ANY_OF_NOT_OBJECT = "ANY_OF_MUST_BE_OBJECT"
+        const val ERR_ANY_OF_VALUE_TYPE = "ANY_OF_VALUE_MUST_BE_STRING_OR_STRING_ARRAY"
+        const val ERR_ANY_OF_EMPTY_ARRAY = "ANY_OF_ARRAY_MUST_NOT_BE_EMPTY"
 
         private val ALLOWED_EXTENSIONS = setOf("json", "txt", "png", "jpg", "jpeg", "webp", "gif")
         private val DANGEROUS_EXTENSIONS = setOf("apk", "dex", "so", "jar", "class", "exe", "sh", "bat", "js", "html", "htm", "php")
@@ -314,6 +317,22 @@ class ZipSecurityValidator(
                         val fp = filesArray.optString(j, "")
                         if (fp.isEmpty()) throw SecurityException(ERR_SPEECH_RULE_NO_FILE)
                         validateSpeechPath(fp)
+                    }
+                }
+
+                if (rule.has("anyOf")) {
+                    val anyOf = rule.optJSONObject("anyOf") ?: throw SecurityException(ERR_ANY_OF_NOT_OBJECT)
+                    anyOf.keys().forEach { key ->
+                        when (val value = anyOf.opt(key)) {
+                            is String -> Unit
+                            is org.json.JSONArray -> {
+                                if (value.length() == 0) throw SecurityException(ERR_ANY_OF_EMPTY_ARRAY)
+                                for (j in 0 until value.length()) {
+                                    if (value.opt(j) !is String) throw SecurityException(ERR_ANY_OF_VALUE_TYPE)
+                                }
+                            }
+                            else -> throw SecurityException(ERR_ANY_OF_VALUE_TYPE)
+                        }
                     }
                 }
             }
