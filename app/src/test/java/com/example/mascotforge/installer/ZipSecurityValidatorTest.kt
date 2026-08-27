@@ -1,6 +1,7 @@
 package com.example.mascotforge.installer
 
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.File
@@ -150,6 +151,55 @@ class ZipSecurityValidatorTest {
                 fail("should fail when only double-nested speeches path exists")
             } catch (e: SecurityException) {
                 assertTrue(e.message?.contains("JSON_REFERENCED_FILE_MISSING") == true)
+            }
+        }
+    }
+
+    @Test
+    fun findMetadataFile_acceptsCharacterJsonInNestedDirectory() {
+        tempRoot { root ->
+            File(root, "README.txt").writeText("distribution notes")
+            val characterRoot = File(root, "release/kaede_character")
+            characterRoot.mkdirs()
+            File(characterRoot, "character.json").writeText("{\"id\": \"kaede_akise\"}")
+
+            val metadata = ZipExtractor(ZipSecurityValidator(root)).findMetadataFile(root)
+
+            assertEquals(File(characterRoot, "character.json"), metadata)
+            assertEquals(characterRoot, metadata?.parentFile)
+        }
+    }
+
+    @Test
+    fun findMetadataFile_acceptsCapitalizedCharacterJson() {
+        tempRoot { root ->
+            val characterRoot = File(root, "kaede_character")
+            characterRoot.mkdirs()
+            File(characterRoot, "Character.json").writeText("{\"id\": \"kaede_akise\"}")
+
+            val metadata = ZipExtractor(ZipSecurityValidator(root)).findMetadataFile(root)
+
+            assertEquals(File(characterRoot, "Character.json"), metadata)
+        }
+    }
+
+    @Test
+    fun findMetadataFile_rejectsCaseOnlyMetadataDuplicates() {
+        tempRoot { root ->
+            File(root, "a/character.json").apply {
+                parentFile?.mkdirs()
+                writeText("{}")
+            }
+            File(root, "b/Character.json").apply {
+                parentFile?.mkdirs()
+                writeText("{}")
+            }
+
+            try {
+                ZipExtractor(ZipSecurityValidator(root)).findMetadataFile(root)
+                fail("case-only duplicates must be rejected")
+            } catch (e: SecurityException) {
+                assertEquals("DUPLICATE_METADATA_FILES", e.message)
             }
         }
     }

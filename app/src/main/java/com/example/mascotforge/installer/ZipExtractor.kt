@@ -122,23 +122,23 @@ class ZipExtractor(private val validator: ZipSecurityValidator) {
     }
 
     /**
-     * character.jsonを探す
+     * ZIP展開先から character.json を探す。
+     *
+     * キャラクター配布物には README やリリース用フォルダが同梱されることが
+     * あるため、トップレベルの配置には依存しない。ZIP の深さ・エントリ数は
+     * 展開時に検証済みなので、その範囲で探索する。大文字・小文字だけが
+     * 異なる character.json が複数ある場合は、ファイルシステムによる扱いの
+     * 違いを避けるため拒否する。
      */
-        fun findMetadataFile(dir: File): File? {
-        // 1. ルート直下をチェック（大文字小文字無視）
-        dir.listFiles()?.firstOrNull {
-            it.isFile && it.name.equals("character.json", ignoreCase = true)
-        }?.let { return it }
+    fun findMetadataFile(dir: File): File? {
+        val metadataFiles = dir.walkTopDown()
+            .maxDepth(ZipSecurityValidator.MAX_DIRECTORY_DEPTH + 1)
+            .filter { it.isFile && it.name.equals("character.json", ignoreCase = true) }
+            .toList()
 
-        // 2. 直下にディレクトリが1つだけある場合、フォルダごと圧縮対策で中を探索
-        val subDirs = dir.listFiles()?.filter { it.isDirectory } ?: emptyList()
-        if (subDirs.size == 1) {
-            return File(subDirs[0], "character.json").takeIf { it.isFile }
-                ?: subDirs[0].listFiles()?.firstOrNull {
-                    it.isFile && it.name.equals("character.json", ignoreCase = true)
-                }
+        if (metadataFiles.size > 1) {
+            throw SecurityException("DUPLICATE_METADATA_FILES")
         }
-
-        return null
+        return metadataFiles.singleOrNull()
     }
 }

@@ -110,7 +110,19 @@ macOS / Linux:
 
 ## キャラクター作成・配布
 
-追加キャラクターは `character.json` と `speeches/`, `images/` を含む ZIP として配布できます。
+追加キャラクターは `character.json` と `speeches/`, `images/` を含む ZIP として配布できます。`character.json` と同じフォルダをキャラクターのルートとして扱うため、ZIPのトップ階層にキャラクターフォルダや README などの配布用ファイルがあっても導入できます。
+
+```text
+kaede_character.zip
+└── release/                 # 任意の配布用フォルダ
+    ├── README.txt            # 任意
+    └── kaede_character/      # このフォルダがキャラクターのルート
+        ├── character.json    # 必須
+        ├── images/
+        └── speeches/
+```
+
+1つのZIPに導入できるキャラクターは1人です。`character.json` の先頭の `C` は大文字・小文字のどちらでも構いませんが、大文字・小文字だけが異なる同名ファイルを複数入れることはできません。`character.json` が指す画像・セリフは、必ずその `character.json` と同じフォルダ以下に置いてください。
 
 - 仕様メモ: `character_json_reference.md`
 - 記法リファレンス: `記法/` フォルダ
