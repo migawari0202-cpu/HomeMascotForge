@@ -93,7 +93,9 @@
     },
     {
       "file": "speeches/rainy.txt",
-      "anyOf": { "weatherCode": ["雨", "小雨", "雷雨", "嵐", "霧"] },
+      "anyOf": {
+        "weatherCode": ["雨", "小雨", "雷雨", "嵐", "霧"]
+      },
       "priority": 70
     },
     {
