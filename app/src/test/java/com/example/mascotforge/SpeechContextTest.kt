@@ -1,7 +1,10 @@
 package com.example.mascotforge
 
 import com.example.mascotforge.character.CharacterState
+import com.example.mascotforge.character.parseAnyOfConditions
 import com.example.mascotforge.speech.SpeechContext
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -9,7 +12,8 @@ import org.junit.Test
 class SpeechContextTest {
 
     private fun createSpeechContext(
-        customVars: MutableMap<String, Int> = mutableMapOf()
+        customVars: MutableMap<String, Int> = mutableMapOf(),
+        weatherCode: String = "晴れ"
     ): SpeechContext {
         return SpeechContext(
             timeSlot = "afternoon",
@@ -25,7 +29,7 @@ class SpeechContextTest {
             isSpecialDay = false,
             specialDayName = null,
             weatherEmoji = "☀️",
-            weatherCode = "晴れ",
+            weatherCode = weatherCode,
             temperature = 25,
             temperatureFeeling = "ちょうどいい",
             humidity = 50,
@@ -87,5 +91,32 @@ class SpeechContextTest {
         assertFalse(ctx.matches("is_happy", "false"))
         assertTrue(ctx.matches("is_tired", "false"))
         assertFalse(ctx.matches("is_tired", "true"))
+    }
+
+    @Test
+    fun matchesAny_matchesAnyValueForTheSameKey() {
+        val conditions = mapOf("weatherCode" to listOf("雨", "小雨"))
+
+        assertTrue(createSpeechContext(weatherCode = "雨").matchesAny(conditions))
+        assertTrue(createSpeechContext(weatherCode = "小雨").matchesAny(conditions))
+        assertFalse(createSpeechContext(weatherCode = "晴れ").matchesAny(conditions))
+    }
+
+    @Test
+    fun matchesAny_supportsLegacySingleValueAfterParsing() {
+        val legacyCondition = parseAnyOfConditions(JSONObject("""{"weatherCode":"雨"}"""))
+
+        assertEquals(listOf("雨"), legacyCondition["weatherCode"])
+        assertTrue(createSpeechContext(weatherCode = "雨").matchesAny(legacyCondition))
+        assertFalse(createSpeechContext(weatherCode = "小雨").matchesAny(legacyCondition))
+    }
+
+    @Test
+    fun parseAnyOfConditions_readsMultipleValuesForTheSameKey() {
+        val conditions = parseAnyOfConditions(
+            JSONObject("""{"weatherCode":["雨","小雨"]}""")
+        )
+
+        assertEquals(listOf("雨", "小雨"), conditions["weatherCode"])
     }
 }

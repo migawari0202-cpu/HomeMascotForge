@@ -7,10 +7,29 @@ import android.util.Log
 import com.example.mascotforge.CharacterProvider
 import com.example.mascotforge.speech.SpeechContext
 import com.example.mascotforge.speech.SpeechContextFactory
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+
+internal fun parseAnyOfConditions(anyOfJson: JSONObject?): Map<String, List<String>> {
+    if (anyOfJson == null) return emptyMap()
+
+    return buildMap {
+        anyOfJson.keys().forEach { key ->
+            val values = when (val rawValue = anyOfJson.get(key)) {
+                is String -> listOf(rawValue)
+                is JSONArray -> List(rawValue.length()) { index ->
+                    rawValue.opt(index) as? String
+                        ?: throw IllegalArgumentException("anyOf.$key[$index] must be a string")
+                }
+                else -> throw IllegalArgumentException("anyOf.$key must be a string or string array")
+            }
+            put(key, values)
+        }
+    }
+}
 
 /**
  * セキュアなキャラクター読み込みシステム v5（動的再評価対応）
@@ -206,10 +225,7 @@ class SafeCharacterLoader(context: Context) {
                     }
 
                 // anyOf 条件（OR・十分条件）
-                val anyOf = mutableMapOf<String, String>()
-                ruleJson.optJSONObject("anyOf")?.keys()?.forEach { key ->
-                    anyOf[key] = ruleJson.optJSONObject("anyOf")!!.getString(key)
-                }
+                val anyOf = parseAnyOfConditions(ruleJson.optJSONObject("anyOf"))
 
                 // ファイル指定: "file" (単体) または "files" (複数・ランダム選択)
                 val files: List<String> = when {
@@ -386,7 +402,7 @@ class SafeCharacterLoader(context: Context) {
 data class SpeechRule(
     val files: List<String>,                       // 候補ファイルリスト（ランダム選択）
     val conditions: Map<String, String> = emptyMap(), // AND 条件
-    val anyOf: Map<String, String> = emptyMap(),      // OR 条件（十分条件）
+    val anyOf: Map<String, List<String>> = emptyMap(), // OR conditions; each key accepts one or more values
     val priority: Int = 0
 )
 

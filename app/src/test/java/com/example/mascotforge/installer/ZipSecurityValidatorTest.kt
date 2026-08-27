@@ -26,7 +26,8 @@ class ZipSecurityValidatorTest {
     private fun writeMinimalCharacter(
         root: File,
         speechPathInJson: String,
-        physicalSpeechRelative: String = "speeches/default.txt"
+        physicalSpeechRelative: String = "speeches/default.txt",
+        speechRuleExtra: String = ""
     ) {
         File(root, "images").mkdirs()
         File(root, "images/normal.png").writeBytes(ByteArray(8))
@@ -43,7 +44,7 @@ class ZipSecurityValidatorTest {
               "version": "1.8",
               "images": { "normal": "normal.png" },
               "speechRules": [
-                { "file": "$speechPathInJson" }
+                { "file": "$speechPathInJson"$speechRuleExtra }
               ]
             }
             """.trimIndent()
@@ -75,6 +76,19 @@ class ZipSecurityValidatorTest {
             )
             val validator = ZipSecurityValidator(root)
             validator.validateRequiredFiles(root)
+        }
+    }
+
+    @Test
+    fun validateCharacterJson_acceptsAnyOfStringArray() {
+        tempRoot { root ->
+            writeMinimalCharacter(
+                root = root,
+                speechPathInJson = "default.txt",
+                speechRuleExtra = ", \"anyOf\": { \"weatherCode\": [\"雨\", \"小雨\"] }"
+            )
+
+            ZipSecurityValidator(root).validateRequiredFiles(root)
         }
     }
 
