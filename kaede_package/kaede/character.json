@@ -1,0 +1,153 @@
+{
+  "id": "kaede_akise",
+  "name": "楓",
+  "version": "1.0.0",
+  "author": "haman",
+  "description": "水彩イラストレーターの秋瀬楓（26歳）。焙じ茶と押し花が好きな癒し系。あなたの一日の温度に合わせて、ゆっくり寄り添います。",
+  "images": {
+    "normal": "normal.png",
+    "happy": "happy.png",
+    "shy": "shy.png",
+    "sleepy": "sleepy.png",
+    "sad": "sad.png",
+    "worried": "worried.png",
+    "excited": "excited.png",
+    "thumbnail": "thumbnail.png"
+  },
+  "customVariables": {
+    "favorability": {
+      "type": "number",
+      "initial": 30,
+      "min": 0,
+      "max": 100,
+      "onChange": [
+        { "trigger": "onTouch", "action": "increment", "value": 1 },
+        { "trigger": "onConsecutiveDays", "action": "increment", "value": 1 }
+      ]
+    },
+    "mood": {
+      "type": "string",
+      "initial": "calm",
+      "options": ["calm", "happy", "low", "drowsy"],
+      "onChange": [
+        { "trigger": "onLaunch", "condition": "consecutiveDays >= 3", "action": "set", "value": "happy" },
+        { "trigger": "onTouch", "condition": "pettingLevel >= 2", "action": "set", "value": "happy" }
+      ]
+    },
+    "nightMode": {
+      "type": "boolean",
+      "initial": false,
+      "onChange": [
+        { "trigger": "onLaunch", "condition": "hour >= 21", "action": "set", "value": true },
+        { "trigger": "onLaunch", "condition": "hour <= 6", "action": "set", "value": false }
+      ]
+    }
+  },
+  "emotions": {
+    "rules": [
+      { "if": "isBeingPetted", "emotion": "happy" },
+      { "if": "isLowBattery", "emotion": "worried" },
+      { "if": "hour >= 23 || hour < 5", "emotion": "sleepy" },
+      { "if": "weatherCode == \"雨\" || weatherCode == \"小雨\"", "emotion": "sad" },
+      { "if": "season == \"冬\" && temperature <= 3", "emotion": "worried" },
+      { "if": "month == 11", "emotion": "happy" },
+      { "if": "favorability >= 80", "emotion": "happy" },
+      { "default": "normal" }
+    ]
+  },
+  "speechRules": [
+    {
+      "file": "speeches/petting.txt",
+      "conditions": { "isBeingPetted": "true", "consecutiveTouchCount": ">=2" },
+      "priority": 120
+    },
+    {
+      "file": "speeches/welcome_first.txt",
+      "conditions": { "touchCount": "0" },
+      "priority": 100
+    },
+    {
+      "file": "speeches/welcome_back.txt",
+      "anyOf": { "isLongTimeNoSee": "true", "isWelcomeBack": "true" },
+      "priority": 96
+    },
+    {
+      "file": "speeches/birthday.txt",
+      "conditions": { "month": "11", "day": "12" },
+      "priority": 90
+    },
+    {
+      "file": "speeches/charging.txt",
+      "conditions": { "isCharging": "true" },
+      "priority": 85
+    },
+    {
+      "file": "speeches/low_battery.txt",
+      "conditions": { "batteryLevel": "<=20" },
+      "priority": 84
+    },
+    {
+      "file": "speeches/close_fav.txt",
+      "conditions": { "customVars[favorability]": ">=80" },
+      "priority": 75
+    },
+    {
+      "file": "speeches/rainy.txt",
+      "anyOf": { "weatherCode": ["雨", "小雨", "雷雨", "嵐", "霧"] },
+      "priority": 70
+    },
+    {
+      "file": "speeches/snowy.txt",
+      "conditions": { "weatherCode": "雪" },
+      "priority": 69
+    },
+    {
+      "file": "speeches/cloudy.txt",
+      "conditions": { "weatherCode": "曇り" },
+      "priority": 68
+    },
+    {
+      "file": "speeches/streak.txt",
+      "conditions": { "consecutiveDays": ">=7" },
+      "priority": 55
+    },
+    {
+      "file": "speeches/sunny.txt",
+      "conditions": { "isSunny": "true" },
+      "priority": 46
+    },
+    {
+      "file": "speeches/midnight.txt",
+      "conditions": { "timeSlot": "midnight" },
+      "priority": 40
+    },
+    {
+      "file": "speeches/morning.txt",
+      "conditions": { "timeSlot": "morning" },
+      "priority": 40
+    },
+    {
+      "file": "speeches/afternoon.txt",
+      "conditions": { "timeSlot": "afternoon" },
+      "priority": 40
+    },
+    {
+      "file": "speeches/evening.txt",
+      "conditions": { "timeSlot": "evening" },
+      "priority": 40
+    },
+    {
+      "file": "speeches/night_normal.txt",
+      "conditions": { "timeSlot": "night" },
+      "priority": 41
+    },
+    {
+      "file": "speeches/night_secret.txt",
+      "conditions": { "timeSlot": "night", "nightMode": "true" },
+      "priority": 42
+    },
+    {
+      "file": "speeches/default.txt"
+    }
+  ]
+}
