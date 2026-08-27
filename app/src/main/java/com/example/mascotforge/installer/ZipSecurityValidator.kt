@@ -229,9 +229,12 @@ class ZipSecurityValidator(
     // --- 展開後のファイル構造・コンテンツ検証 ---
 
     fun validateRequiredFiles(rootDir: File) {
-        val charFile = File(rootDir, "character.json")
-        if (!charFile.exists()) throw SecurityException("MISSING_REQUIRED_FILE: character.json")
-        validateCharacterJson(charFile, rootDir)
+        val metadataFiles = rootDir.listFiles()
+            ?.filter { it.isFile && it.name.equals("character.json", ignoreCase = true) }
+            .orEmpty()
+        if (metadataFiles.isEmpty()) throw SecurityException("MISSING_REQUIRED_FILE: character.json")
+        if (metadataFiles.size > 1) throw SecurityException("DUPLICATE_METADATA_FILES")
+        validateCharacterJson(metadataFiles.single(), rootDir)
     }
 
     fun validateCharacterJson(file: File, rootDir: File) {

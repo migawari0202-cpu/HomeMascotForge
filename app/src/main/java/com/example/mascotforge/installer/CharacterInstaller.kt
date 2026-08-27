@@ -69,8 +69,15 @@ class CharacterInstaller(private val context: Context) {
 
             val metadataFile = extractor.findMetadataFile(tempDir)
                 ?: throw SecurityException("MISSING_METADATA")
+            // All following checks and the installed layout must use the
+            // directory that actually contains character.json; otherwise
+            // discovery succeeds but validation and later loading incorrectly
+            // look in tempDir itself.
+            val characterRoot = metadataFile.parentFile
+                ?: throw SecurityException("MISSING_METADATA")
+            val normalizedMetadataFile = normalizeMetadataFileName(metadataFile, characterRoot)
 
-            val metadata = loadMetadata(metadataFile)
+            val metadata = loadMetadata(normalizedMetadataFile)
             rejectDuplicateId(metadata.id)
 
             val targetDir = File(installedCharDir, metadata.id)
@@ -83,12 +90,16 @@ class CharacterInstaller(private val context: Context) {
                     )
                 }
 
-                validator.validateRequiredFiles(tempDir)
-                validator.validateImageFiles(tempDir)
+                validator.validateRequiredFiles(characterRoot)
+                validator.validateImageFiles(characterRoot)
 
-                if (!atomicInstall(tempDir, targetDir)) {
+                if (!atomicInstall(characterRoot, targetDir)) {
                     throw SecurityException("ATOMIC_INSTALL_FAILED")
                 }
+                // rejectDuplicateId() populated the registry cache before the
+                // new directory existed.  Refresh it so the newly installed
+                // character appears immediately in the selector.
+                CharacterRegistry.invalidate(metadata.id)
             }
 
             Log.i(TAG, "Character installed: ${metadata.id}")
@@ -120,6 +131,21 @@ class CharacterInstaller(private val context: Context) {
             tempTarget.deleteRecursively()
             throw SecurityException("ATOMIC_INSTALL_IO_FAILED")
         }
+    }
+
+    /**
+     * The package format accepts Character.json and character.json alike, but
+     * installed characters are always loaded through the canonical lower-case
+     * path. Normalize in the disposable extraction directory before install.
+     */
+    private fun normalizeMetadataFileName(metadataFile: File, characterRoot: File): File {
+        val canonicalFile = File(characterRoot, "character.json")
+        if (metadataFile.name == canonicalFile.name) return metadataFile
+        if (canonicalFile.exists()) throw SecurityException("DUPLICATE_METADATA_FILES")
+        if (!metadataFile.renameTo(canonicalFile)) {
+            throw SecurityException("METADATA_CASE_NORMALIZATION_FAILED")
+        }
+        return canonicalFile
     }
 
     private fun loadMetadata(file: File): CharacterMetadata {
@@ -280,6 +306,8 @@ class CharacterInstallException(
                 code == "ID_ALREADY_EXISTS" -> "同じIDのキャラクターがすでにインストールされています。"
                 code == "INVALID_URI_SCHEME" -> "このファイルのURI形式は使用できません。"
                 code == "MISSING_METADATA" || code.startsWith("MISSING_REQUIRED_FILE") -> "必要な character.json が見つかりません。"
+                code == "DUPLICATE_METADATA_FILES" -> "character.json は大文字・小文字を区別せず、ZIP内に1つだけ置いてください。"
+                code == "METADATA_CASE_NORMALIZATION_FAILED" -> "character.json のファイル名を正規化できませんでした。"
                 code == "INVALID_CHARACTER_ID_FORMAT" || code == "INVALID_ID_FORMAT" -> "キャラクターIDの形式が不正です。"
                 code == ZipSecurityValidator.ERR_JSON_INVALID -> "character.json のJSON形式が不正です。"
                 code == ZipSecurityValidator.ERR_IMAGES_NOT_OBJECT -> "character.json の images はオブジェクトである必要があります。"
