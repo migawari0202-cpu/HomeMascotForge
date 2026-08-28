@@ -372,8 +372,15 @@ class SafeCharacterLoader(context: Context) {
 
             val filteredLines = lines
                 .take(MAX_LINES)
-                .map { it.trim() }
-                .filter { it.isNotEmpty() && !it.startsWith("#") }
+                .map { line ->
+                    line.removePrefix("\uFEFF").trim()
+                }
+                .filter { line ->
+                    line.isNotEmpty() &&
+                        !line.startsWith("#") &&
+                        !line.startsWith("＃") &&
+                        !line.startsWith("♯")
+                }
 
             Log.d(TAG, "Loaded ${filteredLines.size} speeches from: $path")
             if (filteredLines.isNotEmpty()) {
