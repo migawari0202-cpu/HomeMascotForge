@@ -44,7 +44,7 @@ class CharacterInstallViewModel : ViewModel() {
     private suspend fun loadInstalledCharacters() {
         _uiState.value = _uiState.value.copy(isLoading = true)
 
-        val list = CharacterRegistry.getEntries(appContext)
+        val list = CharacterRegistry.reload(appContext)
         _uiState.value = _uiState.value.copy(
             characters = list.map {
                 CharacterDisplayData(

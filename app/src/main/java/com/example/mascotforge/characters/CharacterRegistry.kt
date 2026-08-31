@@ -73,6 +73,15 @@ object CharacterRegistry {
         }
     }
 
+    /**
+     * キャラクターの追加・削除後に、最新のファイル構成から一覧を読み直す。
+     * 一覧画面はこのメソッドを使うことで、キャッシュされた一覧を表示しない。
+     */
+    fun reload(context: Context): List<CharacterEntry> {
+        invalidate()
+        return getEntries(context)
+    }
+
     fun getInstalledEntries(context: Context): List<CharacterEntry> {
         return getEntries(context).filterNot { it.isBuiltIn }
     }
