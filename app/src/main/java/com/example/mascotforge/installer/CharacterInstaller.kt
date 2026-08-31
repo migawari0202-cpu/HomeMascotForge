@@ -219,7 +219,11 @@ class CharacterInstaller(private val context: Context) {
         }
 
         return try {
-            charDir.deleteRecursively()
+            val deleted = charDir.deleteRecursively()
+            if (deleted) {
+                CharacterRegistry.invalidate(charId)
+            }
+            deleted
         } catch (e: Exception) {
             Log.e(TAG, "Uninstall failed: $charId", e)
             false

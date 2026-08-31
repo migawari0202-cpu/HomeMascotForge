@@ -146,11 +146,10 @@ class CharacterSelectorActivity : AppCompatActivity() {
     }
 
     private fun refreshCharacterList() {
-        factories = CharacterRegistry.getFactories(this)
+        factories = CharacterRegistry.reload(this).map { it.factory }
         currentId = CharacterPreferences.getSelectedCharacterId(this)
-        adapter.factories = factories
         adapter.selectedId = currentId
-        adapter.notifyDataSetChanged()
+        adapter.replaceFactories(factories)
     }
 
     private fun installCharacterFromZip(uri: Uri) {
@@ -268,6 +267,17 @@ class CharacterSelectorActivity : AppCompatActivity() {
         R.layout.character_list_item,
         factories
     ) {
+
+        fun replaceFactories(newFactories: List<CharacterFactory>) {
+            // ArrayAdapter keeps its own backing list. Replacing only the
+            // property above leaves that list with the pre-install contents.
+            setNotifyOnChange(false)
+            clear()
+            addAll(newFactories)
+            factories = newFactories
+            setNotifyOnChange(true)
+            notifyDataSetChanged()
+        }
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = convertView ?: LayoutInflater.from(context)
