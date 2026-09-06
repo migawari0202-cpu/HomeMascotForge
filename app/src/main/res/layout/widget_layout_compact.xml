@@ -88,8 +88,8 @@
                     android:padding="4dp">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:src="@drawable/button_bg_normal"
                         android:contentDescription="メモ"/>
                 </LinearLayout>
