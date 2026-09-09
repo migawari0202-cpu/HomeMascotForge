@@ -38,6 +38,15 @@
           "value": true
         }
       ]
+    },
+    "mood": {
+      "type": "string",
+      "initial": "neutral",
+      "options": ["neutral", "happy", "sleepy"]
+    },
+    "isAngry": {
+      "type": "boolean",
+      "initial": false
     }
   },
   "emotions": {
@@ -63,6 +72,48 @@
         "consecutiveTouchCount": ">=2"
       },
       "priority": 100
+    },
+    {
+      "file": "speeches/low_battery.txt",
+      "conditions": {
+        "isLowBattery": "true"
+      },
+      "priority": 90
+    },
+    {
+      "file": "speeches/charging.txt",
+      "conditions": {
+        "isCharging": "true"
+      },
+      "priority": 80
+    },
+    {
+      "file": "speeches/sunny.txt",
+      "conditions": {
+        "weatherCode": "sunny"
+      },
+      "priority": 20
+    },
+    {
+      "file": "speeches/cloudy.txt",
+      "conditions": {
+        "weatherCode": "cloudy"
+      },
+      "priority": 20
+    },
+    {
+      "file": "speeches/rainy.txt",
+      "conditions": {
+        "weatherCode": "rain"
+      },
+      "priority": 20
+    },
+    {
+      "file": "speeches/snowy.txt",
+      "conditions": {
+        "weatherCode": "snow"
+      },
+      "priority": 20
     },
     {
       "file": "speeches/midnight.txt",
