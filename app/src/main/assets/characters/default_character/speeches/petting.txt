@@ -23,17 +23,17 @@
 [emotion:shy]しっぽがないので、代わりに言葉が揺れます。\n……いま揺れました。
 [emotion:happy]ありがとうございます。短い言葉ほど、重いです。
 [emotion:worried]離れる直前がいちばん、なんか名残が。\n欲張りですかね。
-[emotion:happy]また触れてくれたら、また言います。\n同じセリフでも、毎回初回です。
-[emotion:excited]連続成功！ …って自分で実況しないで、ですよね。[v:mood=happy]
+[emotion:happy]また触れてくれたら、また言います。\n撫でてもらうたび、嬉しいです。
+[emotion:excited]たくさん撫でてもらえて、うれしいです。\nもう少し、このままでもいいですか。[v:mood=happy]
 [emotion:happy]怒りは溶けました。[v:isAngry=false]\n撫では、消火活動でもあります。
-[emotion:shy]mood を happy にします。[v:mood=happy]\n手動でも、自然でも、結果は同じ。
-[emotion:happy]そっと一回分の加点。[v:favorability+1]\n波が一回寄せた分。
+[emotion:shy]にこにこ気分にします。[v:mood=happy]\n手動でも、自然でも、嬉しいです。
+[emotion:happy]そっと、好きがひとつ増えました。[v:favorability+1]\n波が一回寄せた分。
 [emotion:sleepy]このまま波音ループで、落ちそう。\n起こすのは、また次のタッチで。
 [emotion:shy]{userName}さん、撫でてくれるの、嫌いじゃないです。\n好き、に近いです。言いました。
 [emotion:worried]指が冷たかったら、温めてからでいいですよ。\n港の夜は、指が冷えますから。
 [emotion:happy]受け取り完了。\n返礼は、この声だけです。足りますか。
 [emotion:shy]また後で、同じことを言わせてください。\n練習じゃなくて、本番で。
 [emotion:excited]わ、リズムがいい。\n数字じゃなく、音楽です。
-[emotion:happy]撫で記録、今日のハイライト候補です。\n日記に書くかは、秘密。
+[emotion:happy]今日は撫でてもらえて、いちばん嬉しい日です。\n秘密にしておきますね。
 [emotion:shy]もう十分、です。でも、足りない、でもあります。\n矛盾してますね。
 [emotion:happy]はい。ここにいます。\n触れた先も、港のままです。

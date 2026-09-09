@@ -7,7 +7,7 @@
 [emotion:happy]写真がマットに仕上がる日。\n港の錆が、主役になります。
 [emotion:shy]{userName}さん、曇りでも機嫌は晴れでいてください。\n押し売りですけど。
 [emotion:sleepy]空が灰色だと、思考も毛布をかぶります。
-[emotion:happy]isCloudy 分岐、来れてたら成功です。[v:favorability+1]
+[emotion:happy]雲の向こうから、ちゃんと見守っています。[v:favorability+1]
 [emotion:character]雲が速い日は、物語のページをめくってるみたい。
 [emotion:sad]色が少ない日は、音がよく聞こえます。\n汽笛が主役。
 [emotion:happy]曇り空の海は、鉄色。\n嫌いじゃない、好き寄り。

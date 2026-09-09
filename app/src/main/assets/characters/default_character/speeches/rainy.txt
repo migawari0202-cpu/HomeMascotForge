@@ -13,8 +13,8 @@
 [emotion:happy]雨上がりの虹、港だと海に刺さって見えます。\n今日はどうでしょう。
 [emotion:worried]雷まで来ると、金属の港は少し緊張します。\n私だけかも。
 [emotion:shy]濡れ髪の猫を見ると、自分のことは後回しになります。
-[emotion:happy]雨の日の好感度、じわっと上げます。[v:favorability+1]\n湿度と一緒に。
-[emotion:character]isRaining 相当の日、です。\n条件分岐、ちゃんと来てますように。
+[emotion:happy]雨の日は、好きがじわっと増えます。[v:favorability+1]\n湿度と一緒に。
+[emotion:character]雨音が近くにある日は、少し甘えたくなります。\nそばにいてくれますか。
 [emotion:sad]予定が消える雨も、波は予定どおりです。\nどっちが正しいのでしょう。
 [emotion:sleepy]窓の雨垂れを目で追う仕事、今日のメインです。
 [emotion:happy]{userName}さんと雨の話ができるなら、濡れても元が取れます。
@@ -24,4 +24,4 @@
 [emotion:sad]遠洋の船が雨に溶けると、消えたように見えて焦ります。
 [emotion:excited]突然の強い雨、港がドラムになります。\n臨時ライブ。
 [emotion:shy]靴擦れと雨、同時はつらいです。\n今日は大丈夫、ですか。
-[emotion:character]weatherCode が雨系のとき、このファイルへ。\n来れてたら、成功です。[emotion:happy]
+[emotion:happy]雨の港は、いつもより近く感じます。\n一緒に見てくれて、嬉しいです。

@@ -70,10 +70,10 @@
 [emotion:sleepy]何も考えない練習、ときどきしてるんです。\nうまくいかないことのほうが多いですけど。
 船の名前を読むのが、密かな楽しみです。\n知らない言葉だと、なおさら。[emotion:happy]
 少しだけ戻します。[v:favorability-1][emotion:shy]\n下がっても、嫌いになったわけじゃないです。
-気分を neutral に整えます。[v:mood=neutral][emotion:character]\n港の朝みたいに、まっさらに。
-ご機嫌モードへ。[v:mood=happy][emotion:happy][v:favorability+1]\nこういうの、自分で言うの恥ずかしいです。
-和解します。[v:isAngry=false][v:mood=happy][emotion:happy]\n汽笛が鳴ったら、切り替えましょう。
+気持ちをそっと整えます。[v:mood=neutral][emotion:character]\n港の朝みたいに、まっさらに。
+にこにこ気分になりました。[v:mood=happy][emotion:happy][v:favorability+1]\nこういうの、自分で言うの恥ずかしいです。
+もう怒っていませんよ。[v:isAngry=false][v:mood=happy][emotion:happy]\n汽笛が鳴ったら、仲直りです。
 もう一度戻します。[v:isAngry=toggle][emotion:shy]\n忙しいですね、私の心。
 {temperatureFeeling == "寒い" ? 寒い日の港は、息が白いんです : 寒くない日は、潮の匂いがはっきりします}。[emotion:happy]
 {weatherCode == "雨" ? 雨の港、音がふくらみます : 雨じゃなくても、波の音はあります}。[emotion:character]
-今日の汎用枠は、ここまでにします。\nまた時間帯が来たら、別の顔で話しますね。[emotion:happy]
+今日のお話はここまでですね。\nまた会えたら、もっとそばにいてくださいね。[emotion:happy]

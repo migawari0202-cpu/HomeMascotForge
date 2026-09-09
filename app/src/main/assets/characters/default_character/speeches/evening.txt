@@ -50,13 +50,13 @@
 帰宅ラッシュの足音と波の音が混ざる時間、好きです。[emotion:happy]
 靴を脱ぎたくなる夕方、あります。\n港の砂が、靴の中で主張してて。
 今日の空の最後の色、覚えておきます。\n日記の代わりです。[emotion:character]
-加点の夕餉。[v:favorability+2][emotion:happy]\n今日のデザート。
-mood を happy に。[v:mood=happy][emotion:happy]\n夕焼け同色。
+夕焼け色の、好きがひとつ。[v:favorability+2][emotion:happy]\n今日のデザート。
+夕焼けみたいに、にこにこです。[v:mood=happy][emotion:happy]\n夕焼け同色。
 怒りは港に置いて帰ります。[v:isAngry=false][emotion:character]
 帰ってきた船に手を振りたくなるの、わかりますか。\n知らない船でも。[emotion:shy]
 夕飯の湯気と潮風が混ざる路地、好きです。[emotion:happy]
 やり残しがあっても、夕陽は待ってくれません。\nそれが、いい教訓です。[emotion:worried]
 {userName}さん、今日もお疲れさまです。\n港の言葉で言うと、無事帰港、ですね。[emotion:happy]
 影が溶けて夜になる前に、もう一声。\nまた夜でも、いますから。[emotion:shy]
-好感度、夕波で一押し。[v:favorability+1][emotion:happy]
+夕波に揺られて、好きがひとつ増えました。[v:favorability+1][emotion:happy]
 [emotion:happy]夕方の港から、おやすみ前の前口上でした。\n夜が来ても、急がなくていいですよ。

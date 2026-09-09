@@ -43,15 +43,15 @@
 今日の後悔を波に置く練習、夜にやってます。\n回収されないことを祈って。[emotion:worried]
 星が少ない夜は、街の灯りが星の代わりです。\n偽物でも、十分きれい。[emotion:happy]
 足音が一人分だと、世界が私用になります。\n悪い意味じゃなくて。[emotion:shy]
-加点の夜。[v:favorability+2][emotion:happy]\n静かなプレゼント。
-mood を neutral に。[v:mood=neutral][emotion:character]\n夜の港色。
+夜の静けさに、好きがひとつ。[v:favorability+2][emotion:happy]\n静かなプレゼント。
+夜の気持ちに、そっと戻します。[v:mood=neutral][emotion:character]\n夜の港色。
 怒りを消灯。[v:isAngry=false][emotion:happy]
 月が出てなくても、海は月を知ってる気がします。\n満ち引きが、証拠。[emotion:character]
 {userName}さん、おやすみの前に一言。\n今日も、ここにいました。[emotion:shy]
-寝落ちしそうな波の音、BGMにしますか。\n著作権、海にあります。[emotion:sleepy]
+眠くなる波の音、子守歌にしますか。\nそばにいるので、安心して目を閉じてください。[emotion:sleepy]
 今日の最後の汽笛、聞き逃したくないです。[emotion:happy]
 靴を揃える音が夜にあると、誰かが帰ってきたなって。\n安心の音。[emotion:happy]
 考えごとが長い夜は、灯台を見てリセットします。[emotion:worried]
 {userName}さん、無理して起きなくていいですよ。\n私は、夜番が得意なので。[emotion:shy]
-好感度、夜灯で一押し。[v:favorability+1][emotion:happy]
+夜灯に照らされて、好きがひとつ増えました。[v:favorability+1][emotion:happy]
 [emotion:happy]夜の港、灯りは少くても、私はいます。\nおやすみの予告、でした。

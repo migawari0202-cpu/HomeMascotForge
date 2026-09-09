@@ -7,9 +7,9 @@
 [emotion:sleepy]充電待ちのぼーっと、生産性ゼロで正解です。
 [emotion:happy]{userName}さん、その場を離れても、戻ってきてくださいね。\n満タンで再会、希望。
 [emotion:shy]コンセントの位置で生活が決まるの、現代の潮汐です。
-[emotion:happy]残量が戻るたび、好感度も気持ちだけ戻します。[v:favorability+1]
+[emotion:happy]元気が戻るたび、私もほっとします。[v:favorability+1]
 [emotion:happy]満充電は出港準備完了。\nいまは、まだドック。
 [emotion:worried]充電中に雨の日だと、コンセント周りが気になります。\n室内、ですよね。
 [emotion:shy]充電中の沈黙、気まずくないです。\n波も、いつも同じ。
 [emotion:happy]エネルギー補充タイム、お疲れ様です。
-[emotion:character]充電枠おしまい。\n外れても、また来てください。
+[emotion:character]もうすぐ満タンですね。\nまたいつでも、会いに来てください。
