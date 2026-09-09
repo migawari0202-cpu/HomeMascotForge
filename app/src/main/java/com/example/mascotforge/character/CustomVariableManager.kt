@@ -49,8 +49,12 @@ class CustomVariableManager(
         Log.d(TAG, "[$characterId] Initializing custom variables for the first time")
         val state = stateManager.getState(characterId)
         variableDefinitions.forEachIndexed { index, variable ->
-            val rawValue = convertToRaw(variable, variable.initialValue)
-            state.setCustomVar(variable.name, rawValue)
+            if (variable.type == CustomVariable.VariableType.ANY) {
+                state.setCustomStrVar(variable.name, anyToString(variable.initialValue))
+            } else {
+                val rawValue = convertToRaw(variable, variable.initialValue)
+                state.setCustomVar(variable.name, rawValue)
+            }
         }
         stateManager.saveState(characterId, state)
         initPrefs.edit().putBoolean(initKey, true).apply()
@@ -61,6 +65,11 @@ class CustomVariableManager(
      */
     fun getValue(variable: CustomVariable): Any {
         val state = stateManager.getState(characterId)
+        if (variable.type == CustomVariable.VariableType.ANY) {
+            return state.customStrVars[variable.name]
+                ?: state.customVars[variable.name]?.toString()
+                ?: anyToString(variable.initialValue)
+        }
         val rawValue = state.getCustomVar(variable.name)
         return convertFromRaw(variable, rawValue)
     }
@@ -77,8 +86,15 @@ class CustomVariableManager(
      * 変数の値を設定（型変換 + 範囲制限）
      */
     fun setValue(variable: CustomVariable, value: Any) {
-        val rawValue = convertToRaw(variable, value)
         val state = stateManager.getState(characterId)
+        if (variable.type == CustomVariable.VariableType.ANY) {
+            val stored = anyToString(value)
+            state.setCustomStrVar(variable.name, stored)
+            stateManager.saveState(characterId, state)
+            Log.d(TAG, "[$characterId] ${variable.name} = $value (ANY: $stored)")
+            return
+        }
+        val rawValue = convertToRaw(variable, value)
         state.setCustomVar(variable.name, rawValue)
         stateManager.saveState(characterId, state)
         Log.d(TAG, "[$characterId] ${variable.name} = $value (raw: $rawValue)")
@@ -147,7 +163,14 @@ class CustomVariableManager(
                     index
                 }
             }
+
+            CustomVariable.VariableType.ANY -> error("ANY is stored in the string store")
         }
+    }
+
+    private fun anyToString(value: Any): String = when (value) {
+        org.json.JSONObject.NULL -> ""
+        else -> value.toString()
     }
 
     /**
@@ -175,6 +198,8 @@ class CustomVariableManager(
                     options[rawValue]
                 }
             }
+
+            CustomVariable.VariableType.ANY -> error("ANY is stored in the string store")
         }
     }
 
@@ -206,24 +231,32 @@ class CustomVariableManager(
             }
             CustomVariable.ChangeRule.Action.INCREMENT -> {
                 if (variable.type == CustomVariable.VariableType.NUMBER) {
-                    val increment = (rule.value as? Int) ?: 1
+                    val increment = (rule.value as? Number)?.toInt() ?: rule.value?.toString()?.toIntOrNull() ?: 1
                     val currentInt = currentValue as? Int ?: run {
                         Log.e(TAG, "[$characterId] Expected NUMBER for INCREMENT, got ${currentValue::class.simpleName}")
                         return
                     }
                     currentInt + increment
+                } else if (variable.type == CustomVariable.VariableType.ANY) {
+                    val current = currentValue.toString().toIntOrNull() ?: return
+                    val increment = (rule.value as? Number)?.toInt() ?: rule.value?.toString()?.toIntOrNull() ?: 1
+                    (current + increment).toString()
                 } else {
                     currentValue
                 }
             }
             CustomVariable.ChangeRule.Action.DECREMENT -> {
                 if (variable.type == CustomVariable.VariableType.NUMBER) {
-                    val decrement = (rule.value as? Int) ?: 1
+                    val decrement = (rule.value as? Number)?.toInt() ?: rule.value?.toString()?.toIntOrNull() ?: 1
                     val currentInt = currentValue as? Int ?: run {
                         Log.e(TAG, "[$characterId] Expected NUMBER for DECREMENT, got ${currentValue::class.simpleName}")
                         return
                     }
                     currentInt - decrement
+                } else if (variable.type == CustomVariable.VariableType.ANY) {
+                    val current = currentValue.toString().toIntOrNull() ?: return
+                    val decrement = (rule.value as? Number)?.toInt() ?: rule.value?.toString()?.toIntOrNull() ?: 1
+                    (current - decrement).toString()
                 } else {
                     currentValue
                 }
@@ -235,6 +268,12 @@ class CustomVariableManager(
                         return
                     }
                     !currentBool
+                } else if (variable.type == CustomVariable.VariableType.ANY) {
+                    when (currentValue.toString().lowercase()) {
+                        "true" -> "false"
+                        "false" -> "true"
+                        else -> return
+                    }
                 } else {
                     currentValue
                 }
@@ -271,8 +310,12 @@ class CustomVariableManager(
 
         val state = stateManager.getState(characterId)
         variableDefinitions.forEach { variable ->
-            val rawValue = convertToRaw(variable, variable.initialValue)
-            state.setCustomVar(variable.name, rawValue)
+            if (variable.type == CustomVariable.VariableType.ANY) {
+                state.setCustomStrVar(variable.name, anyToString(variable.initialValue))
+            } else {
+                val rawValue = convertToRaw(variable, variable.initialValue)
+                state.setCustomVar(variable.name, rawValue)
+            }
         }
         stateManager.saveState(characterId, state)
     }

@@ -13,6 +13,7 @@
   "number"   数値             min（省略可）/ max（省略可）
   "string"   文字列           options（実質必須。選択肢リスト）
   "boolean"  true / false     なし
+  "any"      任意の値         なし（値は文字列として保存）
 
   【変数名の制限】
     キー（変数名）は英数字とアンダースコアのみ推奨。
@@ -40,6 +41,11 @@
     "isAngry": {
       "type":    "boolean",
       "initial": false
+    },
+
+    "freeValue": {
+      "type":    "any",
+      "initial": "自由な初期値"
     }
   }
 
@@ -51,6 +57,10 @@
     （内部では options のインデックスとして整数保存するため）
   ※ options に無い値を set / タグ代入すると拒否または先頭 option に落ちる
   ※ min / max を省略した NUMBER型は上限・下限なし
+  ※ ANY型は initial やタグ・onChange の値を文字列化してそのまま保存する。
+    options は不要で、数値・真偽値・自由文字列を同じ変数に保持できる。
+    toggle は値が true / false の場合のみ反転し、加減算は整数として解釈できる
+    場合のみ実行される。min / max は適用されない。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ onChange（自動更新ルール）

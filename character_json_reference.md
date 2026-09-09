@@ -263,6 +263,7 @@ mychar.zip
 | `"number"` | 数値 | `min`, `max`（省略可。省略時は上下限なし） |
 | `"string"` | 文字列 | `options`（**実質必須**。下記注意参照） |
 | `"boolean"` | `true` / `false` | なし |
+| `"any"` | 任意の値 | なし。文字列化して保存 |
 
 > **STRING型の `options` に関する注意**:
 > 内部では選択肢のインデックスとして整数保存するため、`options` 未定義（空）の場合は
@@ -292,6 +293,8 @@ mychar.zip
 - `onTouch`: ウィジェットをタップしたとき（ウィジェット・置時計の両方から発火）
 
 ※ 数値型の `min` / `max` を指定した場合、更新値はその範囲にクランプされる。
+
+**ANY型:** `initial` や更新値を文字列化して保存する。`options` は不要で、数値・真偽値・自由文字列を同じ変数に保持できる。`toggle` は現在値が `true` / `false` の場合のみ反転し、加減算は整数として解釈できる場合のみ実行する。`min` / `max` は適用されない。
 
 ---
 
@@ -332,7 +335,7 @@ mychar.zip
 ```
 
 #### 変数操作タグ `[var:式]` / `[v:式]`
-セリフ表示と同時にカスタム変数を操作する。**NUMBER / STRING / BOOLEAN の全型に対応**。
+セリフ表示と同時にカスタム変数を操作する。**NUMBER / STRING / BOOLEAN / ANY の全型に対応**。
 `[v:式]` は短縮形。空白の有無はどちらでも可（例: `[v:favorability+2]` と `[v: favorability + 2]`）。1行に複数書いてもよい。
 
 **NUMBER型:**
@@ -361,6 +364,15 @@ mychar.zip
 |---|---|
 | `[var:isAngry=true]` / `[var:isAngry=false]` | 代入（小文字化される） |
 | `[var:isAngry=toggle]` | 現在値を反転 |
+
+**ANY型:**
+
+| 記法 | 操作 |
+|---|---|
+| `[var:freeValue=文字列]` | 文字列として保存 |
+| `[var:freeValue=5]` | `"5"` として保存 |
+| `[var:freeValue=toggle]` | 値が `true` / `false` の場合のみ反転 |
+| `[var:freeValue+2]` / `[var:freeValue-2]` | 現在値を整数として解釈できる場合に加減算 |
 
 **型の不一致はスキップ**（警告ログ、セリフ表示には影響しない）:
 

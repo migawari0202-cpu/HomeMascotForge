@@ -431,7 +431,10 @@ data class SpeechContext(
                 if (varName != null && varName.isNotEmpty()) {
                     val strVal = customValues[varName] ?: getCustomVar(varName).toString()
                     val isBooleanCondition = value == "true" || value == "false"
-                    if (isBooleanCondition) {
+                    if (isBooleanCondition && customValues.containsKey(varName)) {
+                        // 型変換済みの表示値を優先し、ANY の "true" / "false" を正しく比較する。
+                        strVal == value
+                    } else if (isBooleanCondition) {
                         val rawVal = getCustomVar(varName)
                         val expectedInt = if (value == "true") 1 else 0
                         rawVal == expectedInt

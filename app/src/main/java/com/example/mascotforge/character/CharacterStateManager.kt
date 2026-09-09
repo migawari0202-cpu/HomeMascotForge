@@ -21,7 +21,8 @@ data class CharacterState(
     var touchCountToday: Int = 0,
     var lastTouchTime: Long = 0L,
     var consecutiveTouchCount: Int = 0,
-    val customVars: MutableMap<String, Int> = mutableMapOf()  // 名前ベースのカスタム変数
+    val customVars: MutableMap<String, Int> = mutableMapOf(),  // 名前ベースのカスタム変数
+    val customStrVars: MutableMap<String, String> = mutableMapOf() // ANY変数
 ) {
     /**
      * カスタム変数を名前で取得（未設定の場合は 0 を返す）
@@ -33,6 +34,12 @@ data class CharacterState(
      */
     fun setCustomVar(name: String, value: Int) {
         customVars[name] = value
+    }
+
+    fun getCustomStrVar(name: String): String = customStrVars[name] ?: ""
+
+    fun setCustomStrVar(name: String, value: String) {
+        customStrVars[name] = value
     }
 
     /**
@@ -106,6 +113,7 @@ class CharacterStateManager(private val context: Context) {
         private const val KEY_LAST_SAVE_DATE = "last_save_date"
         // カスタム変数は "cvar_{varName}" 形式で名前ベースに保存
         private const val KEY_CUSTOM_VAR_PREFIX = "cvar_"
+        private const val KEY_CUSTOM_STR_VAR_PREFIX = "cvarstr_"
         const val MAX_CUSTOM_VARS = 30
 
         // デフォルト値
@@ -147,6 +155,13 @@ class CharacterStateManager(private val context: Context) {
                 customVars[key.removePrefix(cvarPrefix)] = value
             }
         }
+        val cvarStrPrefix = makeKey(characterId, KEY_CUSTOM_STR_VAR_PREFIX)
+        val customStrVars = mutableMapOf<String, String>()
+        prefs.all.entries.forEach { (key, value) ->
+            if (key.startsWith(cvarStrPrefix) && value is String) {
+                customStrVars[key.removePrefix(cvarStrPrefix)] = value
+            }
+        }
 
         // 日付が変わっていたらリセット
         val today = getCurrentDate()
@@ -163,7 +178,8 @@ class CharacterStateManager(private val context: Context) {
             touchCountToday = actualTouchCountToday,
             lastTouchTime = lastTouchTime,
             consecutiveTouchCount = consecutiveTouchCount,
-            customVars = customVars
+            customVars = customVars,
+            customStrVars = customStrVars
         )
 
         Log.d(TAG, "State loaded: $state")
@@ -216,9 +232,14 @@ class CharacterStateManager(private val context: Context) {
 
             // カスタム変数を名前ベースで保存（古いキーを削除してから書き込む）
             val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
-            prefs.all.keys.filter { it.startsWith(cvarPrefix) }.forEach { remove(it) }
+            val cvarStrPrefix = makeKey(characterId, KEY_CUSTOM_STR_VAR_PREFIX)
+            prefs.all.keys.filter { it.startsWith(cvarPrefix) || it.startsWith(cvarStrPrefix) }
+                .forEach { remove(it) }
             state.customVars.forEach { (name, value) ->
                 putInt("$cvarPrefix$name", value)
+            }
+            state.customStrVars.forEach { (name, value) ->
+                putString("$cvarStrPrefix$name", value)
             }
 
             apply()
@@ -245,7 +266,9 @@ class CharacterStateManager(private val context: Context) {
             remove(makeKey(characterId, KEY_LAST_SAVE_DATE))
 
             val cvarPrefix = makeKey(characterId, KEY_CUSTOM_VAR_PREFIX)
-            prefs.all.keys.filter { it.startsWith(cvarPrefix) }.forEach { remove(it) }
+            val cvarStrPrefix = makeKey(characterId, KEY_CUSTOM_STR_VAR_PREFIX)
+            prefs.all.keys.filter { it.startsWith(cvarPrefix) || it.startsWith(cvarStrPrefix) }
+                .forEach { remove(it) }
 
             apply()
         }
