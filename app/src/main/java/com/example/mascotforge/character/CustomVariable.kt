@@ -16,8 +16,9 @@ data class CustomVariable(
 ) {
     enum class VariableType {
         NUMBER,   // 数値
-        STRING,   // 文字列
-        BOOLEAN   // 真偽値
+        STRING,   // 列挙文字列
+        BOOLEAN,  // 真偽値
+        ANY       // 任意の値（文字列として永続化）
     }
 
     /**
@@ -54,6 +55,7 @@ fun parseCustomVariable(name: String, json: JSONObject): CustomVariable {
     val type = when (typeStr.lowercase()) {
         "number" -> CustomVariable.VariableType.NUMBER
         "boolean" -> CustomVariable.VariableType.BOOLEAN
+        "any" -> CustomVariable.VariableType.ANY
         else -> CustomVariable.VariableType.STRING
     }
 
@@ -61,6 +63,9 @@ fun parseCustomVariable(name: String, json: JSONObject): CustomVariable {
         CustomVariable.VariableType.NUMBER -> json.optInt("initial", 0)
         CustomVariable.VariableType.BOOLEAN -> json.optBoolean("initial", false)
         CustomVariable.VariableType.STRING -> json.optString("initial", "")
+        CustomVariable.VariableType.ANY -> json.opt("initial")
+            .takeUnless { it == null || it == org.json.JSONObject.NULL }
+            ?: ""
     }
 
     val min = json.optInt("min", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }

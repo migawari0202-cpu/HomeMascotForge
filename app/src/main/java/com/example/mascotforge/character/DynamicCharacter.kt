@@ -305,6 +305,11 @@ class DynamicCharacter(
                 Log.d(TAG, "[$charId] [var:] ${op.varName} = \"$strVal\"")
             }
 
+            CustomVariable.VariableType.ANY -> {
+                variableManager.setValue(op.varName, strVal)
+                Log.d(TAG, "[$charId] [var:] ${op.varName} = \"$strVal\" (ANY)")
+            }
+
             CustomVariable.VariableType.BOOLEAN -> {
                 val boolVal = strVal.toBooleanStrictOrNull()
                 if (boolVal == null) {
@@ -322,8 +327,22 @@ class DynamicCharacter(
     }
 
     private fun applyToggle(varDef: CustomVariable, op: VariableOperation) {
+        if (varDef.type == CustomVariable.VariableType.ANY) {
+            val current = variableManager.getValue(op.varName).toString()
+            val next = when (current.lowercase()) {
+                "true" -> "false"
+                "false" -> "true"
+                else -> {
+                    Log.w(TAG, "[$charId] [var:] ANY TOGGLE requires true/false, got '$current'")
+                    return
+                }
+            }
+            variableManager.setValue(op.varName, next)
+            Log.d(TAG, "[$charId] [var:] ${op.varName}: $current -> $next (ANY TOGGLE)")
+            return
+        }
         if (varDef.type != CustomVariable.VariableType.BOOLEAN) {
-            Log.w(TAG, "[$charId] [var:] TOGGLE is only valid for BOOLEAN ('${op.varName}' is ${varDef.type})")
+            Log.w(TAG, "[$charId] [var:] TOGGLE is only valid for BOOLEAN/ANY ('${op.varName}' is ${varDef.type})")
             return
         }
 
@@ -334,8 +353,8 @@ class DynamicCharacter(
     }
 
     private fun applyNumericOperation(varDef: CustomVariable, op: VariableOperation) {
-        if (varDef.type != CustomVariable.VariableType.NUMBER) {
-            Log.w(TAG, "[$charId] [var:] '${op.varName}' is not NUMBER, skipping ${op.type}")
+        if (varDef.type != CustomVariable.VariableType.NUMBER && varDef.type != CustomVariable.VariableType.ANY) {
+            Log.w(TAG, "[$charId] [var:] '${op.varName}' is not NUMBER/ANY, skipping ${op.type}")
             return
         }
 
@@ -344,6 +363,10 @@ class DynamicCharacter(
             is Long -> value.toInt()
             is Float -> value.toInt()
             is Double -> value.toInt()
+            is String -> value.toIntOrNull() ?: run {
+                Log.w(TAG, "[$charId] [var:] '${op.varName}' has no numeric current value")
+                return
+            }
             else -> {
                 Log.w(TAG, "[$charId] [var:] '${op.varName}' has no numeric current value")
                 return
