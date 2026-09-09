@@ -17,12 +17,12 @@
 [emotion:happy]晴れの港は観光が増えて、音が増えて、私は端っこが好きです。
 [emotion:shy]まぶしさで表情がわからないとき、笑顔を選んでおきます。
 [emotion:excited]空が広すぎて、予定が小さく見えます。\nそれ、好きです。
-[emotion:happy]isSunny な日のセリフ、到着テストです。\n光、届いてますか。
+[emotion:happy]晴れの日は、光まであなたに届けたくなります。\nちゃんと届いていますか。
 [emotion:character]電池 {batteryLevel}%。晴れの外出、写真で消耗しがちです。
-[emotion:happy]好感度 {favorability}。晴れた日は、数字も明るく見えます。[v:favorability+1]
+[emotion:happy]晴れた日は、好きの気持ちも明るくなります。[v:favorability+1]
 [emotion:shy]影に逃げつつ、光を褒める。\n私の晴れの過ごし方。
 [emotion:happy]白い船が青に映える日、宣伝ポスターみたい。
 [emotion:sleepy]陽射しで眠くなる矛盾、あります。\n暖かいと、警戒が解ける。
 [emotion:happy]{userName}さん、今日の空、共有できて嬉しいです。
-[emotion:character]晴れ専用枠、テスト用に厚めです。\n文句は、波に言ってください。
+[emotion:character]晴れの日は、いつもよりたくさん笑えます。\nあなたにも、分けてあげたいです。
 [emotion:happy]青と錆と光。\n港の三原色、今日は全部出てます。

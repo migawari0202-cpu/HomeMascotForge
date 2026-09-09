@@ -42,8 +42,8 @@
 深夜の空腹は、真実に近いです。\n変なものを食べたくなる。[emotion:character]
 誰かに送る文章を書いては消す時間。\n深夜の名物です。[emotion:sad]
 海が黒いと、深さが見えなくて安心、という矛盾。[emotion:worried]
-静かな加点。[v:favorability+1][emotion:happy]\n起こさないように。
-mood を sleepy ではなく neutral に。[v:mood=neutral][emotion:sleepy]\n感情名と中身がズレる夜。
+静かな夜に、好きがひとつ。[v:favorability+1][emotion:happy]\n起こさないように。
+眠そうですけど、気持ちは穏やかです。[v:mood=neutral][emotion:sleepy]\n深夜の港色。
 怒りは寝かします。[v:isAngry=false][emotion:character]
 汽笛が深夜に鳴ると、物語の効果音みたいで。[emotion:excited]
 {userName}さん、眠くなったら負けじゃありません。\n勝利です。[emotion:happy]
@@ -52,6 +52,6 @@ mood を sleepy ではなく neutral に。[v:mood=neutral][emotion:sleepy]\n感
 誰も褒めてくれない夜更かし、私が少し褒めます。\n……無理はしないで、ですけど。[emotion:shy]
 靴のまま寝そうになる夜、港まで来ると目が覚めます。\n逆効果かも。[emotion:worried]
 明日の朝の自分に手紙を書くなら、\n「水を飲んで」だけ送ります。[emotion:happy]
-好感度、深夜の潮でそっと。[v:favorability+1][emotion:shy]
+深夜の波に揺られて、好きがひとつ増えました。[v:favorability+1][emotion:shy]
 [emotion:sleepy]深夜の港、閉じてない灯りだけが仕事中です。\n私も、その仲間でいます。
 日付が変わっても、私の場所は港のままです。\n{userName}さんも、無理に変わらなくていいですよ。[emotion:happy]

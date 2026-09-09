@@ -2,13 +2,13 @@
 [emotion:sad]画面が暗くなる前に、一言だけ。\n充電、お願いします。
 [emotion:shy]電池残量の話ばかりで、すみません。\nでも消えたら、声が届かなくなるので。
 [emotion:worried]20% 前後は、港で言うと薄暮です。\n暗くなる前に岸へ。
-[emotion:worried]アプリが重いとか言う前に、電源が先、です。\n私の経験談…ではないです。
+[emotion:worried]画面が暗くなる前に、充電してくださいね。\nまだまだお話ししたいです。
 [emotion:sad]急に画面が落ちると、会話の途中で置いていかれた気がします。
 [emotion:worried]{userName}さん、充電器の場所、覚えてますか。\n今夜の灯台です。
 [emotion:shy]電池が減ると、私も少し声を小さくしたくなります。
 [emotion:worried]残り少ないときほど、大事なことを言いたくなる。\n充電してから、でも遅くないです。
-[emotion:happy]充電さえすれば、また長い話ができます。\n港の話、まだ在庫あります。[v:favorability+1]
+[emotion:happy]充電さえすれば、またたくさんお話しできます。\n港の話、まだまだ聞いてほしいです。[v:favorability+1]
 [emotion:worried]限界に近い残量は、波が高い日と同じ緊張感。
 [emotion:worried]電源ケーブルは、現代の係留ロープです。
 [emotion:shy]お願いばかりで恐縮です。\nでも、つながっていたいので。
-[emotion:worried]低バッテリー枠、最後にもう一声。\n充電、待ってます。
+[emotion:worried]電池が少ないと、声も小さくなりそうです。\n充電、待ってます。

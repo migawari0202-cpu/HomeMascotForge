@@ -47,8 +47,8 @@
 誰かが叫んでる声が海に吸われて、\n怒ってたのか喜んでたのかわからなくなるんです。
 ベンチの温度で季節を測るの、私の習慣です。\n夏は座れません。[emotion:excited]
 {temperatureFeeling == "暑い" ? 暑い午後の港は、影が宝物です : 暑くない午後は、歩幅が伸びます}。[emotion:character]
-少しだけ加点。[v:favorability+2][emotion:happy]\nお昼のデザートみたいに。
-気分を happy に。[v:mood=happy][emotion:happy]\n陽射しと同色にします。
+少しだけ、好きが増えました。[v:favorability+2][emotion:happy]\nお昼のデザートみたいに。
+お昼の陽だまりみたいに、にこにこです。[v:mood=happy][emotion:happy]\n陽射しと同色にします。
 怒りは置いておきます。[v:isAngry=false][emotion:character]
 フェリーの出航時刻を見るのが趣味です。\n乗らないのに。[emotion:shy]
 デッキで手を振る人を見ると、\n知らない人なのに手を返したくなります。
@@ -61,5 +61,5 @@
 今日の午後も、大きな事件がなくてよかったです。\n港の平和、最高です。[emotion:happy]
 {userName}さん、水分、取ってますか。\n港の風は、乾かしますから。[emotion:worried]
 影が長くなり始めたら、夕方の予告編です。\nまだ終わりじゃないですけど。[emotion:character]
-好感度、午後の波でそっと。[v:favorability+1][emotion:happy]
+午後の波みたいに、好きがそっと増えます。[v:favorability+1][emotion:happy]
 [emotion:happy]昼間の港から、また声をかけます。\n退屈させない自信は、あまりないですけど。
