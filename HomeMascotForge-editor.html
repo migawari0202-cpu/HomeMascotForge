@@ -1,0 +1,2194 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeMascotForge キャラクター定義</title>
+<link rel="icon" href="data:,">
+<style>
+/* 無機質・高密度。装飾より情報量を優先する。 */
+:root {
+  --line: #b9c2cb; --ink: #1d2733; --muted: #5d6b7a; --bg: #eceef1; --panel: #ffffff;
+  --accent: #1f4f52; --warn: #8a5a00; --error: #a3231b;
+  font-family: "Yu Gothic UI", Meiryo, "MS PGothic", sans-serif;
+  color: var(--ink);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); font-size: 13px; }
+h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: .02em; }
+h1 span { font-weight: 400; font-size: 12px; color: #cfe3e4; margin-left: 10px; }
+h2 { font-size: 13px; margin: 0 0 6px; border-left: 4px solid var(--accent); padding-left: 8px; }
+h3 { font-size: 13px; margin: 14px 0 6px; }
+header { background: var(--accent); color: #fff; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; }
+button, .btn { font: inherit; padding: 5px 10px; border: 1px solid #6c7b8a; background: #f6f7f9; color: var(--ink); cursor: pointer; }
+header button, header .btn { border-color: #ffffff88; background: #ffffff1a; color: #fff; }
+header button:disabled { opacity: .4; cursor: default; }
+.dirty { font-size: 11px; padding: 2px 8px; border: 1px solid #ffffff55; border-radius: 10px; white-space: nowrap; }
+button.primary { background: #eef3f4; border-color: #ffffff; font-weight: 700; color: var(--accent); }
+button.link { border: none; background: none; color: #1b4d8a; text-decoration: underline; padding: 0 4px; }
+button:disabled { opacity: .5; cursor: progress; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid #226bb0; outline-offset: 1px; }
+main { display: grid; grid-template-columns: 170px minmax(0, 1fr) 340px; gap: 10px; padding: 10px; align-items: start; }
+nav, section, aside { background: var(--panel); border: 1px solid var(--line); }
+nav { display: flex; flex-direction: column; position: sticky; top: 10px; }
+nav button { border: none; border-bottom: 1px solid var(--line); text-align: left; padding: 9px 12px; background: none; }
+nav button[aria-current="true"] { background: #dfe9ea; font-weight: 700; border-left: 4px solid var(--accent); }
+section, aside { padding: 12px; min-width: 0; }
+aside { position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow: auto; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
+th, td { border: 1px solid var(--line); padding: 3px 5px; vertical-align: top; text-align: left; }
+th { background: #e3e7eb; font-weight: 700; white-space: nowrap; }
+td.num, td.op { white-space: nowrap; }
+input, select, textarea { font: inherit; padding: 3px 5px; border: 1px solid #8b98a6; background: #fff; color: inherit; max-width: 100%; }
+input[type="number"] { width: 84px; }
+textarea { width: 100%; resize: vertical; font-family: "Consolas", "Yu Gothic", monospace; line-height: 1.7; }
+label { display: inline-flex; align-items: center; gap: 5px; margin-right: 10px; }
+.field { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 10px; align-items: center; max-width: 720px; }
+.field > span { color: var(--muted); }
+.hint { color: var(--muted); margin: 2px 0 8px; line-height: 1.7; }
+.muted { color: var(--muted); }
+.warn { color: var(--warn); }
+.error { color: var(--error); }
+ul.errors { margin: 0; padding-left: 18px; }
+ul.errors li { margin-bottom: 3px; line-height: 1.6; }
+pre { margin: 4px 0 10px; padding: 8px; background: #f4f6f8; border: 1px solid var(--line); overflow: auto; font-family: "Consolas", monospace; font-size: 12px; line-height: 1.55; }
+code { font-family: "Consolas", monospace; background: #f1f3f6; padding: 0 3px; }
+.condlabel { font-weight: 700; margin: 6px 0 2px; }
+.condrow { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 1px 0; }
+.condrow select, .condrow input { max-width: 260px; }
+details { border: 1px solid var(--line); margin-bottom: 8px; }
+details > summary { padding: 5px 8px; background: #eef1f4; cursor: pointer; font-family: "Consolas", monospace; }
+details > div { padding: 8px; }
+.badge { display: inline-block; border: 1px solid var(--warn); color: var(--warn); background: #fff6e0; padding: 0 5px; font-size: 11px; margin-left: 4px; }
+.badge.raw { border-color: #7a5ea8; color: #5b3f8a; background: #f1ebfa; }
+.preview { width: 96px; height: 96px; object-fit: contain; background: repeating-conic-gradient(#e4e7ea 0% 25%, #fff 0% 50%) 0 / 12px 12px; border: 1px solid var(--line); }
+.scene { border: 1px solid var(--line); margin-bottom: 14px; }
+.scene > header { display: block; background: #eef1f4; padding: 6px 8px; color: var(--ink); border-bottom: 1px solid var(--line); }
+.scene > div { padding: 8px; }
+/* ── 折りたたみカード（状態・表情・場面・自動切替）。見出しをクリックすると開閉する ── */
+.foldbar { margin: 2px 0 8px; }
+.foldbar button { margin-right: 6px; }
+details.card { margin-bottom: 8px; }
+details.card.scene { margin-bottom: 10px; }
+details.card > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 6px 8px; list-style: none; font-family: inherit; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::before { content: "▶"; flex: 0 0 auto; width: 10px; font-size: 10px; color: var(--muted); }
+details.card[open] > summary::before { content: "▼"; }
+details.card[open] > summary { border-bottom: 1px solid var(--line); }
+details.card.has-error { border-color: var(--error); }
+details.card.has-error > summary { background: #fbecea; }
+details.card > summary .sum { display: inline-flex; flex: 1 1 240px; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-width: 0; }
+details.card > summary .acts { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+details.card > summary .errcount { font-size: 11px; font-weight: 700; }
+details.card > summary .errcount:empty { display: none; }
+.swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid #8b98a6; }
+footer { padding: 8px 14px 20px; }
+#status { margin: 0 0 4px; white-space: pre-wrap; min-height: 1.6em; }
+#about { margin: 0; font-size: 11px; }
+/* ── ~1100px: ノート/タブレット。ナビ+本文の2カラム、右パネルは下段に ── */
+@media (max-width: 1100px) {
+  main { grid-template-columns: 150px minmax(0, 1fr); }
+  aside { grid-column: 1 / -1; position: static; max-height: none; }
+}
+
+/* ── ~720px: スマホ。1カラム化+タッチ操作向けに調整 ── */
+@media (max-width: 720px) {
+  main { grid-template-columns: 1fr; padding: 6px; gap: 6px; }
+
+  /* ナビは横スクロールのタブ列に */
+  nav { position: static; flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  nav button { flex: 0 0 auto; white-space: nowrap; border-bottom: none; border-right: 1px solid var(--line); }
+  nav button[aria-current="true"] { border-left: none; border-bottom: 4px solid var(--accent); }
+
+  /* 表が広い場合は、ページ全体ではなくセクション内でスクロール */
+  section { overflow-x: auto; padding: 8px; }
+  th { white-space: normal; }
+
+  /* フォーム項目は縦積み */
+  .field { grid-template-columns: 1fr; gap: 2px; }
+  .field > span { margin-top: 6px; }
+
+  /* 指で押しやすく、iOSの入力時ズームも防ぐ */
+  button, .btn { min-height: 36px; padding: 6px 12px; }
+  input, select, textarea { font-size: 16px; min-height: 34px; }
+  input[type="number"] { width: 96px; }
+  .condrow select, .condrow input { max-width: 100%; }
+
+  header { padding: 8px 10px; }
+  h1 span { display: block; margin: 2px 0 0; }
+  details.card > summary .acts { margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>HomeMascotForge<span>キャラクター定義シート</span></h1>
+  <div class="tools">
+    <button id="new">新規</button>
+    <label class="btn">定義を開く<input id="open-project" type="file" accept=".json" hidden></label>
+    <button id="save-project">定義を保存</button>
+    <button id="undo" title="Ctrl+Z">元に戻す</button>
+    <button id="redo" title="Ctrl+Y">やり直す</button>
+    <label class="btn">ZIPから取り込む<input id="open-zip" type="file" accept=".zip" hidden></label>
+    <button id="export" class="primary">キャラクターZIPを書き出す</button>
+    <span id="dirty" class="dirty" aria-live="polite"></span>
+  </div>
+</header>
+<main>
+  <nav id="sections" aria-label="項目"></nav>
+  <section id="panel"></section>
+  <aside id="output" aria-label="生成結果と検証">
+    <h2>生成結果</h2>
+    <div id="files"></div>
+    <h2>検証</h2>
+    <div id="errors"></div>
+  </aside>
+</main>
+<footer><p id="status" role="status" aria-live="polite"></p><p class="muted" id="about"></p></footer>
+<script>
+(function () {
+'use strict';
+// ===== dsl.mjs =====
+// 作者が書く「要件」を、HomeMascot の DSL（character.json / セリフtxt / タグ）へ変換する。
+// UI はこのファイルの語彙だけを使い、作者に JSON キーやタグを書かせない。
+// 根拠: SafeExpressionEvaluator.kt / DynamicCharacter.kt / TagParser.kt / speechRules記法.txt
+
+const TIME_SLOTS = [
+  ['morning', '朝（5:00〜11:59）'],
+  ['afternoon', '昼（12:00〜16:59）'],
+  ['evening', '夕（17:00〜20:59）'],
+  ['night', '夜（21:00〜23:59）'],
+  ['midnight', '深夜（0:00〜4:59）'],
+];
+
+const NUMBER_OPS = [['gte', '以上'], ['lte', '以下'], ['gt', 'より大きい'], ['lt', 'より小さい'], ['eq', 'と等しい']];
+
+const TRIGGERS = [
+  ['onTouch', 'タップされたとき'],
+  ['onSpeech', 'セリフを話したとき'],
+  ['onLaunch', '今日はじめて起動したとき'],
+  ['onConsecutiveDays', '連続起動日数が変わったとき'],
+  ['onTimeSlotChange', '時間帯が変わったとき'],
+];
+
+// 標準変数カタログ。expr:false は emotions の条件式では使えない（SpeechContext のヘルパー専用）。
+const CATALOG = [
+  { key: 'timeSlot', label: '時間帯', kind: 'select', values: TIME_SLOTS },
+  { key: 'hour', label: '時刻', kind: 'hour' },
+  { key: 'day', label: '日にち', kind: 'day' },
+  { key: 'dayOfWeek', label: '曜日', kind: 'select', values: ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'].map(v => [v, v]) },
+  { key: 'season', label: '季節', kind: 'select', values: ['春', '梅雨', '夏', '秋', '冬'].map(v => [v, v]) },
+  { key: 'isWeekend', label: '週末', kind: 'bool' },
+  { key: 'isHoliday', label: '祝日', kind: 'bool' },
+  { key: 'weatherCode', label: '天気', kind: 'select', values: ['晴れ', '晴れ時々曇り', '曇り', '雨', '小雨', '雷雨', '雪', '霧', '嵐'].map(v => [v, v]) },
+  { key: 'temperatureFeeling', label: '気温の感じ方', kind: 'select', values: ['暑い', '少し暑い', 'ちょうどいい', '少し寒い', '寒い'].map(v => [v, v]) },
+  { key: 'temperature', label: '気温（℃）', kind: 'number' },
+  { key: 'isRaining', label: '雨が降っている', kind: 'bool', expr: false },
+  { key: 'isSnowing', label: '雪が降っている', kind: 'bool', expr: false },
+  { key: 'isSunny', label: '晴れている', kind: 'bool', expr: false },
+  { key: 'isCloudy', label: '曇っている', kind: 'bool', expr: false },
+  { key: 'batteryLevel', label: 'バッテリー残量（%）', kind: 'number' },
+  { key: 'isCharging', label: '充電中', kind: 'bool' },
+  { key: 'isLowBattery', label: 'バッテリーが少ない', kind: 'bool' },
+  { key: 'isFirstLaunchToday', label: '今日はじめての起動', kind: 'bool' },
+  { key: 'consecutiveDays', label: '連続起動日数', kind: 'number' },
+  { key: 'launchCount', label: '今日の起動回数', kind: 'number' },
+  { key: 'lastLaunchHoursAgo', label: '前回の起動からの時間', kind: 'number' },
+  { key: 'wasTouched', label: 'さっき触られた', kind: 'bool' },
+  { key: 'touchCountToday', label: '今日のタッチ回数', kind: 'number' },
+  { key: 'consecutiveTouchCount', label: '連続タッチ回数', kind: 'number' },
+  { key: 'pettingLevel', label: 'なで段階（0〜3）', kind: 'number' },
+  { key: 'isBeingPetted', label: 'なでられている', kind: 'bool' },
+  { key: 'isNearBedtime', label: 'そろそろ寝る時間', kind: 'bool' },
+  { key: 'isNearWakeup', label: '起きる時間', kind: 'bool' },
+];
+
+// {変数名} としてセリフへ差し込める標準変数（DynamicCharacter.expandVariables の一覧）
+const EXPANDABLE = [
+  'userName', 'hour', 'minute', 'month', 'day', 'dayOfWeek', 'timeSlot', 'season', 'weatherCode', 'weatherEmoji',
+  'temperature', 'temperatureFeeling', 'batteryLevel', 'batteryStatus', 'consecutiveDays', 'launchCount',
+  'touchCountToday', 'pettingLevel', 'holidayName', 'specialDayName',
+];
+
+function catalogEntry(key) { return CATALOG.find(e => e.key === key) ?? null; }
+// 条件行の種類（bool / select / number / hour / day）。UI と検証で同じ判定を使う。
+function conditionKind(row, states) { return rowKind(row, states); }
+function findState(states, id) { return (states ?? []).find(s => s.id === id) ?? null; }
+function isStateKey(key) { return typeof key === 'string' && key.startsWith('state:'); }
+function stateIdOf(key) { return key.slice('state:'.length); }
+function stateKey(id) { return `state:${id}`; }
+// 条件1行 → conditions / anyOf のキー。未対応行は null。
+function conditionKey(row, states) {
+  if (!row) return null;
+  if (row.op === 'raw') return row.key;
+  if (isStateKey(row.key)) {
+    const state = findState(states, stateIdOf(row.key));
+    return state ? `customVars[${state.id}]` : null;
+  }
+  return catalogEntry(row.key) ? row.key : null;
+}
+
+// 条件1行 → conditions / anyOf の値（文字列）。
+function conditionValue(row, states) {
+  if (!row) return null;
+  if (row.op === 'raw') return String(row.value ?? '');
+  const kind = rowKind(row, states);
+  if (kind === 'bool') return row.op === 'true' ? 'true' : 'false';
+  if (kind === 'select') return String(row.value ?? '');
+  if (kind === 'number') return row.op === 'eq' ? String(row.value) : `${opSymbol(row.op)}${row.value}`;
+  if (kind === 'hour' || kind === 'day') return String(row.value ?? '');
+  return null;
+}
+
+function rowKind(row, states) {
+  if (isStateKey(row.key)) {
+    const state = findState(states, stateIdOf(row.key));
+    if (!state) return null;
+    return state.type === 'number' ? 'number' : state.type === 'choice' ? 'select' : 'bool';
+  }
+  const entry = catalogEntry(row.key);
+  return entry ? entry.kind : null;
+}
+
+function opSymbol(op) { return { gte: '>=', lte: '<=', gt: '>', lt: '<' }[op] ?? ''; }
+
+// 条件行の配列 → conditions / anyOf オブジェクト。未対応行が混ざれば null。
+function conditionMap(rows, states) {
+  if (!rows || rows.length === 0) return null;
+  const map = {};
+  for (const row of rows) {
+    const key = conditionKey(row, states), value = conditionValue(row, states);
+    if (key === null || value === null) return null;
+    map[key] = value;
+  }
+  return map;
+}
+
+// 条件行の配列 → emotions.rules の "if" 式（AND のみ）。
+function renderExpression(rows, states) {
+  const parts = [];
+  for (const row of rows ?? []) {
+    if (row.op === 'raw') { parts.push(String(row.value ?? '')); continue; }
+    const kind = rowKind(row, states);
+    const name = isStateKey(row.key) ? stateIdOf(row.key) : row.key;
+    if (kind === 'bool') parts.push(row.op === 'true' ? name : `!${name}`);
+    else if (kind === 'select') parts.push(`${name} == "${row.value}"`);
+    else if (kind === 'number') parts.push(`${name} ${opSymbol(row.op)} ${row.value}`);
+    else if (kind === 'hour' || kind === 'day') {
+      if (row.op === 'range') { const [a, b] = String(row.value).split('-'); parts.push(`${name} >= ${a} && ${name} <= ${b}`); }
+      else parts.push(`${name} == ${row.value}`);
+    }
+  }
+  return parts.join(' && ');
+}
+
+// 条件行を日本語で説明する（UI表示用）。
+function describeCondition(row, states) {
+  if (!row) return '';
+  if (row.op === 'raw') return `${row.key} = ${row.value}（取り込んだ条件）`;
+  let label;
+  if (isStateKey(row.key)) label = findState(states, stateIdOf(row.key))?.label ?? stateIdOf(row.key);
+  else label = catalogEntry(row.key)?.label ?? row.key;
+  const kind = rowKind(row, states);
+  if (kind === 'bool') return `${label} が ${row.op === 'true' ? 'はい' : 'いいえ'}`;
+  if (kind === 'select') {
+    const entry = catalogEntry(row.key);
+    const shown = entry?.values?.find(v => v[0] === row.value)?.[1];
+    const state = isStateKey(row.key) ? findState(states, stateIdOf(row.key)) : null;
+    const opt = state?.options?.find(o => o.value === row.value);
+    return `${label} が ${shown ?? opt?.label ?? row.value}`;
+  }
+  if (kind === 'number') return `${label} が ${NUMBER_OPS.find(o => o[0] === row.op)?.[1] ?? row.op} ${row.value}`;
+  if (kind === 'hour' || kind === 'day') {
+    if (row.op === 'range') { const [a, b] = String(row.value).split('-'); return `${label} が ${a} 〜 ${b}`; }
+    return `${label} が ${row.value}`;
+  }
+  return label;
+}
+
+// 「話したときの変化」→ [var:] タグ。
+function renderEffect(effect) {
+  if (!effect) return '';
+  if (effect.raw) return effect.raw;
+  if (!effect.stateId || !effect.action) return '';
+  if (effect.action === 'toggle') return `[var:${effect.stateId}=toggle]`;
+  if (effect.action === 'increment') return `[var:${effect.stateId}+${effect.value}]`;
+  if (effect.action === 'decrement') return `[var:${effect.stateId}-${effect.value}]`;
+  if (effect.action === 'set') return `[var:${effect.stateId}=${effect.value}]`;
+  return '';
+}
+
+function describeEffect(effect, states) {
+  if (!effect) return 'なし';
+  if (effect.raw) return `${effect.raw}（取り込んだ変化）`;
+  if (!effect.stateId || !effect.action) return 'なし';
+  const label = findState(states, effect.stateId)?.label ?? effect.stateId;
+  if (effect.action === 'increment') return `${label} を ${effect.value} 増やす`;
+  if (effect.action === 'decrement') return `${label} を ${effect.value} 減らす`;
+  if (effect.action === 'toggle') return `${label} を反転する`;
+  return `${label} を ${effect.value} にする`;
+}
+
+// 自由記述 → セリフ単位（空行区切り）。1セリフは複数行可。
+function parseSpeeches(text) {
+  const groups = [];
+  let current = null;
+  String(text ?? '').split(/\r\n|\r|\n/).forEach((line, index) => {
+    if (line.trim() === '') { current = null; return; }
+    if (!current) { current = { lines: [], start: index + 1, end: index + 1 }; groups.push(current); }
+    current.lines.push(line);
+    current.end = index + 1;
+  });
+  return groups;
+}
+
+function speechBody(group) { return group.lines.join('{br}'); }
+
+// セリフ1件 → 出力する物理1行。取り込んだ記述（verbatim）はそのまま出力する。
+function renderSpeech(group, meta) {
+  if (meta?.verbatim) return group.lines.join('{br}');
+  const emotion = meta?.emotion ?? 'normal';
+  return `${speechBody(group)}${renderEffect(meta?.effect)}[emotion:${emotion}]`;
+}
+
+const SPEECH_HEADER = '# HomeMascotEditor が生成しました。1行=1セリフ。先頭の # はコメント。';
+
+function renderSpeechFile(text, meta) {
+  const lines = parseSpeeches(text).map((group, i) => renderSpeech(group, meta?.[i]));
+  return [SPEECH_HEADER, ...lines].join('\n') + '\n';
+}
+
+
+// ===== model.mjs =====
+// 編集モデル（作者が書く「要件」）。DSL はここでは扱わない。
+// validate() は日本語で「どこを直すか」を返し、compile() が character.json と speeches/*.txt を作る。
+
+const FORMAT = 'HomeMascotEditor';
+const FORMAT_VERSION = 2;
+
+// 上限の根拠: CustomVariableManager(30) / ZipSecurityValidator(100枚・500件・10MiB・50MiB・深さ5)
+// / SpeechManager(10,000行) / emotions記法(感情名 英数字_ 1〜30字)
+const LIMITS = {
+  states: 30, emotions: 100, scenes: 50, speeches: 10000, speechChars: 1000,
+  emotionRules: 50, idLength: 30, labelLength: 30, emotionLabel: 12,
+  nameLength: 100, descriptionLength: 10000, file: 10 * 1024 ** 2, total: 50 * 1024 ** 2,
+  entries: 500, depth: 5, project: 96 * 1024 ** 2, side: 4096,
+};
+
+// 標準変数名。状態IDに使うと式・展開で標準変数を隠してしまうため予約する。
+const RESERVED = new Set([
+  ...CATALOG.map(e => e.key), ...EXPANDABLE,
+  'minute', 'month', 'touchCount', 'lastTouchMinutesAgo', 'humidity', 'batteryStatus', 'moonPhase',
+  'userGender', 'holidayName', 'specialDayName', 'isSpecialDay', 'weatherEmoji',
+]);
+
+const ID_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+const OPTION_PATTERN = /^[a-zA-Z0-9_]{1,30}$/;
+const EMOTION_PATTERN = /^[a-zA-Z0-9_]{1,30}$/;
+
+function blankProject() {
+  return {
+    format: FORMAT, formatVersion: FORMAT_VERSION,
+    // 名前・内部ID・いつもの会話の本文は空のまま始める（未入力は検証が指摘する）。
+    // 「通常」だけは実機のフォールバック先なので、最初から1つ持つ。
+    character: { id: '', name: '', description: '', author: '', version: '1.0.0' },
+    states: [],
+    emotions: [{ id: 'normal', label: '通常', color: '#c9d6e2', image: null }],
+    emotionDefault: 'normal',
+    scenes: [],
+    fallback: { id: 'default', label: 'いつもの会話', text: '', meta: [] },
+    emotionRules: [],
+  };
+}
+
+function newProject() { return normalize(blankProject()); }
+
+function newState(id, label, type = 'number') {
+  const base = { id, label, type, changes: [] };
+  if (type === 'number') return { ...base, initial: 50, min: 0, max: 100 };
+  if (type === 'choice') return { ...base, initial: 'normal', options: [{ value: 'normal', label: 'ふつう' }, { value: 'happy', label: 'ごきげん' }, { value: 'sleepy', label: '眠い' }] };
+  return { ...base, initial: false };
+}
+
+function newScene(id, label) { return { id, label, conditions: [], anyOf: [], text: '', meta: [] }; }
+
+// 新しい表情。「あたらしい感情_1」・内部ID「emotion_1」のように、番号がそろう最小の組を使う。
+function newEmotion(p) {
+  const ids = new Set((p.emotions ?? []).map(e => String(e.id).toLowerCase()));
+  const labels = new Set((p.emotions ?? []).map(e => e.label));
+  let n = 1;
+  while (ids.has(`emotion_${n}`) || labels.has(`あたらしい感情_${n}`)) n++;
+  return { id: `emotion_${n}`, label: `あたらしい感情_${n}`, color: '#ffe0b3', image: null };
+}
+
+// 読み込んだデータの欠落を埋める。未知の項目は消さずに保持する。
+function normalize(p) {
+  const base = blankProject();
+  const project = { ...base, ...p };
+  project.character = { ...base.character, ...(p?.character ?? {}) };
+  project.states = (p?.states ?? []).map(s => ({ changes: [], ...s }));
+  project.emotions = (p?.emotions ?? []).map(e => ({ image: null, color: '#c9d6e2', ...e }));
+  project.scenes = (p?.scenes ?? []).map(s => ({ conditions: [], anyOf: [], meta: [], ...s }));
+  project.fallback = { id: 'default', label: 'いつもの会話', meta: [], ...(p?.fallback ?? {}) };
+  project.emotionRules = (p?.emotionRules ?? []).map(r => ({ conditions: [], ...r }));
+  project.emotionDefault = typeof p?.emotionDefault === 'string' ? p.emotionDefault : 'normal';
+  for (const scene of [...project.scenes, project.fallback]) {
+    const count = parseSpeeches(scene.text).length;
+    const meta = Array.isArray(scene.meta) ? scene.meta.slice(0, count) : [];
+    while (meta.length < count) meta.push({ emotion: 'normal', effect: null });
+    scene.meta = meta.map(m => ({ emotion: 'normal', effect: null, ...m }));
+  }
+  return project;
+}
+
+function findEmotion(p, id) { return (p.emotions ?? []).find(e => e.id === id) ?? null; }
+
+// 表情の内部ID → ZIP内の画像パス（IDは変えても参照が壊れないよう安定させる）。
+function imagePath(id) { return `${id}.png`; }
+
+// 状態を参照している箇所を列挙する（削除前の確認に使う）。
+function stateUsages(p, id) {
+  const uses = [];
+  for (const state of p.states) (state.changes ?? []).forEach((c, i) => {
+    if ((c.condition ?? []).some(r => r.key === `state:${id}`)) uses.push(`状態「${state.label}」の変化${i + 1}の条件`);
+  });
+  p.scenes.forEach((s, i) => {
+    (s.conditions ?? []).concat(s.anyOf ?? []).forEach(r => { if (r.key === `state:${id}`) uses.push(`セリフ群「${s.label || s.id}」の条件`); });
+    (s.meta ?? []).forEach((m, j) => { if (m.effect?.stateId === id) uses.push(`セリフ群「${s.label || s.id}」の${j + 1}件目の変化`); });
+  });
+  (p.fallback.meta ?? []).forEach((m, j) => { if (m.effect?.stateId === id) uses.push(`いつもの会話の${j + 1}件目の変化`); });
+  p.emotionRules.forEach((r, i) => { if ((r.conditions ?? []).some(x => x.key === `state:${id}`)) uses.push(`表情の自動切替${i + 1}の条件`); });
+  return uses;
+}
+
+// 表情を参照している箇所を列挙する。
+function emotionUsages(p, id) {
+  const uses = [];
+  if (id === 'normal') return uses;
+  p.scenes.forEach(s => (s.meta ?? []).forEach((m, j) => { if (m.emotion === id) uses.push(`セリフ群「${s.label || s.id}」の${j + 1}件目`); }));
+  (p.fallback.meta ?? []).forEach((m, j) => { if (m.emotion === id) uses.push(`いつもの会話の${j + 1}件目`); });
+  p.emotionRules.forEach((r, i) => { if (r.emotion === id) uses.push(`表情の自動切替${i + 1}`); });
+  return uses;
+}
+function validate(p) {
+  const errors = [];
+  const fail = (where, message) => errors.push(`${where}：${message}`);
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return ['プロジェクト：読み取れる形式ではありません。'];
+  if (p.format !== FORMAT || p.formatVersion !== FORMAT_VERSION) {
+    fail('プロジェクト', `対応していない形式です（${FORMAT} 形式${FORMAT_VERSION} のみ）。`);
+    return errors;
+  }
+  const states = Array.isArray(p.states) ? p.states : [];
+  const emotions = Array.isArray(p.emotions) ? p.emotions : [];
+  const scenes = Array.isArray(p.scenes) ? p.scenes : [];
+
+  // --- キャラクター ---
+  const c = p.character ?? {};
+  if (typeof c.id !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(c.id)) fail('キャラクター／内部ID', '英数字と _ - の1〜50文字にしてください。');
+  else if (c.id === 'default' || c.id === 'default_character') fail('キャラクター／内部ID', '組み込みキャラのIDは使えません。');
+  if (typeof c.name !== 'string' || c.name.trim() === '' || c.name.length > LIMITS.nameLength) fail('キャラクター／名前', `1〜${LIMITS.nameLength}文字で入力してください。`);
+  if (typeof c.version !== 'string' || c.version.trim() === '' || c.version.length > 50) fail('キャラクター／バージョン', '1〜50文字で入力してください。');
+  for (const [key, label] of [['description', '説明'], ['author', '作者名']]) {
+    if (typeof c[key] !== 'string' || c[key].length > LIMITS.descriptionLength) fail(`キャラクター／${label}`, `${LIMITS.descriptionLength.toLocaleString()}文字以内にしてください。`);
+  }
+
+  // --- 状態（変数） ---
+  if (states.length > LIMITS.states) fail('状態', `最大${LIMITS.states}個です（現在${states.length}個）。`);
+  const stateIds = new Set();
+  states.forEach((s, i) => {
+    const at = `状態${i + 1}${s?.label ? `「${s.label}」` : ''}`;
+    if (typeof s?.id !== 'string' || !ID_PATTERN.test(s.id) || s.id.length > LIMITS.idLength) fail(at, `内部IDは英字か _ で始まる英数字と _ の${LIMITS.idLength}文字以内にしてください。`);
+    else {
+      if (stateIds.has(s.id)) fail(at, '内部IDが重複しています。');
+      if (RESERVED.has(s.id)) fail(at, `内部ID「${s.id}」はアプリの標準変数名です。別の名前にしてください。`);
+      stateIds.add(s.id);
+    }
+    if (typeof s?.label !== 'string' || s.label.trim() === '' || s.label.length > LIMITS.labelLength) fail(at, `表示名は1〜${LIMITS.labelLength}文字で入力してください。`);
+    if (!['number', 'choice', 'flag', 'raw'].includes(s?.type)) { fail(at, '種類を選んでください。'); return; }
+    if (s.type === 'raw') {
+      if (!s.dsl || typeof s.dsl !== 'object') fail(at, '取り込んだ定義がありません。');
+      return;
+    }
+    if (s.type === 'number') {
+      if (!Number.isInteger(s.initial)) fail(`${at}／初期値`, '整数を入力してください。');
+      if (!Number.isInteger(s.min) || !Number.isInteger(s.max)) fail(`${at}／範囲`, '最小・最大は整数で入力してください。');
+      else if (s.min > s.max) fail(`${at}／範囲`, '最小が最大を超えています。');
+      else if (Number.isInteger(s.initial) && (s.initial < s.min || s.initial > s.max)) fail(`${at}／初期値`, `初期値は ${s.min} 〜 ${s.max} の範囲で入力してください。`);
+    } else if (s.type === 'choice') {
+      const options = Array.isArray(s.options) ? s.options : [];
+      if (options.length < 1 || options.length > 30) fail(`${at}／選択肢`, '選択肢は1〜30個です。');
+      const values = new Set();
+      options.forEach((o, j) => {
+        if (typeof o?.value !== 'string' || !OPTION_PATTERN.test(o.value)) fail(`${at}／選択肢${j + 1}`, '内部識別子は英数字と _ の30文字以内にしてください。');
+        else if (values.has(o.value)) fail(`${at}／選択肢${j + 1}`, '内部識別子が重複しています。');
+        else values.add(o.value);
+        if (typeof o?.label !== 'string' || o.label.trim() === '' || o.label.length > LIMITS.labelLength) fail(`${at}／選択肢${j + 1}`, `表示名は1〜${LIMITS.labelLength}文字で入力してください。`);
+      });
+      if (values.size && !values.has(s.initial)) fail(`${at}／初期値`, '初期値を選択肢から選んでください。');
+    } else if (typeof s.initial !== 'boolean') {
+      fail(`${at}／初期値`, 'はい か いいえ を選んでください。');
+    }
+    validateChanges(s, at, errors);
+  });
+// --- 表情 ---
+  if (emotions.length < 1 || emotions.length > LIMITS.emotions) fail('表情', `1〜${LIMITS.emotions}枚にしてください。`);
+  const emotionIds = new Set();
+  emotions.forEach((e, i) => {
+    const at = `表情${i + 1}${e?.label ? `「${e.label}」` : ''}`;
+    if (typeof e?.id !== 'string' || !EMOTION_PATTERN.test(e.id)) fail(at, `内部IDは英数字と _ の${LIMITS.idLength}文字以内（感情タグに使える形式）にしてください。`);
+    else {
+      const key = e.id.toLowerCase();
+      if (emotionIds.has(key)) fail(at, '内部ID・画像ファイル名が重複しています。');
+      emotionIds.add(key);
+    }
+    if (typeof e?.label !== 'string' || e.label.trim() === '' || e.label.length > LIMITS.emotionLabel || /[\r\n\t]/.test(e.label)) fail(at, `表示名は改行なしの1〜${LIMITS.emotionLabel}文字にしてください（仮画像の可読性のため）。`);
+    if (typeof e?.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(e.color)) fail(at, '仮画像の色を選んでください。');
+    if (e?.image !== null && (typeof e.image !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(e.image))) fail(at, '画像はPNGとして保存してください。');
+  });
+  if (!emotions.some(e => e?.id === 'normal')) fail('表情', '「通常」の表情が必要です（フォールバック先）。');
+  if (!emotions.some(e => e?.id === p.emotionDefault)) fail('表情', '「どの条件にも当てはまらないとき」の表情を選んでください。');
+
+  // --- セリフ群 ---
+  if (scenes.length > LIMITS.scenes) fail('セリフ群', `最大${LIMITS.scenes}場面です（現在${scenes.length}場面）。`);
+  const sceneIds = new Set();
+  let totalSpeeches = parseSpeeches(p.fallback?.text).length;
+  scenes.forEach((s, i) => {
+    const at = `セリフ群${i + 1}${s?.label ? `「${s.label}」` : ''}`;
+    if (typeof s?.id !== 'string' || !ID_PATTERN.test(s.id) || s.id.length > LIMITS.idLength) fail(at, `内部ID（ファイル名）は英字か _ で始まる英数字と _ の${LIMITS.idLength}文字以内にしてください。`);
+    else {
+      if (sceneIds.has(s.id)) fail(at, '内部IDが重複しています。');
+      if (s.id === 'default') fail(at, '内部ID「default」は「いつもの会話」が使います。');
+      sceneIds.add(s.id);
+    }
+    if (typeof s?.label !== 'string' || s.label.trim() === '' || s.label.length > LIMITS.labelLength) fail(at, `場面名は1〜${LIMITS.labelLength}文字で入力してください。`);
+    const hasAnd = (s?.conditions ?? []).length > 0, hasOr = (s?.anyOf ?? []).length > 0;
+    if (!hasAnd && !hasOr) fail(at, '条件がありません。条件なしのセリフは「いつもの会話」に書いてください。');
+    validateRows(s?.conditions, p, `${at}の条件`, errors);
+    validateRows(s?.anyOf, p, `${at}のOR条件`, errors);
+    totalSpeeches += validateSpeech(s?.text, s?.meta, at, p, errors);
+  });
+  totalSpeeches += validateSpeech(p.fallback?.text, p.fallback?.meta, 'いつもの会話', p, errors);
+  if (p.fallback?.id !== 'default') fail('いつもの会話', '内部IDは default 固定です。');
+  if (totalSpeeches > LIMITS.speeches) fail('セリフ', `合計は${LIMITS.speeches.toLocaleString()}件までです（現在${totalSpeeches}件）。`);
+
+  // --- 表情の自動切替 ---
+  if (p.emotionRules.length > LIMITS.emotionRules) fail('表情の自動切替', `最大${LIMITS.emotionRules}件です。`);
+  p.emotionRules.forEach((r, i) => {
+    const at = `表情の自動切替${i + 1}`;
+    if (r?.expression) {
+      if (typeof r.expression !== 'string' || r.expression.trim() === '') fail(at, '取り込んだ条件が空です。');
+    } else {
+      if (!(r?.conditions ?? []).length) fail(at, '条件を1つ以上選んでください。');
+      validateRows(r?.conditions, p, `${at}の条件`, errors);
+    }
+    if (typeof r?.emotion !== 'string' || !emotions.some(e => e.id === r.emotion)) fail(at, '表情を選んでください。');
+  });
+  return errors;
+}
+
+// 状態の「変化のしかた」を検証する。
+function validateChanges(s, at, errors) {
+  const changes = Array.isArray(s.changes) ? s.changes : [];
+  if (changes.length > 20) errors.push(`${at}：変化は20件までです。`);
+  changes.forEach((rule, j) => {
+    const rat = `${at}／変化${j + 1}`;
+    if (!TRIGGERS.some(t => t[0] === rule?.trigger)) errors.push(`${rat}：きっかけを選んでください。`);
+    if (!['set', 'increment', 'decrement', 'toggle'].includes(rule?.action)) { errors.push(`${rat}：動作を選んでください。`); return; }
+    const kindName = s.type === 'number' ? '数値' : s.type === 'choice' ? '選択肢' : 'はい／いいえ';
+    const allowed = s.type === 'number' ? ['set', 'increment', 'decrement'] : s.type === 'choice' ? ['set'] : ['set', 'toggle'];
+    if (!allowed.includes(rule.action)) errors.push(`${rat}：「${kindName}」ではこの動作は使えません（実機側で無視されます）。`);
+    if (rule.action === 'toggle') return;
+    if (s.type === 'number') {
+      if (!Number.isInteger(rule.value)) errors.push(`${rat}：値は整数で入力してください。`);
+      else if (rule.action !== 'set' && rule.value <= 0) errors.push(`${rat}：増やす・減らす値は1以上にしてください。`);
+      else if (rule.action === 'set' && (rule.value < s.min || rule.value > s.max)) errors.push(`${rat}：セットする値は ${s.min} 〜 ${s.max} の範囲にしてください。`);
+    } else if (s.type === 'choice') {
+      if (!(s.options ?? []).some(o => o.value === rule.value)) errors.push(`${rat}：セットする値を選択肢から選んでください。`);
+    } else if (rule.value !== 'true' && rule.value !== 'false') {
+      errors.push(`${rat}：セットする値を はい か いいえ から選んでください。`);
+    }
+  });
+}
+// 条件1行を検証する。取り込みで生のまま保持した行（op:'raw'）は通過させる。
+function validateRows(rows, p, at, errors) {
+  const list = Array.isArray(rows) ? rows : [];
+  list.forEach((row, i) => {
+    const rat = `${at}${list.length > 1 ? `${i + 1}行目` : ''}`;
+    if (!row || typeof row !== 'object') { errors.push(`${rat}：条件を読み取れません。`); return; }
+    if (row.op === 'raw') {
+      if (typeof row.key !== 'string' || row.key.trim() === '') errors.push(`${rat}：取り込んだ条件のキーが空です。`);
+      if (typeof row.value !== 'string') errors.push(`${rat}：取り込んだ条件の値は文字列にしてください。`);
+      return;
+    }
+    if (typeof row.key === 'string' && row.key.startsWith('state:')) {
+      const state = findState(p.states, row.key.slice('state:'.length));
+      if (!state) { errors.push(`${rat}：参照している状態が見つかりません。`); return; }
+      if (state.type === 'number') {
+        if (!NUMBER_OPS.some(o => o[0] === row.op)) errors.push(`${rat}：比較のしかたを選んでください。`);
+        if (!Number.isInteger(row.value)) errors.push(`${rat}：数値を入力してください。`);
+      } else if (state.type === 'choice') {
+        if (!(state.options ?? []).some(o => o.value === row.value)) errors.push(`${rat}：選択肢から値を選んでください。`);
+      } else if (row.op !== 'true' && row.op !== 'false') {
+        errors.push(`${rat}：はい か いいえ を選んでください。`);
+      }
+      return;
+    }
+    const entry = catalogEntry(row.key);
+    if (!entry) { errors.push(`${rat}：選べない条件です。`); return; }
+    if (entry.kind === 'bool' && row.op !== 'true' && row.op !== 'false') errors.push(`${rat}：はい か いいえ を選んでください。`);
+    if (entry.kind === 'select' && !entry.values.some(v => v[0] === row.value)) errors.push(`${rat}：値を選んでください。`);
+    if (entry.kind === 'number') {
+      if (!NUMBER_OPS.some(o => o[0] === row.op)) errors.push(`${rat}：比較のしかたを選んでください。`);
+      if (!Number.isInteger(row.value)) errors.push(`${rat}：数値を入力してください。`);
+    }
+    if (entry.kind === 'hour' || entry.kind === 'day') {
+      const range = entry.kind === 'hour' ? [0, 23] : [1, 31];
+      if (row.op !== 'eq' && row.op !== 'range') { errors.push(`${rat}：値を選んでください（${entry.kind === 'hour' ? '時刻' : '日にち'}は単一か範囲だけです）。`); return; }
+      const parts = String(row.value ?? '').split('-').map(Number);
+      const shape = parts.length === 1 ? 1 : parts.length === 2 && parts[0] !== parts[1] ? 1 : 0;
+      if (!shape) errors.push(`${rat}：値を選んでください。`);
+      else if (parts.some(n => !Number.isInteger(n) || n < range[0] || n > range[1])) errors.push(`${rat}：${range[0]}〜${range[1]} の範囲で選んでください。`);
+    }
+  });
+}
+
+// セリフ本文と、セリフごとの表情・変化を検証する。戻り値はセリフ件数。
+function validateSpeech(text, meta, at, p, errors) {
+  const groups = parseSpeeches(text);
+  if (groups.length < 1) { errors.push(`${at}：セリフを1件以上書いてください（空行でセリフを区切ります）。`); return 0; }
+  const allowed = new Set([...EXPANDABLE, ...p.states.map(s => s.id)]);
+  groups.forEach((group, i) => {
+    const gat = `${at}／${i + 1}件目`;
+    const body = group.lines.join('{br}');
+    const m = { emotion: 'normal', effect: null, ...(meta?.[i] ?? {}) };
+    if (/^[#＃♯]/.test(group.lines[0])) errors.push(`${gat}：先頭の # ＃ ♯ はコメント扱いで消えます。別の文字で始めてください。`);
+    if (/^\s/.test(group.lines[0])) errors.push(`${gat}：先頭の空白は表示時に消えます。取り除いてください。`);
+    if (/\s$/.test(group.lines[group.lines.length - 1])) errors.push(`${gat}：末尾の空白は表示時に消えます。取り除いてください。`);
+    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\ufeff]/.test(body)) errors.push(`${gat}：制御文字・BOMは使えません。`);
+    if (body.length > LIMITS.speechChars) errors.push(`${gat}：1件のセリフは${LIMITS.speechChars}文字までにしてください（現在${body.length}文字）。`);
+    if (m.verbatim) { validateEffect(m.effect, p, gat, errors); return; }
+    const raw = group.lines.join('\n');
+    if (/[\[\]\\]/.test(raw)) errors.push(`${gat}：記号 [ ] \\ は使えません。表情と変化は右側の表から選んでください。`);
+    if (/[{}]/.test(raw.replace(/\{[^{}]*\}/g, ''))) errors.push(`${gat}：「変数を差し込む」で入れた {名前} 以外の { } は使えません。`);
+    for (const token of raw.match(/\{[^{}]*\}/g) ?? []) {
+      const name = token.slice(1, -1);
+      if (!allowed.has(name)) errors.push(`${gat}：「${token}」は差し込める変数ではありません。「変数を差し込む」から選んでください。`);
+    }
+    if (typeof m.emotion !== 'string' || !p.emotions.some(e => e.id === m.emotion)) errors.push(`${gat}：表情を選んでください。`);
+    validateEffect(m.effect, p, gat, errors);
+  });
+  return groups.length;
+}
+
+function validateEffect(effect, p, at, errors) {
+  if (!effect) return;
+  if (effect.raw) {
+    if (!/^(\[(?:v|var):[^\[\]]+\])+$/.test(effect.raw)) errors.push(`${at}：取り込んだ変化を出力できません（[var:...] のみ対応）。`);
+    return;
+  }
+  if (!effect.stateId) return;
+  const state = findState(p.states, effect.stateId);
+  if (!state) { errors.push(`${at}：変化の対象の状態が見つかりません。`); return; }
+  const allowed = state.type === 'number' ? ['increment', 'decrement', 'set'] : state.type === 'choice' ? ['set'] : ['set', 'toggle'];
+  if (!allowed.includes(effect.action)) { errors.push(`${at}：この状態ではその変化は使えません。`); return; }
+  if (effect.action === 'toggle') return;
+  if (state.type === 'number' && !Number.isInteger(effect.value)) errors.push(`${at}：変化の値は整数にしてください。`);
+  else if (state.type === 'choice' && !(state.options ?? []).some(o => o.value === effect.value)) errors.push(`${at}：変化の値を選択肢から選んでください。`);
+  else if (state.type === 'flag' && effect.value !== 'true' && effect.value !== 'false') errors.push(`${at}：変化の値を はい か いいえ から選んでください。`);
+}
+
+function requireValid(p) { const errors = validate(p); if (errors.length) throw new Error(errors.join('\n')); return p; }
+// 要件 → 生成物（character.json と speeches/*.txt）。
+function compile(p) {
+  requireValid(p);
+  const c = p.character;
+  const character = { id: c.id, name: c.name, version: c.version || '1.0.0' };
+  if (c.author) character.author = c.author;
+  if (c.description) character.description = c.description;
+  character.images = Object.fromEntries(p.emotions.map(e => [e.id, imagePath(e.id)]));
+  character.emotions = {
+    rules: [
+      ...p.emotionRules.map(r => ({ if: r.expression || renderExpression(r.conditions, p.states), emotion: r.emotion })),
+      { default: p.emotionDefault || 'normal' },
+    ],
+  };
+  const rules = p.scenes.map((s, i) => {
+    const rule = { file: `speeches/${s.id}.txt` };
+    const and = conditionMap(s.conditions, p.states);
+    const or = conditionMap(s.anyOf, p.states);
+    if (and) rule.conditions = and;
+    if (or) rule.anyOf = or;
+    rule.priority = (p.scenes.length - i) * 10;
+    return rule;
+  });
+  rules.push({ file: 'speeches/default.txt' });
+  character.speechRules = rules;
+  if (p.states.length) character.customVariables = Object.fromEntries(p.states.map(s => [s.id, stateToDsl(s, p.states)]));
+  const files = [{ name: 'character.json', text: JSON.stringify(character, null, 2) }];
+  for (const s of p.scenes) files.push({ name: `speeches/${s.id}.txt`, text: renderSpeechFile(s.text, s.meta) });
+  files.push({ name: 'speeches/default.txt', text: renderSpeechFile(p.fallback.text, p.fallback.meta) });
+  return { character, files };
+}
+
+function stateToDsl(s, states) {
+  if (s.type === 'raw') return s.dsl;
+  const out = { type: s.type === 'flag' ? 'boolean' : s.type === 'choice' ? 'string' : 'number' };
+  if (s.type === 'number') { out.initial = s.initial; out.min = s.min; out.max = s.max; }
+  else if (s.type === 'choice') { out.initial = s.initial; out.options = s.options.map(o => o.value); }
+  else out.initial = s.initial;
+  if ((s.changes ?? []).length) {
+    out.onChange = s.changes.map(r => {
+      const rule = { trigger: r.trigger };
+      if (r.conditionRaw) rule.condition = r.conditionRaw;
+      else {
+        const condition = renderExpression(r.condition, states);
+        if (condition) rule.condition = condition;
+      }
+      rule.action = r.action;
+      if (r.action !== 'toggle') rule.value = s.type === 'number' ? r.value : s.type === 'flag' ? r.value === 'true' : r.value;
+      return rule;
+    });
+  }
+  return out;
+}
+
+function serialize(p) { requireValid(p); return JSON.stringify(p, null, 2); }
+
+function parseProject(text) {
+  if (new TextEncoder().encode(text).length > LIMITS.project) throw new Error('プロジェクトが大きすぎます（96 MiBまで）。');
+  let raw;
+  try { raw = JSON.parse(text); } catch { throw new Error('プロジェクトのJSONを読み取れませんでした。'); }
+  const project = normalize(raw);
+  requireValid(project);
+  return project;
+}
+
+// 状態IDを変えても参照を壊さないように、参照側も書き換える。
+function changeStateId(p, from, to) {
+  if (from === to) return;
+  const self = p.states.find(s => s.id === from);
+  if (self) self.id = to;
+  for (const state of p.states) for (const change of state.changes ?? []) {
+    for (const row of change.condition ?? []) if (row.key === `state:${from}`) row.key = `state:${to}`;
+  }
+  const rewrite = rows => (rows ?? []).forEach(row => { if (row.key === `state:${from}`) row.key = `state:${to}`; });
+  p.scenes.forEach(s => { rewrite(s.conditions); rewrite(s.anyOf); });
+  p.emotionRules.forEach(r => rewrite(r.conditions));
+  const effects = meta => (meta ?? []).forEach(m => { if (m.effect?.stateId === from) m.effect.stateId = to; });
+  p.scenes.forEach(s => effects(s.meta));
+  effects(p.fallback.meta);
+}
+
+function changeEmotionId(p, from, to) {
+  if (from === to) return;
+  const self = p.emotions.find(e => e.id === from);
+  if (self) self.id = to;
+  if (p.emotionDefault === from) p.emotionDefault = to;
+  const effects = meta => (meta ?? []).forEach(m => { if (m.emotion === from) m.emotion = to; });
+  p.scenes.forEach(s => effects(s.meta));
+  effects(p.fallback.meta);
+  p.emotionRules.forEach(r => { if (r.emotion === from) r.emotion = to; });
+}
+
+function removeState(p, id) {
+  const uses = stateUsages(p, id);
+  if (uses.length) throw new Error(`この状態は使用中です。先に参照を変更してください。\n${uses.join('\n')}`);
+  p.states = p.states.filter(s => s.id !== id);
+}
+
+function removeEmotion(p, id) {
+  if (id === 'normal') throw new Error('「通常」の表情は削除できません（どの条件にも当てはまらないときの行き先です）。');
+  if (id === p.emotionDefault) throw new Error('「どの条件にも当てはまらないとき」に使っている表情は削除できません。先に別の表情へ変更してください。');
+  const uses = emotionUsages(p, id);
+  if (uses.length) throw new Error(`この表情は使用中です。先に別の表情へ変更してください。\n${uses.join('\n')}`);
+  p.emotions = p.emotions.filter(e => e.id !== id);
+}
+
+function projectFileName(id) { return `${id}.hmeditor.json`; }
+function zipFileName(id) { return `${id}.zip`; }
+
+// ===== zip.mjs =====
+// ZIP の書き出しと読み込み。非圧縮(STORE)で書き、読み込みは STORE と deflate に対応。
+// パス制限は ZipSecurityValidator.kt に合わせる（深さ5・500件・1件10MiB・合計50MiB・許可拡張子）。
+
+const ALLOWED_EXT = new Set(['json', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif']);
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) { crc ^= byte; for (let j = 0; j < 8; j++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function checkEntryName(name) {
+  if (typeof name !== 'string' || name === '') throw new Error('ZIPに入れるファイル名が空です。');
+  if (name.length > 255) throw new Error(`ZIPのファイル名が長すぎます：${name}`);
+  if (name.includes('\\') || name.includes(':') || name.startsWith('/') || name.includes('..')) throw new Error(`ZIPに入れられないファイル名です：${name}`);
+  const parts = name.split('/').filter(Boolean);
+  if (parts.some(p => p.startsWith('.'))) throw new Error(`隠しファイルは入れられません：${name}`);
+  if (parts.length - 1 > LIMITS.depth) throw new Error(`フォルダが深すぎます（${LIMITS.depth}階層まで）：${name}`);
+  if (!ALLOWED_EXT.has((parts[parts.length - 1].split('.').pop() ?? '').toLowerCase())) throw new Error(`入れられない拡張子です（json/txt/png/jpg/jpeg/webp/gif）：${name}`);
+  return name;
+}
+
+function zip(entries) {
+  if (entries.length > LIMITS.entries) throw new Error(`ZIPは${LIMITS.entries}件までです。`);
+  const names = new Set(), locals = [], centrals = [];
+  let total = 0, offset = 0;
+  const block = n => { const bytes = new Uint8Array(n); return [bytes, new DataView(bytes.buffer)]; };
+  for (const { name, data } of entries) {
+    checkEntryName(name);
+    const key = name.toLowerCase();
+    if (names.has(key)) throw new Error(`ZIP内でファイル名が重複しています：${name}`);
+    names.add(key);
+    if (!(data instanceof Uint8Array) || data.length === 0) throw new Error(`空のファイルは入れられません：${name}`);
+    if (data.length > LIMITS.file) throw new Error(`1ファイルは10 MiBまでです：${name}`);
+    total += data.length;
+    if (total > LIMITS.total) throw new Error('ZIPの合計が50 MiBを超えています。');
+    const filename = new TextEncoder().encode(name), crc = crc32(data);
+    const [local, v] = block(30 + filename.length);
+    v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0x800, true); v.setUint16(12, 33, true);
+    v.setUint32(14, crc, true); v.setUint32(18, data.length, true); v.setUint32(22, data.length, true); v.setUint16(26, filename.length, true);
+    local.set(filename, 30);
+    const [central, c] = block(46 + filename.length);
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x800, true); c.setUint16(14, 33, true);
+    c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, filename.length, true); c.setUint32(42, offset, true);
+    central.set(filename, 46);
+    locals.push(local, data); centrals.push(central); offset += local.length + data.length;
+  }
+  const [end, e] = block(22), size = centrals.reduce((n, c) => n + c.length, 0);
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, entries.length, true); e.setUint16(10, entries.length, true);
+  e.setUint32(12, size, true); e.setUint32(16, offset, true);
+  const result = new Uint8Array(offset + size + 22);
+  let at = 0;
+  for (const b of [...locals, ...centrals, end]) { result.set(b, at); at += b.length; }
+  return result;
+}
+async function inflate(comp, method) {
+  if (method === 0) return comp;
+  if (method !== 8) throw new Error(`対応していない圧縮方式です（方式${method}）。deflate か 無圧縮 のZIPを使ってください。`);
+  const stream = new Blob([comp]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+// ZIP → Map(名前 → Uint8Array)。ディレクトリ項目は返さない。
+async function unzip(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 65535); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('ZIPとして読み取れませんでした。');
+  const count = view.getUint16(eocd + 10, true);
+  if (count > LIMITS.entries) throw new Error(`ZIPの項目が多すぎます（${LIMITS.entries}件まで）。`);
+  let at = view.getUint32(eocd + 16, true);
+  const result = new Map();
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    if (view.getUint32(at, true) !== 0x02014b50) throw new Error('ZIPの目録が壊れています。');
+    const method = view.getUint16(at + 10, true);
+    const crc = view.getUint32(at + 16, true);
+    const compressedSize = view.getUint32(at + 20, true);
+    const size = view.getUint32(at + 24, true);
+    const nameLength = view.getUint16(at + 28, true);
+    const local = view.getUint32(at + 42, true);
+    const name = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLength));
+    at += 46 + nameLength + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+    if (name.endsWith('/')) continue;
+    if (size > LIMITS.file) throw new Error(`1ファイルは10 MiBまでです：${name}`);
+    if (view.getUint32(local, true) !== 0x04034b50) throw new Error(`ZIPの項目が壊れています：${name}`);
+    const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+    const data = await inflate(bytes.subarray(start, start + compressedSize), method);
+    if (data.length !== size) throw new Error(`ZIPの展開サイズが一致しません：${name}`);
+    if (crc32(data) !== crc) throw new Error(`ZIPの内容が壊れています：${name}`);
+    total += data.length;
+    if (total > LIMITS.total) throw new Error('ZIPの合計が50 MiBを超えています。');
+    result.set(name, data);
+  }
+  return result;
+}
+
+function decodeText(data) { return new TextDecoder('utf-8', { fatal: true }).decode(data); }
+
+const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+function isPng(bytes) { return PNG_SIGNATURE.every((b, i) => bytes[i] === b); }
+// ===== png.mjs =====
+// 画像の読み込み・仮画像PNGの生成・ZIPの組み立て。ブラウザのCanvasを使う。
+
+const SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+const FONT = 'bold 56px "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif';
+
+function dataBlob(dataUrl) {
+  const raw = atob(dataUrl.split(',')[1]);
+  return new Blob([Uint8Array.from(raw, c => c.charCodeAt(0))], { type: 'image/png' });
+}
+
+function toDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('画像の読み込みに失敗しました。'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function canvasBlob(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('PNGを作成できませんでした。')), 'image/png'));
+}
+
+// PNGシグネチャ・デコード・寸法・サイズを確認する。
+async function checkPng(blob) {
+  if (blob.size === 0) throw new Error('画像が空です。');
+  if (blob.size > LIMITS.file) throw new Error('画像は1枚10 MiBまでです。');
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (!SIGNATURE.every((b, i) => bytes[i] === b)) throw new Error('PNGとして読み取れません。');
+  const image = await createImageBitmap(blob).catch(() => { throw new Error('PNGをデコードできません。'); });
+  const size = [image.width, image.height];
+  image.close();
+  if (size.some(n => n < 1 || n > LIMITS.side)) throw new Error(`画像の縦横は1〜${LIMITS.side}pxにしてください。`);
+  return bytes;
+}
+
+// PNG・JPEG・WebP を取り込み、PNGに変換して data URL で返す。
+async function importImage(file) {
+  if (!file) throw new Error('画像を選んでください。');
+  if (file.size > LIMITS.file) throw new Error('画像は10 MiBまでです。');
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('PNG・JPEG・WebPを選んでください。');
+  const image = await createImageBitmap(file).catch(() => { throw new Error('画像をデコードできません。'); });
+  try {
+    if (image.width > LIMITS.side || image.height > LIMITS.side) throw new Error(`画像の縦横は${LIMITS.side}px以下にしてください。`);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width; canvas.height = image.height;
+    canvas.getContext('2d').drawImage(image, 0, 0);
+    const blob = await canvasBlob(canvas);
+    await checkPng(blob);
+    return await toDataUrl(blob);
+  } finally { image.close(); }
+}
+
+// 画像未登録の表情に使う仮画像（丸アイコン＋日本語の感情名＋「仮画像」）。
+async function placeholder(emotion) {
+  await document.fonts.ready;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 512;
+  const c = canvas.getContext('2d');
+  c.clearRect(0, 0, 512, 512);
+  c.fillStyle = emotion.color;
+  c.beginPath(); c.arc(256, 235, 150, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#26313a'; c.lineWidth = 10; c.stroke();
+  c.fillStyle = '#26313a';
+  for (const x of [206, 306]) { c.beginPath(); c.arc(x, 208, 13, 0, Math.PI * 2); c.fill(); }
+  c.beginPath(); c.arc(256, 238, 52, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  const outline = (text, x, y, font) => {
+    c.font = font;
+    c.strokeStyle = '#ffffff'; c.lineWidth = 12; c.lineJoin = 'round';
+    c.strokeText(text, x, y, 460);
+    c.fillStyle = '#172331'; c.fillText(text, x, y, 460);
+  };
+  // 色だけで区別せず、名前を必ず描く。
+  const chars = Array.from(emotion.label);
+  const lines = chars.length > 6 ? [chars.slice(0, 6).join(''), chars.slice(6, 12).join('')] : [emotion.label];
+  lines.forEach((line, i) => outline(line, 256, lines.length === 1 ? 420 : 402 + i * 58, FONT));
+  outline('仮画像', 256, 38, 'bold 30px "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif');
+  const blob = await canvasBlob(canvas);
+  await checkPng(blob);
+  return blob;
+}
+
+// キャラクターZIPを組み立てる。仮画像も通常のPNGとして同梱する。
+async function buildZip(project, onProgress = () => {}) {
+  const { files } = compile(project);
+  const encoder = new TextEncoder();
+  const entries = files.map(f => ({ name: f.name, data: encoder.encode(f.text) }));
+  for (const emotion of project.emotions) {
+    onProgress(`画像を準備しています：${emotion.label}`);
+    const bytes = emotion.image ? await checkPng(dataBlob(emotion.image)) : await checkPng(await placeholder(emotion));
+    entries.push({ name: `images/${emotion.id}.png`, data: bytes });
+  }
+  return zip(entries);
+}
+
+// ===== reverse.mjs =====
+// 既存キャラクターZIP → 編集モデル（逆変換）。
+// 表現できない記述は消さずに「取り込み」として保持し、note に残す。
+
+const OPS = { '>=': 'gte', '<=': 'lte', '>': 'gt', '<': 'lt' };
+const VAR_TAG = /\[(?:v|var):\s*([^\]]+)\]/g;
+const EMOTION_TAG = /\[(?:emotion|e):([a-zA-Z0-9_]{1,30})\]/;
+
+const PALETTE = ['#f4cbd7', '#d1ebdf', '#d9e2f2', '#ffe0b3', '#e6d7f5', '#f7d9c4', '#cfe8e3', '#e8e0cf'];
+
+function colorFor(id) {
+  let hash = 0;
+  for (const ch of String(id)) hash = (hash * 31 + ch.codePointAt(0)) >>> 0;
+  return PALETTE[hash % PALETTE.length];
+}
+
+function bytesToDataUrl(bytes) {
+  let text = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return `data:image/png;base64,${btoa(text)}`;
+}
+
+function parseIntOr(value, fallback) { return Number.isInteger(value) ? value : fallback; }
+
+// 条件式 → 条件行。表現できない式は raw として扱う。
+function parseExpression(text, states) {
+  const parts = String(text).split('&&').map(p => p.trim()).filter(Boolean);
+  const rows = [];
+  for (const part of parts) {
+    let match = /^!\s*([a-zA-Z_][a-zA-Z0-9_]*)$/.exec(part);
+    if (match) { const key = rowKey(match[1], states); if (!key) return { raw: true }; rows.push({ key, op: 'false' }); continue; }
+    match = /^([a-zA-Z_][a-zA-Z0-9_]*)$/.exec(part);
+    if (match) { const key = rowKey(match[1], states); if (!key) return { raw: true }; rows.push({ key, op: 'true' }); continue; }
+    match = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*(>=|<=|>|<|==|!=)\s*(.+)$/.exec(part);
+    if (!match) return { raw: true };
+    const [, name, op, right] = match;
+    const key = rowKey(name, states);
+    if (!key) return { raw: true };
+    if (op === '!=') return { raw: true };
+    if (op === '==') {
+      const quoted = /^"(.*)"$/.exec(right);
+      if (!quoted) return { raw: true };
+      rows.push({ key, op: 'eq', value: quoted[1] });
+      continue;
+    }
+    if (!/^-?\d+$/.test(right)) return { raw: true };
+    rows.push({ key, op: OPS[op], value: Number(right) });
+  }
+  return { rows };
+}
+
+// 式に出てくる名前 → 条件行のキー。扱えない名前は null（式全体を raw にする）。
+function rowKey(name, states) {
+  if (states.some(s => s.id === name)) return `state:${name}`;
+  const entry = catalogEntry(name);
+  return entry && entry.expr !== false ? name : null;
+}
+
+// conditions / anyOf の map → 条件行。
+function reverseMap(map, states) {
+  const rows = [];
+  for (const [key, raw] of Object.entries(map ?? {})) {
+    const value = typeof raw === 'string' ? raw : String(raw);
+    const custom = /^customVars\[([^\]]+)\]$/.exec(key);
+    const name = custom ? custom[1] : key;
+    const state = states.find(s => s.id === name);
+    const entry = catalogEntry(key);
+    const number = /^(>=|<=|>|<)?(-?\d+)$/.exec(value);
+    if (custom && state) {
+      if (state.type === 'number' && number) { rows.push({ key: `state:${name}`, op: number[1] ? OPS[number[1]] : 'eq', value: Number(number[2]) }); continue; }
+      if (state.type === 'choice' && (state.options ?? []).some(o => o.value === value)) { rows.push({ key: `state:${name}`, op: 'eq', value }); continue; }
+      if (state.type === 'flag' && (value === 'true' || value === 'false')) { rows.push({ key: `state:${name}`, op: value }); continue; }
+    } else if (entry) {
+      if (entry.kind === 'bool' && (value === 'true' || value === 'false')) { rows.push({ key, op: value }); continue; }
+      if (entry.kind === 'select' && entry.values.some(v => v[0] === value)) { rows.push({ key, op: 'eq', value }); continue; }
+      if (entry.kind === 'number' && number) { rows.push({ key, op: number[1] ? OPS[number[1]] : 'eq', value: Number(number[2]) }); continue; }
+      if ((entry.kind === 'hour' || entry.kind === 'day') && /^\d+(-\d+)?$/.test(value)) { rows.push({ key, op: value.includes('-') ? 'range' : 'eq', value }); continue; }
+    }
+    rows.push({ key, op: 'raw', value });
+  }
+  return rows;
+}
+// customVariables → 状態。
+function reverseStates(customVariables, notes) {
+  const states = [];
+  const raw = (id, def, reason) => { states.push({ id, label: id, type: 'raw', dsl: def, changes: [] }); notes.push(`状態「${id}」：${reason}そのまま出力します。`); };
+  for (const [id, def] of Object.entries(customVariables ?? {})) {
+    if (!ID_PATTERN.test(id) || id.length > 30) { notes.push(`状態「${id}」：内部IDをこのツールでは使えないため、条件・変化は「取り込み」として保持します。`); continue; }
+    if (RESERVED.has(id)) { notes.push(`状態「${id}」：アプリの標準変数と同じ名前です。条件・変化は「取り込み」として保持します。`); continue; }
+    const type = String(def?.type ?? 'string').toLowerCase();
+    if (type === 'any') { raw(id, def, 'any型は値を編集できません。'); continue; }
+    if (type === 'number') {
+      const initial = parseIntOr(def.initial, 0);
+      const min = Number.isInteger(def.min) ? def.min : -1000000;
+      const max = Number.isInteger(def.max) ? def.max : 1000000;
+      if (!Number.isInteger(def.min) || !Number.isInteger(def.max)) notes.push(`状態「${id}」：範囲（min/max）が無かったので -1000000 〜 1000000 として扱います。`);
+      states.push({ id, label: id, type: 'number', initial, min, max, changes: [] });
+    } else if (type === 'boolean') {
+      states.push({ id, label: id, type: 'flag', initial: def.initial === true, changes: [] });
+    } else {
+      const options = Array.isArray(def.options) ? def.options.filter(o => typeof o === 'string') : [];
+      if (!options.length) { raw(id, def, '選択肢（options）が無い文字列型は実行時に代入できません。'); continue; }
+      if (!options.every(o => OPTION_PATTERN.test(o))) { raw(id, def, '選択肢に日本語や記号が含まれ、書き換えると参照が壊れます。'); continue; }
+      let initial = typeof def.initial === 'string' ? def.initial : options[0];
+      if (!options.includes(initial)) { notes.push(`状態「${id}」：初期値「${initial}」が選択肢に無いので「${options[0]}」を使います。`); initial = options[0]; }
+      states.push({ id, label: id, type: 'choice', initial, options: options.map(v => ({ value: v, label: v })), changes: [] });
+    }
+    const state = states[states.length - 1];
+    if (state.type !== 'raw') state.changes = reverseChanges(def.onChange, id, def, notes);
+  }
+  return states;
+}
+
+function reverseChanges(onChange, stateId, def, notes) {
+  const changes = [];
+  for (const rule of Array.isArray(onChange) ? onChange : []) {
+    const trigger = TRIGGERS.some(t => t[0] === rule?.trigger) ? rule.trigger : 'onLaunch';
+    if (trigger !== rule?.trigger) notes.push(`状態「${stateId}」：きっかけ「${rule?.trigger}」は対応していないので「今日はじめて起動したとき」にしました。`);
+    const action = ['set', 'increment', 'decrement', 'toggle'].includes(rule?.action) ? rule.action : 'set';
+    const change = { trigger, action, condition: [] };
+    if (typeof rule?.condition === 'string' && rule.condition.trim() !== '') change.conditionRaw = rule.condition;
+    if (action !== 'toggle') {
+      if (def.type.toLowerCase() === 'number') {
+        const value = typeof rule?.value === 'number' ? rule.value : /^-?\d+$/.test(String(rule?.value)) ? Number(rule.value) : null;
+        if (value === null) { notes.push(`状態「${stateId}」：変化の値「${rule?.value}」を数値にできないため、この変化は取り込みませんでした。`); continue; }
+        change.value = value;
+      } else if (def.type.toLowerCase() === 'boolean') {
+        change.value = rule?.value === true || rule?.value === 'true' ? 'true' : 'false';
+      } else {
+        change.value = String(rule?.value ?? '');
+      }
+    }
+    changes.push(change);
+  }
+  return changes;
+}
+// セリフファイル → 自由記述本文と、セリフごとの表情・変化。
+function reverseSpeechFile(text, states, notes, at) {
+  const speeches = [];
+  for (const line of String(text ?? '').split(/\r\n|\r|\n/)) {
+    if (line.trim() === '' || /^[#＃♯]/.test(line)) continue;
+    const emotion = EMOTION_TAG.exec(line)?.[1] ?? null;
+    const tags = [...line.matchAll(VAR_TAG)].map(m => m[0]);
+    let body = line;
+    if (emotion) body = body.replace(EMOTION_TAG, '');
+    for (const tag of tags) body = body.replace(tag, '');
+    body = body.replace(/\{br\}/gi, '\n').replace(/\\n/g, '\n').trim();
+    const meta = { emotion: emotion ?? 'normal', effect: null };
+    if (tags.length === 1) meta.effect = parseVarTag(tags[0], states);
+    else if (tags.length > 1) meta.effect = { raw: tags.join('') };
+    const weird = /\{[^{}]*\}/.test(body) ? body.match(/\{([^{}]*)\}/g).some(t => !ID_PATTERN.test(t.slice(1, -1))) : false;
+    if (/\n\s*\n/.test(body) || weird) {
+      meta.verbatim = true;
+      meta.effect = tags.length ? { raw: tags.join('') } : null;
+      speeches.push({ text: line, meta });
+      notes.push(`${at}：表現しきれないセリフを「取り込み」としてそのまま保持しました（${line.length > 20 ? line.slice(0, 20) + '…' : line}）。`);
+      continue;
+    }
+    speeches.push({ text: body, meta });
+  }
+  return speeches;
+}
+
+// [var:...] タグ1つ → 変化。表現できない場合は raw。
+function parseVarTag(tag, states) {
+  const inner = /^\[(?:v|var):\s*([^\]]+)\]$/.exec(tag)?.[1] ?? '';
+  const match = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*([+\-*/=])\s*(.+)$/.exec(inner.trim());
+  if (!match) return { raw: tag };
+  const [, name, op, right] = match;
+  const state = states.find(s => s.id === name);
+  if (!state || state.type === 'raw') return { raw: tag };
+  const number = /^\d+$/.test(right) ? Number(right) : null;
+  if (state.type === 'number') {
+    if (op === '+' && number) return { stateId: name, action: 'increment', value: number };
+    if (op === '-' && number) return { stateId: name, action: 'decrement', value: number };
+    if (op === '=' && number !== null) return { stateId: name, action: 'set', value: number };
+    return { raw: tag };
+  }
+  if (state.type === 'choice') {
+    if (op === '=' && (state.options ?? []).some(o => o.value === right)) return { stateId: name, action: 'set', value: right };
+    return { raw: tag };
+  }
+  if (right === 'toggle') return { stateId: name, action: 'toggle' };
+  if (op === '=' && (right === 'true' || right === 'false')) return { stateId: name, action: 'set', value: right };
+  return { raw: tag };
+}
+// キャラクターZIP → 編集モデル。表現できない記述は notes に残す。
+async function importZip(bytes) {
+  const entries = await unzip(bytes);
+  const lookup = new Map();
+  for (const [name, data] of entries) if (!lookup.has(name.toLowerCase())) lookup.set(name.toLowerCase(), { name, data });
+  const metas = [...entries.keys()].filter(n => n.split('/').pop().toLowerCase() === 'character.json');
+  if (!metas.length) throw new Error('character.json が見つかりません。キャラクターのZIPを選んでください。');
+  metas.sort((a, b) => a.split('/').length - b.split('/').length);
+  const metaName = metas[0];
+  const root = metaName.slice(0, metaName.length - 'character.json'.length);
+  let character;
+  try { character = JSON.parse(decodeText(entries.get(metaName))); } catch { throw new Error('character.json を読み取れませんでした（UTF-8のJSONが必要です）。'); }
+  if (typeof character.id !== 'string' || !/^[a-zA-Z0-9_-]{1,50}$/.test(character.id)) throw new Error('character.json の id が正しくありません。');
+
+  const notes = [];
+  const find = path => lookup.get((root + path).toLowerCase());
+  const states = reverseStates(character.customVariables, notes);
+
+  // --- 表情 ---
+  const emotions = [];
+  const images = character.images && typeof character.images === 'object' ? character.images : {};
+  for (const [id, file] of Object.entries(images)) {
+    if (!/^[a-zA-Z0-9_]{1,30}$/.test(id)) throw new Error(`表情「${id}」：感情名は英数字と _ の30文字以内にしてください。`);
+    if (typeof file !== 'string') { notes.push(`表情「${id}」：画像の指定を読み取れませんでした。仮画像にします。`); emotions.push({ id, label: id, color: colorFor(id), image: null }); continue; }
+    const found = find(`images/${file}`);
+    if (!found) notes.push(`表情「${id}」：images/${file} が見つかりません。仮画像にします。`);
+    else if (!isPng(found.data)) notes.push(`表情「${id}」：${file} がPNGではないため、仮画像にします。`);
+    emotions.push({ id, label: id, color: colorFor(id), image: found && isPng(found.data) ? bytesToDataUrl(found.data) : null });
+  }
+
+  // --- セリフ群 ---
+  const readText = (file, at) => {
+    if (typeof file !== 'string' || file === '') { notes.push(`${at}：セリフファイルの指定がありません。`); return ''; }
+    const path = file.startsWith('speeches/') || file.includes('/') ? file : `speeches/${file}`;
+    const found = find(path);
+    if (!found) { notes.push(`${at}：${path} が見つかりません。`); return ''; }
+    try { return decodeText(found.data); } catch { notes.push(`${at}：${path} をUTF-8として読めません。`); return ''; }
+  };
+  const taken = new Set(['default']);
+  const makeId = file => {
+    const base = String(file).split('/').pop().replace(/\.txt$/i, '') || 'scene';
+    const cleaned = base.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^([^a-zA-Z_])/, 's_$1').slice(0, 30);
+    const id = ID_PATTERN.test(cleaned) ? cleaned : 'scene';
+    let unique = id, n = 2;
+    while (taken.has(unique)) unique = `${id.slice(0, 27)}_${n++}`;
+    taken.add(unique);
+    return unique;
+  };
+  const toScene = (rule, at, fixedId) => {
+    const file = Array.isArray(rule.files) && rule.files.length ? rule.files[0] : rule.file;
+    if (Array.isArray(rule.files) && rule.files.length > 1) notes.push(`${at}：複数ファイルからランダムに選ぶ指定は表現できないため、${rule.files[0]} だけを取り込みます。`);
+    const speeches = reverseSpeechFile(readText(file, at), states, notes, at);
+    const id = fixedId ?? makeId(file);
+    if (!fixedId && String(file).replace(/\\/g, '/') !== `speeches/${id}.txt`) notes.push(`${at}：保存先を speeches/${id}.txt に変更します（動作は同じです）。`);
+    return {
+      id, label: String(file).split('/').pop().replace(/\.txt$/i, '') || id,
+      conditions: reverseMap(rule.conditions, states), anyOf: reverseMap(rule.anyOf, states),
+      text: speeches.map(s => s.text).join('\n\n'), meta: speeches.map(s => s.meta),
+    };
+  };
+
+  const rules = (Array.isArray(character.speechRules) ? character.speechRules : []).filter(r => r && typeof r === 'object');
+  const conditional = rules.filter(r => Object.keys(r.conditions ?? {}).length || Object.keys(r.anyOf ?? {}).length);
+  const fallbackRule = rules.find(r => !Object.keys(r.conditions ?? {}).length && !Object.keys(r.anyOf ?? {}).length);
+  const scenes = conditional
+    .map((rule, i) => ({ rule, priority: Number.isInteger(rule.priority) ? rule.priority : 0, order: i }))
+    .sort((a, b) => b.priority - a.priority || a.order - b.order)
+    .map(({ rule }, i) => toScene(rule, `セリフ群${i + 1}`));
+  if (rules.length && !fallbackRule) notes.push('条件なしのセリフが無かったため、「いつもの会話」は空です。');
+  const fallback = fallbackRule ? toScene(fallbackRule, 'いつもの会話', 'default')
+    : { id: 'default', label: 'いつもの会話', conditions: [], anyOf: [], text: '', meta: [] };
+  fallback.id = 'default';
+  fallback.label = 'いつもの会話';
+  fallback.conditions = [];
+  fallback.anyOf = [];
+  // --- 表情の自動切替 ---
+  let emotionDefault = 'normal';
+  const emotionRules = [];
+  for (const rule of Array.isArray(character.emotions?.rules) ? character.emotions.rules : []) {
+    if (rule && typeof rule.default === 'string') { emotionDefault = rule.default; continue; }
+    if (!rule || typeof rule.if !== 'string' || !rule.if.trim()) continue;
+    if (typeof rule.emotion !== 'string') { notes.push(`表情の自動切替「${rule.if}」：表情が指定されていないため取り込みませんでした。`); continue; }
+    const parsed = parseExpression(rule.if, states);
+    if (parsed.raw) { emotionRules.push({ expression: rule.if, conditions: [], emotion: rule.emotion }); notes.push(`表情の自動切替「${rule.if}」：画面で組み立てられない条件のため、そのまま保持します。`); }
+    else emotionRules.push({ conditions: parsed.rows, emotion: rule.emotion });
+  }
+  if (emotionDefault !== 'normal') notes.push(`「どの条件にも当てはまらないとき」の表情は「${emotionDefault}」でした。`);
+
+  // --- 参照されている表情が無ければ仮画像で補う ---
+  const speechMeta = [...scenes.flatMap(s => s.meta), ...fallback.meta];
+  const needed = new Set(['normal', emotionDefault, ...emotionRules.map(r => r.emotion), ...speechMeta.map(m => m.emotion)]);
+  for (const id of needed) {
+    if (emotions.some(e => e.id === id)) continue;
+    if (!/^[a-zA-Z0-9_]{1,30}$/.test(id)) {
+      notes.push(`表情「${id}」：感情名として使えないため「通常」に置き換えました。`);
+      for (const meta of speechMeta) if (meta.emotion === id) meta.emotion = 'normal';
+      for (const rule of emotionRules) if (rule.emotion === id) rule.emotion = 'normal';
+      if (emotionDefault === id) emotionDefault = 'normal';
+      continue;
+    }
+    emotions.push({ id, label: id, color: colorFor(id), image: null });
+    notes.push(`表情「${id}」：画像が見つからなかったので仮画像にしました。`);
+  }
+
+  const project = normalize({
+    format: FORMAT, formatVersion: FORMAT_VERSION,
+    character: {
+      id: character.id,
+      name: typeof character.name === 'string' && character.name ? character.name : character.id,
+      description: typeof character.description === 'string' ? character.description : '',
+      author: typeof character.author === 'string' ? character.author : '',
+      version: typeof character.version === 'string' && character.version ? character.version : '1.0.0',
+    },
+    states, emotions, emotionDefault, scenes, fallback, emotionRules,
+  });
+  return { project, notes, source: metaName };
+}
+
+// ===== app.mjs =====
+// HomeMascotForge Editor: 作者は「キャラ名・変数の動作・セリフ群」だけを書き、記法は生成する。
+
+const $ = id => document.getElementById(id);
+const SECTION_LABELS = [
+  ['character', 'キャラクター'],
+  ['states', '状態（変数）'],
+  ['emotions', '表情'],
+  ['scenes', 'セリフ群'],
+  ['rules', '表情の自動切替'],
+];
+
+let project = newProject();
+let section = 'character';
+let dirty = false;
+let importNotes = [];
+let timer = 0;
+const history = { list: [], index: -1, last: 0 };
+
+const say = text => { $('status').textContent = text; };
+const schedule = () => { clearTimeout(timer); timer = setTimeout(renderOutput, 150); };
+const snapshot = () => JSON.stringify(project);
+
+function updateDirty() {
+  $('dirty').textContent = dirty ? '● 未保存の変更' : '保存済み';
+  document.title = `${dirty ? '● ' : ''}HomeMascotForge キャラクター定義`;
+  $('undo').disabled = history.index <= 0;
+  $('redo').disabled = history.index >= history.list.length - 1;
+}
+
+// 連続した入力は1つの履歴にまとめる（Ctrl+Z が文字単位にならないように）。
+function pushHistory() {
+  const now = Date.now(), text = snapshot();
+  if (history.list[history.index] === text) return;
+  if (now - history.last < 700 && history.index > 0) history.list[history.index] = text;
+  else {
+    history.list = history.list.slice(0, history.index + 1);
+    history.list.push(text);
+    history.index = history.list.length - 1;
+    if (history.list.length > 60) { history.list.shift(); history.index -= 1; }
+  }
+  history.last = now;
+  updateDirty();
+}
+
+function resetHistory() { history.list = [snapshot()]; history.index = 0; history.last = 0; updateDirty(); }
+
+function stepHistory(delta) {
+  const next = history.index + delta;
+  if (next < 0 || next >= history.list.length) { say(delta < 0 ? 'これ以上戻れません。' : 'これ以上やり直せません。'); return; }
+  history.index = next;
+  history.last = 0;
+  const previous = project;
+  project = normalize(JSON.parse(history.list[next]));
+  carryFolds(previous, project);
+  dirty = true;
+  renderPanel();
+  renderOutput();
+  updateDirty();
+  say(delta < 0 ? '1つ前の状態に戻しました。' : 'やり直しました。');
+}
+
+const changed = message => { dirty = true; pushHistory(); if (message) say(message); schedule(); };
+
+function h(tag, props, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props ?? {})) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === 'class') node.className = value;
+    else if (key === 'text') node.textContent = value;
+    else if (key === 'value') node.value = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2).toLowerCase(), value);
+    else node.setAttribute(key, value === true ? '' : String(value));
+  }
+  for (const child of (children ?? []).flat(Infinity)) if (child !== null && child !== undefined && child !== false) node.append(child);
+  return node;
+}
+
+function select(options, value, onChange) {
+  const node = h('select', { onchange: () => onChange(node.value) });
+  for (const [key, label, disabled] of options) {
+    const option = h('option', { value: key, text: label });
+    if (disabled) option.disabled = true;
+    node.append(option);
+  }
+  if (!options.some(o => o[0] === value)) node.prepend(h('option', { value, text: `${value}（不明）` }));
+  node.value = value;
+  return node;
+}
+
+const button = (text, onClick, className) => h('button', { type: 'button', class: className, text, onclick: onClick });
+const textInput = (value, onChange, extra = {}) => h('input', { value, onchange: e => onChange(e.target.value), ...extra });
+const numberInput = (value, onChange) => h('input', { type: 'number', value: String(value ?? 0), onchange: e => onChange(Number(e.target.value)) });
+const checkbox = (checked, onChange) => h('input', { type: 'checkbox', checked, onchange: e => onChange(e.target.checked) });
+const row = (...cells) => h('tr', {}, cells.map(cell => h('td', {}, cell)));
+
+// ── 折りたたみカード（状態・表情・場面・自動切替）──
+// 「閉じたもの」だけを覚える（開いているのが既定なので、追加した項目は開いた状態で出る）。
+// 項目そのもので覚えるため、内部IDの変更・並べ替え・再描画をしても開閉は保たれる。
+const closedItems = new WeakSet();
+const cardNodes = new Map(); // 今の画面にあるカード（項目 → details）。検証結果の印を付けるのに使う。
+
+function card(item, kind, title, actions, body) {
+  const node = h('details', { class: `card ${kind}` });
+  node.open = !closedItems.has(item);
+  node.addEventListener('toggle', () => { if (node.open) closedItems.delete(item); else closedItems.add(item); });
+  node.append(
+    h('summary', {},
+      h('span', { class: 'sum' }, title),
+      h('span', { class: 'errcount error' }),
+      h('span', { class: 'acts' }, actions)),
+    h('div', { class: 'body' }, body));
+  cardNodes.set(item, node);
+  return node;
+}
+
+// 2件以上あるときだけ「すべて開く／すべて閉じる」を出す。
+function addFoldBar(panel, items) {
+  if (items.length < 2) return;
+  const set = open => { for (const item of items) { if (open) closedItems.delete(item); else closedItems.add(item); } renderPanel(); };
+  panel.append(h('div', { class: 'foldbar' }, button('すべて開く', () => set(true)), button('すべて閉じる', () => set(false))));
+}
+
+// 検証メッセージの先頭（「状態2」「セリフ群1」「いつもの会話」…）から、該当する項目を割り出す。
+function itemOf(message) {
+  const m = /^(状態|表情の自動切替|表情|セリフ群)(\d+)/.exec(message);
+  if (m) {
+    const list = { '状態': project.states, '表情の自動切替': project.emotionRules, '表情': project.emotions, 'セリフ群': project.scenes }[m[1]];
+    return list?.[Number(m[2]) - 1] ?? null;
+  }
+  return message.startsWith('いつもの会話') ? project.fallback : null;
+}
+
+// 閉じていても直すところが分かるよう、カードの見出しに件数を出す。
+function markErrors(errors) {
+  const counts = new Map();
+  for (const text of errors) {
+    const item = itemOf(text);
+    if (item) counts.set(item, (counts.get(item) ?? 0) + 1);
+  }
+  for (const [item, node] of cardNodes) {
+    const n = counts.get(item) ?? 0;
+    node.classList.toggle('has-error', n > 0);
+    const badge = node.firstElementChild?.querySelector('.errcount');
+    if (badge) badge.textContent = n ? `⚠ 直すところ ${n}件` : '';
+  }
+}
+
+// 元に戻す／やり直すで項目が作り直されても、閉じていたカードは閉じたままにする。
+function carryFolds(from, to) {
+  const lists = [[from.states, to.states, true], [from.emotions, to.emotions, true], [from.scenes, to.scenes, true], [from.emotionRules, to.emotionRules, false]];
+  for (const [a, b, byId] of lists) {
+    a.forEach((item, i) => {
+      if (!closedItems.has(item)) return;
+      const twin = byId ? b.find(other => other.id === item.id) : b[i];
+      if (twin) closedItems.add(twin);
+    });
+  }
+  if (closedItems.has(from.fallback)) closedItems.add(to.fallback);
+}
+
+function download(bytes, name, type) {
+  const url = URL.createObjectURL(new Blob([bytes], { type }));
+  const link = h('a', { href: url, download: name });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+async function readFile(file) { return new Uint8Array(await file.arrayBuffer()); }
+
+// 取り込みで表現できなかった箇所を画面に残す（黙って消さない）。
+// 検証メッセージの先頭から、直すべき項目を割り出す。
+function sectionOf(message) {
+  if (message.startsWith('キャラクター') || message.startsWith('プロジェクト')) return 'character';
+  if (message.startsWith('状態')) return 'states';
+  if (message.startsWith('表情の自動切替')) return 'rules';
+  if (message.startsWith('表情')) return 'emotions';
+  if (message.startsWith('セリフ') || message.startsWith('いつもの会話')) return 'scenes';
+  return null;
+}
+
+function renderOutput() {
+  const errorBox = $('errors');
+  errorBox.replaceChildren();
+  const errors = validate(project);
+  markErrors(errors);
+  if (errors.length) {
+    errorBox.append(h('p', { class: 'error', text: `${errors.length}件 直すところがあります。クリックすると該当の項目を開きます。` }));
+    errorBox.append(h('ul', { class: 'errors' }, errors.slice(0, 200).map(text => h('li', {},
+      h('button', { type: 'button', class: 'link', text, onclick: () => {
+        const target = sectionOf(text);
+        if (!target) return;
+        const item = itemOf(text);
+        if (item) closedItems.delete(item); // 閉じているカードは開く
+        section = target;
+        renderPanel();
+        ((item && cardNodes.get(item)) ?? $('panel')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } })))));
+    if (errors.length > 200) errorBox.append(h('p', { class: 'muted', text: '…ほか ' + (errors.length - 200) + '件' }));
+  } else {
+    errorBox.append(h('p', { class: 'muted', text: '問題ありません。このまま書き出せます。' }));
+  }
+  if (importNotes.length) {
+    errorBox.append(h('h2', { text: '取り込みのメモ' }));
+    errorBox.append(h('ul', {}, importNotes.map(text => h('li', { text }))));
+  }
+  const box = $('files');
+  box.replaceChildren();
+  if (errors.length) { box.append(h('p', { class: 'muted', text: '直すところがあるため、生成結果は表示していません。' })); return; }
+  const { files } = compile(project);
+  for (const file of files) {
+    box.append(h('details', {}, h('summary', { text: `${file.name}（${file.text.split('\n').length}行）` }), h('pre', { text: file.text })));
+  }
+  const listing = h('table', {}, h('tr', {}, h('th', { text: 'images/' }), h('th', { text: '状態' })));
+  for (const e of project.emotions) {
+    listing.append(h('tr', {}, h('td', { text: `${e.id}.png` }),
+      h('td', {}, e.image ? '登録した画像' : h('span', { class: 'badge', text: '仮画像（自動生成）' }))));
+  }
+  box.append(listing);
+}
+function renderNav() {
+  $('sections').replaceChildren(...SECTION_LABELS.map(([key, label]) => h('button', {
+    type: 'button', text: label, 'aria-current': section === key ? 'true' : 'false',
+    onclick: () => { section = key; renderPanel(); },
+  })));
+}
+
+function renderPanel() {
+  renderNav();
+  const panel = $('panel');
+  panel.replaceChildren();
+  cardNodes.clear();
+  if (section === 'character') renderCharacter(panel);
+  else if (section === 'states') renderStates(panel);
+  else if (section === 'emotions') renderEmotions(panel);
+  else if (section === 'scenes') renderScenes(panel);
+  else renderEmotionRules(panel);
+  markErrors(validate(project));
+}
+
+function renderCharacter(panel) {
+  panel.append(h('h2', { text: 'キャラクター' }));
+  const grid = h('div', { class: 'field' });
+  const add = (label, control, hint) => {
+    grid.append(h('span', { text: label }), control);
+    if (hint) grid.append(h('span'), h('span', { class: 'hint', text: hint }));
+  };
+  add('名前', textInput(project.character.name, v => { project.character.name = v; changed(); }, { id: 'name', placeholder: 'キャラクターの名前' }));
+  add('内部ID', textInput(project.character.id, v => { project.character.id = v; changed(); }, { id: 'character-id', placeholder: '英数字と _ -（例：my_character）' }),
+    '英数字と _ - の1〜50文字。同じIDのキャラは再導入で上書きできません。反復して試すときは my_character_2 のように変えてください。');
+  add('バージョン', textInput(project.character.version, v => { project.character.version = v; changed(); }, { id: 'version' }));
+  add('作者名', textInput(project.character.author, v => { project.character.author = v; changed(); }, { id: 'author' }));
+  const description = h('textarea', { id: 'description', rows: 4, oninput: e => { project.character.description = e.target.value; changed(); } });
+  description.value = project.character.description;
+  add('説明（紹介文）', description, '紹介文としてそのまま保存されます。動作・条件・判定には一切影響しません。');
+  panel.append(grid);
+}
+
+function uniqueStateId(base) {
+  const taken = new Set(project.states.map(s => s.id));
+  let id = base, n = 2;
+  while (taken.has(id) || RESERVED.has(id) || !ID_PATTERN.test(id) || id.length > LIMITS.idLength) id = `${base}_${n++}`;
+  return id;
+}
+
+function addState(type) {
+  if (project.states.length >= LIMITS.states) { say(`状態は${LIMITS.states}個までです。`); return; }
+  const base = type === 'number' ? 'favorability' : type === 'choice' ? 'mood' : 'is_angry';
+  const label = type === 'number' ? '好感度' : type === 'choice' ? '気分' : '怒っている';
+  project.states.push(newState(uniqueStateId(base), label, type));
+  changed('状態を追加しました。');
+  renderPanel();
+}
+
+function changeStateType(state, type) {
+  if (type === state.type) return;
+  const { id, label, changes } = state;
+  for (const key of ['initial', 'min', 'max', 'options', 'changes']) delete state[key];
+  Object.assign(state, newState(id, label, type));
+  const allowed = type === 'number' ? ['increment', 'decrement', 'set'] : type === 'choice' ? ['set'] : ['set', 'toggle'];
+  state.changes = (changes ?? []).filter(rule => allowed.includes(rule.action)).map(rule => {
+    let value = rule.value;
+    if (rule.action === 'toggle') value = undefined;
+    else if (type === 'number') value = Number.isInteger(value) ? value : 0;
+    else if (type === 'flag') value = value === 'false' ? 'false' : 'true';
+    else value = (state.options ?? []).some(o => o.value === value) ? value : (state.options ?? [])[0]?.value ?? '';
+    return { ...rule, value };
+  });
+  changed('種類を変更しました。値は選び直してください。');
+  renderPanel();
+}
+
+function renderStates(panel) {
+  panel.append(h('h2', { text: `状態（変数）　${project.states.length} / ${LIMITS.states}` }));
+  panel.append(h('p', { class: 'hint', text: '「表示名」は日本語で自由に変えられます。内部IDはアプリが参照する固定の名前で、変更すると条件や変化の参照も自動で書き換えます。各項目は見出しをクリックすると閉じられます。' }));
+  panel.append(h('div', {}, [
+    button('数値の状態を追加（例：好感度）', () => addState('number')),
+    button('選択肢の状態を追加（例：気分）', () => addState('choice')),
+    button('はい／いいえの状態を追加（例：怒っている）', () => addState('flag')),
+  ]));
+  if (!project.states.length) { panel.append(h('p', { class: 'muted', text: 'まだ状態がありません。状態を使わないキャラクターでも書き出せます。' })); return; }
+  addFoldBar(panel, project.states);
+  project.states.forEach((state, index) => panel.append(stateCard(state, index)));
+}
+// 条件の選択肢。自分で決めた状態と、アプリが与える情報を分けて並べる。
+function conditionKeyOptions() {
+  const options = [];
+  const usable = project.states.filter(s => s.type !== 'raw');
+  if (usable.length) {
+    options.push(['', '─ 自分で決めた状態 ─', true]);
+    for (const state of usable) options.push([`state:${state.id}`, `${state.label}（${state.id}）`]);
+  }
+  options.push(['', '─ アプリが与える情報 ─', true]);
+  for (const entry of CATALOG) options.push([entry.key, entry.label]);
+  return options;
+}
+
+function valuesOf(key) {
+  if (typeof key === 'string' && key.startsWith('state:')) {
+    const state = findState(project.states, key.slice('state:'.length));
+    return (state?.options ?? []).map(o => [o.value, `${o.label}（${o.value}）`]);
+  }
+  return catalogEntry(key)?.values ?? [];
+}
+
+function resetConditionRow(row) {
+  const kind = conditionKind(row, project.states);
+  if (kind === 'bool') { row.op = 'true'; delete row.value; }
+  else if (kind === 'select') { row.op = 'eq'; row.value = valuesOf(row.key)[0]?.[0] ?? ''; }
+  else if (kind === 'number') { row.op = 'gte'; row.value = 0; }
+  else if (kind === 'hour') { row.op = 'eq'; row.value = '9'; }
+  else if (kind === 'day') { row.op = 'eq'; row.value = '1'; }
+}
+
+const HOURS = Array.from({ length: 24 }, (_, i) => [String(i), `${i}時`]);
+const DAYS = Array.from({ length: 31 }, (_, i) => [String(i + 1), `${i + 1}日`]);
+
+// 条件1行の編集UI。記法は出さない。
+function conditionEditor(row, onRemove) {
+  if (row.op === 'raw') {
+    return h('span', { class: 'condrow' }, h('span', { class: 'badge raw', text: '取り込み' }),
+      h('code', { text: `${row.key} = ${row.value}` }), button('削除', onRemove, 'link'));
+  }
+  const wrap = h('span', { class: 'condrow' });
+  wrap.append(select(conditionKeyOptions(), row.key, value => { row.key = value; resetConditionRow(row); changed(); renderPanel(); }));
+  const kind = conditionKind(row, project.states);
+  if (kind === 'bool') {
+    wrap.append(select([['true', 'はい'], ['false', 'いいえ']], row.op, value => { row.op = value; changed(); }));
+  } else if (kind === 'select') {
+    wrap.append(select(valuesOf(row.key), row.value, value => { row.value = value; changed(); }));
+  } else if (kind === 'number') {
+    wrap.append(select(NUMBER_OPS, row.op, value => { row.op = value; changed(); }));
+    wrap.append(numberInput(row.value, value => { row.value = value; changed(); }));
+  } else if (kind === 'hour' || kind === 'day') {
+    const units = kind === 'hour' ? HOURS : DAYS;
+    wrap.append(select([['eq', 'ちょうど'], ['range', '範囲']], row.op, value => {
+      row.op = value;
+      row.value = value === 'range' ? (kind === 'hour' ? '7-9' : '1-3') : (kind === 'hour' ? '9' : '1');
+      changed(); renderPanel();
+    }));
+    const parts = String(row.value ?? '').split('-');
+    if (row.op === 'range') {
+      wrap.append(select(units, parts[0], value => { row.value = `${value}-${parts[1]}`; changed(); }), '〜',
+        select(units, parts[1], value => { row.value = `${parts[0]}-${value}`; changed(); }));
+    } else {
+      wrap.append(select(units, parts[0], value => { row.value = value; changed(); }));
+    }
+  } else {
+    wrap.append(h('span', { class: 'error', text: 'この条件は選べません。選び直してください。' }));
+  }
+  wrap.append(button('削除', onRemove, 'link'));
+  return wrap;
+}
+
+function conditionList(rows, label, hint) {
+  const box = h('div', {});
+  box.append(h('div', { class: 'condlabel', text: label }));
+  if (hint) box.append(h('div', { class: 'hint', text: hint }));
+  const list = h('div', {});
+  rows.forEach((row, index) => list.append(h('div', {}, conditionEditor(row, () => { rows.splice(index, 1); changed(); renderPanel(); }))));
+  if (!rows.length) list.append(h('div', { class: 'muted', text: '（条件なし）' }));
+  box.append(list);
+  box.append(h('div', {}, button('＋ 条件を足す', () => {
+    const first = project.states.find(s => s.type !== 'raw');
+    const row = { key: first ? `state:${first.id}` : CATALOG[0].key, op: 'eq', value: '' };
+    resetConditionRow(row);
+    rows.push(row); changed(); renderPanel();
+  })));
+  return box;
+}
+// 状態1件分のカード（見出し＝要約と操作、中身＝表と「変化のしかた」）。
+const STATE_TYPES = { number: '数値', choice: '選択肢', flag: 'はい／いいえ', raw: 'any型（取り込み）' };
+
+function stateInfo(state) {
+  if (state.type === 'raw') return STATE_TYPES.raw;
+  const initial = state.type === 'number' ? state.initial
+    : state.type === 'choice' ? ((state.options ?? []).find(o => o.value === state.initial)?.label ?? state.initial)
+      : state.initial ? 'はい' : 'いいえ';
+  return [STATE_TYPES[state.type], `初期値 ${initial}`, `変化 ${(state.changes ?? []).length}件`].join(' ・ ');
+}
+
+function stateCard(state, index) {
+  const states = project.states;
+  const name = h('strong', { text: state.label || '（表示名なし）' });
+  const info = h('span', { class: 'muted', text: stateInfo(state) });
+  const refresh = () => { info.textContent = stateInfo(state); };
+  const title = [name, h('code', { text: state.id }), info];
+  const main = h('tr', {});
+  const table = h('table', {}, h('tr', {}, ['表示名', '内部ID', '種類', '初期値', '範囲 ／ 選択肢'].map(text => h('th', { text }))), main);
+  if (state.type === 'raw') {
+    main.append(h('td', { text: state.label }), h('td', { text: state.id }));
+    main.append(h('td', {}, h('span', { class: 'badge raw', text: '取り込み' }), 'any型'));
+    main.append(h('td', { text: '—' }), h('td', { text: 'そのまま出力します（編集できません）' }));
+    return card(state, 'state', title, [button('削除', () => { states.splice(index, 1); changed(); renderPanel(); })], table);
+  }
+  main.append(h('td', {}, textInput(state.label, value => { state.label = value; name.textContent = value || '（表示名なし）'; changed(); })));
+  main.append(h('td', {}, textInput(state.id, value => {
+    if (value === state.id) return;
+    if (!ID_PATTERN.test(value) || value.length > LIMITS.idLength) { say('内部IDは英字か _ で始まる英数字と _ の30文字以内にしてください。'); renderPanel(); return; }
+    changeStateId(project, state.id, value);
+    changed('内部IDを変更し、条件と変化の参照も書き換えました。');
+    renderPanel();
+  })));
+  main.append(h('td', {}, select([['number', '数値'], ['choice', '選択肢'], ['flag', 'はい／いいえ']], state.type, value => changeStateType(state, value))));
+  if (state.type === 'number') {
+    main.append(h('td', { class: 'num' }, numberInput(state.initial, value => { state.initial = value; refresh(); changed(); })));
+    main.append(h('td', { class: 'num' }, '最小 ', numberInput(state.min, value => { state.min = value; changed(); }),
+      ' 最大 ', numberInput(state.max, value => { state.max = value; changed(); })));
+  } else if (state.type === 'choice') {
+    main.append(h('td', {}, select((state.options ?? []).map(o => [o.value, o.label]), state.initial, value => { state.initial = value; refresh(); changed(); })));
+    main.append(h('td', { text: `選択肢 ${(state.options ?? []).length}件（下の表で編集）` }));
+  } else {
+    main.append(h('td', {}, select([['true', 'はい'], ['false', 'いいえ']], String(state.initial), value => { state.initial = value === 'true'; refresh(); changed(); })));
+    main.append(h('td', { text: '—' }));
+  }
+  const actions = [
+    button('上へ', () => { if (index > 0) { states.splice(index - 1, 0, states.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('下へ', () => { if (index < states.length - 1) { states.splice(index + 1, 0, states.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('削除', () => {
+      try { removeState(project, state.id); changed('状態を削除しました。'); }
+      catch (error) { say(error.message); }
+      renderPanel();
+    }),
+  ];
+  return card(state, 'state', title, actions, [table, stateDetails(state)]);
+}
+function stateDetails(state) {
+  const box = h('div', {});
+  if (state.type === 'choice') {
+    box.append(h('h3', { text: '選択肢（左：アプリが使う固定の値　／　右：画面に出す日本語）' }));
+    const table = h('table', {}, h('tr', {}, h('th', { text: '内部識別子' }), h('th', { text: '表示名' }), h('th', { text: '' })));
+    (state.options ?? []).forEach((option, i) => {
+      table.append(h('tr', {},
+        h('td', {}, textInput(option.value, value => {
+          if (!OPTION_PATTERN.test(value)) { say('内部識別子は英数字と _ の30文字以内にしてください。'); renderPanel(); return; }
+          const from = option.value;
+          option.value = value;
+          if (state.initial === from) state.initial = value;
+          for (const rule of state.changes ?? []) if (rule.value === from) rule.value = value;
+          changed('選択肢の値を変更し、初期値と変化の参照も書き換えました。');
+          renderPanel();
+        })),
+        h('td', {}, textInput(option.label, value => { option.label = value; changed(); })),
+        h('td', {}, button('削除', () => { state.options.splice(i, 1); changed(); renderPanel(); }))));
+    });
+    box.append(table);
+    box.append(button('＋ 選択肢を足す', () => {
+      let n = state.options.length + 1, value = `option_${n}`;
+      while (state.options.some(o => o.value === value)) value = `option_${++n}`;
+      state.options.push({ value, label: `選択肢${n}` });
+      changed(); renderPanel();
+    }));
+  }
+  box.append(h('h3', { text: '変化のしかた（この状態がいつ・どう変わるか）' }));
+  const changes = state.changes ?? (state.changes = []);
+  const actions = state.type === 'number' ? [['increment', '増やす'], ['decrement', '減らす'], ['set', 'この値にする']]
+    : state.type === 'choice' ? [['set', 'この値にする']] : [['set', 'この値にする'], ['toggle', '反転する']];
+  const table = h('table', {}, h('tr', {}, ['きっかけ', '動作', '値', '条件（任意）', ''].map(text => h('th', { text }))));
+  changes.forEach((rule, i) => {
+    const cells = [];
+    cells.push(h('td', {}, select(TRIGGERS, rule.trigger, value => { rule.trigger = value; changed(); })));
+    cells.push(h('td', {}, select(actions, rule.action, value => {
+      rule.action = value;
+      if (value === 'toggle') delete rule.value;
+      else if (state.type === 'choice') rule.value = (state.options ?? [])[0]?.value ?? '';
+      else if (state.type === 'flag') rule.value = 'true';
+      else rule.value = Number.isInteger(rule.value) ? rule.value : 1;
+      changed(); renderPanel();
+    })));
+    if (rule.action === 'toggle') cells.push(h('td', { class: 'muted', text: '—' }));
+    else if (state.type === 'choice') cells.push(h('td', {}, select((state.options ?? []).map(o => [o.value, o.label]), rule.value, value => { rule.value = value; changed(); })));
+    else if (state.type === 'flag') cells.push(h('td', {}, select([['true', 'はい'], ['false', 'いいえ']], rule.value, value => { rule.value = value; changed(); })));
+    else cells.push(h('td', { class: 'num' }, numberInput(rule.value, value => { rule.value = value; changed(); })));
+    if (rule.conditionRaw) cells.push(h('td', {}, h('span', { class: 'badge raw', text: '取り込み' }), h('code', { text: rule.conditionRaw })));
+    else cells.push(h('td', {}, conditionList(rule.condition ?? (rule.condition = []), 'この条件のときだけ変える', '空のままなら、きっかけだけで必ず変わります。')));
+    cells.push(h('td', {}, button('削除', () => { changes.splice(i, 1); changed(); renderPanel(); })));
+    table.append(h('tr', {}, cells));
+  });
+  box.append(table);
+  box.append(button('＋ 変化を足す', () => {
+    const action = state.type === 'number' ? 'increment' : 'set';
+    const rule = { trigger: 'onTouch', action, condition: [] };
+    rule.value = action === 'increment' ? 1 : state.type === 'number' ? state.initial : state.type === 'choice' ? (state.options ?? [])[0]?.value ?? '' : 'true';
+    changes.push(rule); changed(); renderPanel();
+  }));
+  if (state.type === 'number') box.append(h('p', { class: 'hint', text: '増やす・減らすは「今の値＋／−」。実機では最小・最大の範囲に収まります。' }));
+  if (state.type === 'flag') box.append(h('p', { class: 'hint', text: '「反転する」は はい↔いいえ を入れ替えます。' }));
+  return box;
+}
+function renderEmotions(panel) {
+  panel.append(h('h2', { text: `表情　${project.emotions.length} / ${LIMITS.emotions}` }));
+  panel.append(h('p', { class: 'hint', text: '画像を登録しなくても仮画像（丸アイコン＋名前）で書き出せます。表示名と内部IDは別物で、内部IDを変えてもセリフと条件の参照は自動で書き換えます。各項目は見出しをクリックすると閉じられます。' }));
+  addFoldBar(panel, project.emotions);
+  const previews = [];
+  project.emotions.forEach((emotion, index) => panel.append(emotionCard(emotion, index, previews)));
+  panel.append(h('div', {}, button('＋ 表情を足す', () => {
+    if (project.emotions.length >= LIMITS.emotions) { say('表情は100枚までです。'); return; }
+    project.emotions.push(newEmotion(project)); // あたらしい感情_1 ／ emotion_1 のように番号を振る
+    changed('表情を追加しました。'); renderPanel();
+  })));
+  panel.append(h('h3', { text: 'どの条件にも当てはまらないときの表情' }));
+  panel.append(h('div', {}, select(project.emotions.map(e => [e.id, e.label]), project.emotionDefault, value => { project.emotionDefault = value; changed(); })));
+  (async () => {
+    for (const [emotion, image] of previews) {
+      try { image.src = emotion.image ?? await toDataUrl(await placeholder(emotion)); }
+      catch (error) { say(error.message); }
+    }
+  })();
+}
+
+function emotionCard(emotion, index, previews) {
+  const list = project.emotions;
+  const image = h('img', { class: 'preview', alt: `${emotion.label}（${emotion.image ? '登録した画像' : '仮画像'}）` });
+  previews.push([emotion, image]);
+  const upload = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', onchange: async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try { emotion.image = await importImage(file); changed(`「${emotion.label}」に画像を登録しました。`); }
+    catch (error) { say(error.message); }
+    renderPanel();
+  } });
+  const swatch = h('span', { class: 'swatch' });
+  swatch.style.background = emotion.color; // 属性ではなくCSSOMで設定（CSPの style-src 'self' でも通る）
+  const name = h('strong', { text: emotion.label || '（表示名なし）' });
+  const title = [
+    swatch, name, h('code', { text: emotion.id }),
+    h('span', { class: 'muted', text: emotion.image ? '登録した画像' : '仮画像' }),
+    emotion.id === 'normal' ? h('span', { class: 'muted', text: '（必須・削除できません）' }) : null,
+  ];
+  const table = h('table', {}, h('tr', {}, ['プレビュー', '表示名', '内部ID', '仮画像の色', '画像'].map(text => h('th', { text }))),
+    h('tr', {},
+      h('td', {}, image, emotion.image ? null : h('span', { class: 'badge', text: '仮画像' })),
+      h('td', {}, textInput(emotion.label, value => { emotion.label = value; name.textContent = value || '（表示名なし）'; changed(); })),
+      h('td', {}, textInput(emotion.id, value => {
+        if (value === emotion.id) return;
+        if (!/^[a-zA-Z0-9_]{1,30}$/.test(value)) { say('内部IDは英数字と _ の30文字以内にしてください（記号や日本語は使えません）。'); renderPanel(); return; }
+        changeEmotionId(project, emotion.id, value);
+        changed('内部IDを変更し、セリフと条件の参照も書き換えました。');
+        renderPanel();
+      })),
+      h('td', {}, h('input', { type: 'color', value: emotion.color, onchange: e => { emotion.color = e.target.value; changed(); renderPanel(); } })),
+      h('td', {}, upload, emotion.image ? button('仮画像に戻す', () => { emotion.image = null; changed(); renderPanel(); }) : h('span', { class: 'muted', text: '未登録（仮画像を書き出します）' }))));
+  const actions = [
+    button('上へ', () => { if (index > 0) { list.splice(index - 1, 0, list.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('下へ', () => { if (index < list.length - 1) { list.splice(index + 1, 0, list.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('削除', () => {
+      try { removeEmotion(project, emotion.id); changed('表情を削除しました。'); }
+      catch (error) { say(error.message); }
+      renderPanel();
+    }),
+  ];
+  return card(emotion, 'emotion', title, actions, table);
+}
+// 本文の行数とセリフごとの設定をそろえる。
+function syncMeta(owner) {
+  const count = parseSpeeches(owner.text).length;
+  const meta = Array.isArray(owner.meta) ? owner.meta.slice(0, count) : [];
+  while (meta.length < count) meta.push({ emotion: 'normal', effect: null });
+  owner.meta = meta.map(m => ({ emotion: 'normal', effect: null, ...m }));
+  return owner.meta;
+}
+
+function insertTool(textarea, owner, redraw) {
+  const variables = [...EXPANDABLE, ...project.states.filter(s => s.type !== 'raw').map(s => s.id)];
+  const picker = select(variables.map(v => [v, `{${v}}`]), variables[0], () => {});
+  return h('span', {}, '変数を差し込む ', picker, button('差し込む', () => {
+    const token = `{${picker.value}}`;
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    textarea.value = textarea.value.slice(0, start) + token + textarea.value.slice(end);
+    owner.text = textarea.value;
+    changed(); redraw();
+    textarea.focus();
+    textarea.setSelectionRange(start + token.length, start + token.length);
+  }));
+}
+
+// セリフごとの表情と「話したときの変化」。
+function speechTable(owner) {
+  const box = h('div', {});
+  const draw = () => {
+    box.replaceChildren();
+    const groups = parseSpeeches(owner.text);
+    const meta = syncMeta(owner);
+    if (!groups.length) { box.append(h('p', { class: 'muted', text: '本文が空です。1件以上書いてください。' })); return; }
+    const table = h('table', {}, h('tr', {}, ['#', 'セリフ', '表情', '変化する状態', '動作', '値', ''].map(text => h('th', { text }))));
+    groups.forEach((group, index) => {
+      const item = meta[index];
+      const text = group.lines.join(' / ');
+      const cells = [
+        h('td', { class: 'num', text: String(index + 1) }),
+        h('td', {}, item.verbatim ? h('span', { class: 'badge raw', text: '取り込み' }) : null, text.length > 40 ? `${text.slice(0, 40)}…` : text),
+        h('td', {}, select(project.emotions.map(e => [e.id, e.label]), item.emotion, value => { item.emotion = value; changed(); })),
+      ];
+      if (item.verbatim) {
+        cells.push(h('td', { colspan: 3 }, h('span', { class: 'muted', text: '取り込んだ記述はそのまま出力します。' })));
+      } else if (item.effect?.raw) {
+        cells.push(h('td', { colspan: 3 }, h('span', { class: 'badge raw', text: '取り込み' }), h('code', { text: item.effect.raw })));
+      } else {
+        const states = project.states.filter(s => s.type !== 'raw');
+        const effect = item.effect ?? null;
+        cells.push(h('td', {}, select([['', 'なし'], ...states.map(s => [s.id, s.label])], effect?.stateId ?? '', value => {
+          if (!value) { item.effect = null; changed(); draw(); return; }
+          const state = findState(states, value);
+          const action = state.type === 'number' ? 'increment' : state.type === 'choice' ? 'set' : 'toggle';
+          item.effect = { stateId: value, action };
+          if (action !== 'toggle') item.effect.value = state.type === 'number' ? 1 : state.type === 'choice' ? (state.options ?? [])[0]?.value ?? '' : 'true';
+          changed(); draw();
+        })));
+        const state = findState(states, effect?.stateId);
+        if (!state) {
+          cells.push(h('td', { class: 'muted', text: '—' }), h('td', { class: 'muted', text: '—' }));
+        } else {
+          const actions = state.type === 'number' ? [['increment', '増やす'], ['decrement', '減らす'], ['set', 'この値にする']]
+            : state.type === 'choice' ? [['set', 'この値にする']] : [['set', 'この値にする'], ['toggle', '反転する']];
+          cells.push(h('td', {}, select(actions, effect.action, value => {
+            effect.action = value;
+            if (value === 'toggle') delete effect.value;
+            else if (state.type === 'choice') effect.value = (state.options ?? [])[0]?.value ?? '';
+            else if (state.type === 'flag') effect.value = 'true';
+            else effect.value = Number.isInteger(effect.value) ? effect.value : 1;
+            changed(); draw();
+          })));
+          if (effect.action === 'toggle') cells.push(h('td', { class: 'muted', text: '—' }));
+          else if (state.type === 'choice') cells.push(h('td', {}, select((state.options ?? []).map(o => [o.value, o.label]), effect.value, value => { effect.value = value; changed(); })));
+          else if (state.type === 'flag') cells.push(h('td', {}, select([['true', 'はい'], ['false', 'いいえ']], effect.value, value => { effect.value = value; changed(); })));
+          else cells.push(h('td', { class: 'num' }, numberInput(effect.value, value => { effect.value = value; changed(); })));
+        }
+      }
+      cells.push(h('td', {}, item.verbatim ? button('通常のセリフに戻す', () => { delete item.verbatim; changed(); draw(); }, 'link') : null));
+      table.append(h('tr', {}, cells));
+    });
+    box.append(table);
+  };
+  draw();
+  return { box, draw };
+}
+function renameScene(scene, value) {
+  if (value === scene.id) return;
+  if (!ID_PATTERN.test(value) || value.length > LIMITS.idLength) { say('内部IDは英字か _ で始まる英数字と _ の30文字以内にしてください。'); renderPanel(); return; }
+  if (value === 'default' || project.scenes.some(s => s !== scene && s.id === value)) { say(`内部ID「${value}」はすでに使われています。`); renderPanel(); return; }
+  scene.id = value;
+  changed('内部IDを変更し、ファイル名も変わりました。');
+  renderPanel();
+}
+
+function sceneCard(owner, index, isFallback) {
+  const countText = () => `セリフ${parseSpeeches(owner.text).length}件`;
+  const nameText = label => (isFallback ? 'いつもの会話' : `場面${index + 1}：${label}`);
+  const name = h('strong', { text: nameText(owner.label) });
+  const counter = h('span', { class: 'muted', text: countText() });
+  const title = isFallback
+    ? [name, h('span', { class: 'muted', text: '条件なし・いちばん最後に使われます' }), counter]
+    : [name, h('code', { text: owner.id }),
+      h('span', { class: 'muted', text: `優先度 ${(project.scenes.length - index) * 10}（上にあるほど高い）` }),
+      h('span', { class: 'muted', text: `条件 ${(owner.conditions ?? []).length + (owner.anyOf ?? []).length}件` }), counter];
+  const body = h('div', {});
+  const grid = h('div', { class: 'field' });
+  grid.append(h('span', { text: '場面名' }), isFallback ? h('span', { text: owner.label }) : textInput(owner.label, value => { owner.label = value; name.textContent = nameText(value); changed(); }));
+  if (!isFallback) {
+    grid.append(h('span', { text: '内部ID' }), textInput(owner.id, value => renameScene(owner, value)),
+      h('span'), h('span', { class: 'hint', text: `保存先：speeches/${owner.id}.txt` }));
+  }
+  body.append(grid);
+  if (!isFallback) {
+    body.append(conditionList(owner.conditions ?? (owner.conditions = []), '条件（すべて満たすとき）', 'アプリの情報から選びます。複数書くと「すべて満たす」ときだけ使われます。'));
+    body.append(conditionList(owner.anyOf ?? (owner.anyOf = []), 'または（どれか1つ満たすとき）', 'ここは「どれか1つでも満たせば」使われます。空なら使いません。'));
+  }
+  body.append(h('h3', { text: '本文' }));
+  body.append(h('p', { class: 'hint', text: '空行でセリフを区切ります（1つのセリフは何行でも書けます。改行はそのまま表示されます）。「#」で始まる行は読み飛ばされるため、検証で止めます。' }));
+  const textarea = h('textarea', { rows: 12 });
+  textarea.value = owner.text;
+  const speech = speechTable(owner);
+  textarea.addEventListener('input', () => { owner.text = textarea.value; counter.textContent = countText(); changed(); speech.draw(); });
+  body.append(textarea);
+  body.append(h('div', {}, insertTool(textarea, owner, () => { counter.textContent = countText(); speech.draw(); })));
+  body.append(h('h3', { text: 'セリフごとの設定' }));
+  body.append(speech.box);
+  const actions = isFallback ? null : [
+    button('上へ', () => { if (index > 0) { project.scenes.splice(index - 1, 0, project.scenes.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('下へ', () => { if (index < project.scenes.length - 1) { project.scenes.splice(index + 1, 0, project.scenes.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('複製', () => {
+      if (project.scenes.length >= LIMITS.scenes) { say(`セリフ群は${LIMITS.scenes}場面までです。`); return; }
+      const copy = structuredClone({ ...owner, id: nextSceneId(), label: `${owner.label}のコピー` });
+      project.scenes.splice(index + 1, 0, copy);
+      changed('場面を複製しました。条件と本文を書き換えてください。');
+      renderPanel();
+    }),
+    button('削除', () => { project.scenes.splice(index, 1); changed('場面を削除しました。'); renderPanel(); }),
+  ];
+  return card(owner, 'scene', title, actions, body);
+}
+
+function nextSceneId() {
+  let n = project.scenes.length + 1;
+  while (project.scenes.some(s => s.id === `scene_${n}`)) n++;
+  return `scene_${n}`;
+}
+
+function addScene() {
+  if (project.scenes.length >= LIMITS.scenes) { say(`セリフ群は${LIMITS.scenes}場面までです。`); return; }
+  const scene = newScene(nextSceneId(), 'あたらしい場面');
+  const first = project.states.find(s => s.type !== 'raw');
+  const row = { key: first ? `state:${first.id}` : 'timeSlot', op: 'eq', value: '' };
+  resetConditionRow(row);
+  scene.conditions.push(row);
+  project.scenes.push(scene);
+  changed('場面を追加しました。');
+  renderPanel();
+}
+
+function renderScenes(panel) {
+  panel.append(h('h2', { text: `セリフ群　${project.scenes.length} / ${LIMITS.scenes}` }));
+  panel.append(h('p', { class: 'hint', text: '上にある場面ほど優先されます。条件が重なったときは、いちばん上にある場面のセリフが使われます。各場面は見出しをクリックすると閉じられます（閉じたまま「上へ」「下へ」で並べ替えられます）。' }));
+  addFoldBar(panel, [...project.scenes, project.fallback]);
+  project.scenes.forEach((scene, index) => panel.append(sceneCard(scene, index, false)));
+  panel.append(h('div', {}, button('＋ 場面を足す', addScene)));
+  panel.append(h('h2', { text: 'いつもの会話' }));
+  panel.append(sceneCard(project.fallback, 0, true));
+}
+
+function renderEmotionRules(panel) {
+  panel.append(h('h2', { text: '表情の自動切替' }));
+  panel.append(h('p', { class: 'hint', text: '上から順に見て、最初に条件が合った表情を使います。セリフごとに表情を選んでいる場合は、そちらが優先されます。' }));
+  panel.append(h('p', { class: 'hint', text: `どれも合わなかったときは「${project.emotions.find(e => e.id === project.emotionDefault)?.label ?? '通常'}」を使います（表情の画面で変更できます）。` }));
+  addFoldBar(panel, project.emotionRules);
+  project.emotionRules.forEach((rule, index) => panel.append(ruleCard(rule, index)));
+  panel.append(h('div', {}, button('＋ 自動切替を足す', () => {
+    if (project.emotionRules.length >= LIMITS.emotionRules) { say(`自動切替は${LIMITS.emotionRules}件までです。`); return; }
+    const first = project.states.find(s => s.type !== 'raw');
+    const row = { key: first ? `state:${first.id}` : 'isLowBattery', op: 'eq', value: '' };
+    resetConditionRow(row);
+    project.emotionRules.push({ conditions: [row], emotion: project.emotions[project.emotions.length - 1].id });
+    changed(); renderPanel();
+  })));
+}
+
+function ruleCard(rule, index) {
+  const emotionLabel = () => project.emotions.find(e => e.id === rule.emotion)?.label ?? rule.emotion;
+  const arrow = h('span', { class: 'muted', text: `→ ${emotionLabel()}` });
+  const title = [h('strong', { text: `自動切替${index + 1}` }),
+    h('span', { class: 'muted', text: rule.expression ? '取り込みの条件' : `条件 ${(rule.conditions ?? []).length}件` }), arrow];
+  const body = [
+    rule.expression
+      ? h('span', {}, h('span', { class: 'badge raw', text: '取り込み' }), h('code', { text: rule.expression }))
+      : conditionList(rule.conditions ?? (rule.conditions = []), '条件', ''),
+    h('div', { class: 'field' }, h('span', { text: 'この表情にする' }),
+      select(project.emotions.map(e => [e.id, e.label]), rule.emotion, value => { rule.emotion = value; arrow.textContent = `→ ${emotionLabel()}`; changed(); })),
+  ];
+  const actions = [
+    button('上へ', () => { if (index > 0) { project.emotionRules.splice(index - 1, 0, project.emotionRules.splice(index, 1)[0]); changed(); renderPanel(); } }),
+    button('削除', () => { project.emotionRules.splice(index, 1); changed(); renderPanel(); }),
+  ];
+  return card(rule, 'rule', title, actions, body);
+}
+async function replaceProject(next, message, notes = []) {
+  project = next;
+  importNotes = notes;
+  dirty = false;
+  section = 'character';
+  resetHistory();
+  say(message);
+  renderPanel();
+  renderOutput();
+}
+
+function busyTask(task) {
+  return async event => {
+    const nodes = [...document.querySelectorAll('button, input, select, textarea')];
+    nodes.forEach(node => { node.disabled = true; });
+    try { await task(event); }
+    catch (error) { say(error.message); }
+    finally { nodes.forEach(node => { node.disabled = false; }); }
+  };
+}
+
+function reportErrors() {
+  const errors = validate(project);
+  if (!errors.length) return false;
+  say(`直すところが ${errors.length} 件あります。右の「検証」を見てください。`);
+  renderOutput();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return true;
+}
+
+$('new').onclick = () => {
+  if (dirty && !confirm('保存していない変更を捨てて、新規の定義にしますか？')) return;
+  replaceProject(newProject(), '新規の定義を用意しました。');
+};
+
+$('save-project').onclick = busyTask(() => {
+  if (reportErrors()) return;
+  download(new TextEncoder().encode(serialize(project)), projectFileName(project.character.id), 'application/json');
+  dirty = false;
+  say(`${projectFileName(project.character.id)} の保存を開始しました。ダウンロード先を確認してください。`);
+});
+
+$('export').onclick = busyTask(async () => {
+  if (reportErrors()) return;
+  const bytes = await buildZip(project, say);
+  download(bytes, zipFileName(project.character.id), 'application/zip');
+  say(`${zipFileName(project.character.id)} の保存を開始しました。画像が未登録の表情には丸アイコンと名前のPNGを入れています。同じIDへの上書き導入はできません。`);
+});
+
+$('open-project').onchange = busyTask(async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    if (dirty && !confirm('保存していない変更を置き換えますか？')) return;
+    await replaceProject(parseProject(await file.text()), '定義を読み込みました。');
+  } finally { event.target.value = ''; }
+});
+
+$('open-zip').onchange = busyTask(async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    if (dirty && !confirm('保存していない変更を置き換えますか？')) return;
+    const { project: next, notes, source } = await importZip(await readFile(file));
+    await replaceProject(next, `${source} から取り込みました。取り込みのメモを右に表示しています。`, notes);
+  } finally { event.target.value = ''; }
+});
+
+window.addEventListener('beforeunload', event => {
+  if (!dirty) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
+
+$('undo').onclick = () => stepHistory(-1);
+$('redo').onclick = () => stepHistory(1);
+
+// Ctrl+S 保存 / Ctrl+O 開く / Ctrl+E ZIP書き出し / Ctrl+Z 戻す / Ctrl+Y やり直す
+window.addEventListener('keydown', event => {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+  const key = event.key.toLowerCase();
+  if (key === 's') { event.preventDefault(); $('save-project').click(); }
+  else if (key === 'o') { event.preventDefault(); $('open-project').click(); }
+  else if (key === 'e') { event.preventDefault(); $('export').click(); }
+  else if (key === 'z' && !event.shiftKey) { event.preventDefault(); stepHistory(-1); }
+  else if (key === 'y' || (key === 'z' && event.shiftKey)) { event.preventDefault(); stepHistory(1); }
+});
+
+$('about').textContent = '書き出すZIPは character.json ／ speeches/*.txt ／ images/*.png だけを含みます。'
+  + '上限：状態30・表情100・場面50・セリフ10,000件・1ファイル10 MiB・合計50 MiB。'
+  + 'ショートカット：Ctrl+S 定義を保存 ／ Ctrl+O 定義を開く ／ Ctrl+E ZIPを書き出す ／ Ctrl+Z 元に戻す ／ Ctrl+Y やり直す。'
+  + '実機（HomeMascot）での表示確認は行っていません。';
+
+resetHistory();
+renderPanel();
+renderOutput();
+document.documentElement.dataset.ready = 'true';
+})();
+
+</script>
+</body>
+</html>
