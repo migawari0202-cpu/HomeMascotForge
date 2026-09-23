@@ -524,6 +524,7 @@ class DynamicCharacter(
             "holidayName" to (ctx.holidayName ?: ""),
             "isWeekend" to ctx.isWeekend.toString(),
             "isHoliday" to ctx.isHoliday.toString(),
+            "isClockMode" to ctx.isClockMode.toString(),
             "isNearBedtime" to ctx.isNearBedtime.toString(),
             "isNearWakeup" to ctx.isNearWakeup.toString(),
             "moonPhase" to (ctx.moonPhase ?: ""),

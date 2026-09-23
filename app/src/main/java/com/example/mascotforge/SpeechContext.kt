@@ -74,7 +74,10 @@ data class SpeechContext(
     val isBeingPetted: Boolean,        // 短時間の連続タッチ中
 
     // === キャラクター状態（追加） ===
-    val characterState: CharacterState  // カスタム変数を含む状態
+    val characterState: CharacterState,  // カスタム変数を含む状態
+
+    // === 表示モード ===
+    val isClockMode: Boolean = false     // 時計Activity由来のコンテキストか
 
 ) {
     /**
@@ -351,6 +354,7 @@ data class SpeechContext(
             "dayOfWeek" -> dayOfWeek == value
             "isWeekend" -> isWeekend == value.toBoolean()
             "isHoliday" -> isHoliday == value.toBoolean()
+            "isClockMode" -> isClockMode == value.toBoolean()
 
             // 季節・イベント
             "season" -> season == value

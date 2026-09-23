@@ -69,8 +69,11 @@ class SafeCharacterLoader(context: Context) {
     /**
      * 現在のSpeechContextを取得（キャッシュなし・毎回最新の状態を生成）
      */
-    fun getCurrentContext(characterId: String = "default"): SpeechContext {
-        return SpeechContextFactory.create(context, characterId)
+    fun getCurrentContext(
+        characterId: String = "default",
+        isClockMode: Boolean = false
+    ): SpeechContext {
+        return SpeechContextFactory.create(context, characterId, isClockMode)
     }
 
     /**

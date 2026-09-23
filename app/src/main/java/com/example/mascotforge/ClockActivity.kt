@@ -1,6 +1,8 @@
 package com.example.mascotforge
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import com.example.mascotforge.character.CharacterStateManager
@@ -37,6 +40,8 @@ class ClockActivity : AppCompatActivity() {
     private lateinit var textClock: TextView
     private lateinit var characterImage: ImageView
     private lateinit var speechText: TextView
+    private lateinit var rootLayout: View
+    private lateinit var darkModeSwitch: com.google.android.material.switchmaterial.SwitchMaterial
 
     /** 例: 2026/07/25(土)\n14:30:45 */
     private val dateTimeFormat = SimpleDateFormat("yyyy/MM/dd(E)\nHH:mm:ss", Locale.JAPANESE)
@@ -65,9 +70,17 @@ class ClockActivity : AppCompatActivity() {
         characterImage = findViewById(R.id.widget_character_image_compact)
         speechText = findViewById(R.id.widget_speech_compact)
         val settingsButton = findViewById<Button>(R.id.button_settings)
-        val rootLayout = findViewById<View>(R.id.root_layout)
+        rootLayout = findViewById(R.id.root_layout)
+        darkModeSwitch = findViewById(R.id.switch_dark_mode)
 
-        applySafeAreaInsets(rootLayout, settingsButton, textClock)
+        applySafeAreaInsets(rootLayout, settingsButton, textClock, darkModeSwitch)
+
+        darkModeSwitch.isChecked = getClockPreferences().getBoolean(KEY_DARK_MODE, false)
+        applyDarkMode(darkModeSwitch.isChecked)
+        darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            getClockPreferences().edit().putBoolean(KEY_DARK_MODE, isChecked).apply()
+            applyDarkMode(isChecked)
+        }
 
         settingsButton.setOnClickListener {
             startActivity(Intent(this, CharacterSelectorActivity::class.java))
@@ -82,12 +95,13 @@ class ClockActivity : AppCompatActivity() {
 
     /**
      * systemBars + displayCutout のインセットを読み取り、
-     * 設定ボタンと時計を安全領域内に配置する。
+     * 設定ボタン・時計・ダークモードスイッチを安全領域内に配置する。
      */
     private fun applySafeAreaInsets(
         root: View,
         settingsButton: Button,
-        textClock: TextView
+        textClock: TextView,
+        darkModeSwitch: View
     ) {
         val baseMarginPx = (16 * resources.displayMetrics.density).toInt()
 
@@ -105,11 +119,49 @@ class ClockActivity : AppCompatActivity() {
                 topMargin = safe.top + baseMarginPx
                 marginEnd = safe.right + baseMarginPx
             }
+            darkModeSwitch.updateLayoutParams<FrameLayout.LayoutParams> {
+                bottomMargin = safe.bottom + baseMarginPx
+            }
 
             insets
         }
         ViewCompat.requestApplyInsets(root)
     }
+
+    /** 時計画面の配色を更新する。設定はこの画面だけに適用する。 */
+    private fun applyDarkMode(enabled: Boolean) {
+        val backgroundColor = if (enabled) Color.BLACK else Color.rgb(245, 245, 245)
+        val textColor = if (enabled) Color.WHITE else Color.rgb(51, 51, 51)
+        val bubbleColor = if (enabled) Color.rgb(28, 28, 28) else Color.WHITE
+        val bubbleStrokeColor = if (enabled) Color.rgb(75, 75, 75) else Color.rgb(224, 224, 224)
+
+        rootLayout.setBackgroundColor(backgroundColor)
+        textClock.setTextColor(textColor)
+        speechText.setTextColor(textColor)
+        darkModeSwitch.setTextColor(textColor)
+        speechText.background = if (enabled) {
+            GradientDrawable().apply {
+                setColor(bubbleColor)
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(2), bubbleStrokeColor)
+                setPadding(dp(4), dp(4), dp(4), dp(4))
+            }
+        } else {
+            getDrawable(R.drawable.speech_bubble_bg)
+        }
+
+        window.statusBarColor = backgroundColor
+        window.navigationBarColor = backgroundColor
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !enabled
+            isAppearanceLightNavigationBars = !enabled
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun getClockPreferences() =
+        getSharedPreferences(CLOCK_PREFERENCES, MODE_PRIVATE)
 
     override fun onResume() {
         super.onResume()
@@ -137,7 +189,7 @@ class ClockActivity : AppCompatActivity() {
                 val provider = characterManager.getCurrentProvider()
                 val characterId = characterManager.getCurrentCharacterId()
                 val contextLoader = SafeCharacterLoader(this@ClockActivity)
-                val speechContext = contextLoader.getCurrentContext(characterId)
+                val speechContext = contextLoader.getCurrentContext(characterId, isClockMode = true)
 
                 val speech = provider.getSpeech(speechContext)
                 speechText.text = speech.orEmpty()
@@ -176,7 +228,11 @@ class ClockActivity : AppCompatActivity() {
 
                 val character = CharacterRegistry.getCharacterById(this@ClockActivity, characterId)
                 if (character is DynamicCharacter) {
-                    val ctx = SpeechContextFactory.create(this@ClockActivity, characterId)
+                    val ctx = SpeechContextFactory.create(
+                        this@ClockActivity,
+                        characterId,
+                        isClockMode = true
+                    )
                     character.triggerTouchRules(ctx)
                     Log.d(TAG, "ON_TOUCH rules fired for character $characterId")
                 }
@@ -184,7 +240,7 @@ class ClockActivity : AppCompatActivity() {
                 // タッチ直後にセリフ・画像を反映
                 val provider = CharacterManager(this@ClockActivity).getCurrentProvider()
                 val contextLoader = SafeCharacterLoader(this@ClockActivity)
-                val speechContext = contextLoader.getCurrentContext(characterId)
+                val speechContext = contextLoader.getCurrentContext(characterId, isClockMode = true)
 
                 val speech = provider.getSpeech(speechContext)
                 speechText.text = speech.orEmpty()
@@ -199,6 +255,8 @@ class ClockActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "ClockActivity"
+        private const val CLOCK_PREFERENCES = "clock_activity"
+        private const val KEY_DARK_MODE = "dark_mode_enabled"
         private const val CLOCK_INTERVAL_MS = 1_000L
         private const val SPEECH_INTERVAL_MS = 2 * 60 * 1_000L // 2分固定
     }

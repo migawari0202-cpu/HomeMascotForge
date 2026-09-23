@@ -43,7 +43,8 @@ object SpeechContextFactory {
      */
     fun create(
         context: Context,
-        characterId: String = "default"
+        characterId: String = "default",
+        isClockMode: Boolean = false
     ): SpeechContext {
         val now = LocalDateTime.now()
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -218,6 +219,7 @@ object SpeechContextFactory {
             pettingLevel = pettingLevel,
             isBeingPetted = isBeingPetted,
             characterState = charState,
+            isClockMode = isClockMode,
         )
     }
 

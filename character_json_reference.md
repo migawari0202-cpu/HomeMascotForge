@@ -120,6 +120,7 @@ mychar.zip
 | `day` | int | `1`〜`31` |
 | `dayOfWeek` | string | `"月曜日"`〜`"日曜日"` |
 | `timeSlot` | string | `"morning"` / `"afternoon"` / `"evening"` / `"night"` / `"midnight"` |
+| `isClockMode` | boolean | ClockActivity由来のコンテキストなら `true` |
 | `season` | string | `"春"` / `"梅雨"` / `"夏"` / `"秋"` / `"冬"` |
 | `isWeekend` | boolean | `true` / `false` |
 | `isHoliday` | boolean | `true` / `false` |
