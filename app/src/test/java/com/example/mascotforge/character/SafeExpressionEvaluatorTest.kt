@@ -96,4 +96,14 @@ class SafeExpressionEvaluatorTest {
         assertTrue(evaluator.evaluate("!!isWeekend"))
         assertTrue(evaluator.evaluate("!(!isWeekend)"))
     }
+
+    @Test
+    fun isClockModeCanBeUsedInExpressions() {
+        val clockContext = createDummySpeechContext().copy(isClockMode = true)
+        val widgetContext = createDummySpeechContext()
+
+        assertTrue(SafeExpressionEvaluator(clockContext).evaluate("isClockMode"))
+        assertFalse(SafeExpressionEvaluator(widgetContext).evaluate("isClockMode"))
+        assertTrue(SafeExpressionEvaluator(widgetContext).evaluate("!isClockMode"))
+    }
 }

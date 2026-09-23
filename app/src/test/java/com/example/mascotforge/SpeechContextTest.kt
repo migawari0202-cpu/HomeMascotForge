@@ -94,6 +94,17 @@ class SpeechContextTest {
     }
 
     @Test
+    fun isClockModeMatchesSpeechRuleConditions() {
+        val clockContext = createSpeechContext().copy(isClockMode = true)
+        val widgetContext = createSpeechContext()
+
+        assertTrue(clockContext.matches("isClockMode", "true"))
+        assertFalse(clockContext.matches("isClockMode", "false"))
+        assertTrue(widgetContext.matches("isClockMode", "false"))
+        assertFalse(widgetContext.matches("isClockMode", "true"))
+    }
+
+    @Test
     fun matchesAny_matchesAnyValueForTheSameKey() {
         val conditions = mapOf("weatherCode" to listOf("雨", "小雨"))
 

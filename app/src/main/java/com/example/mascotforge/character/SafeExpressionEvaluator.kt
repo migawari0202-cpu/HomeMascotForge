@@ -231,6 +231,7 @@ class SafeExpressionEvaluator(
             "dayOfWeek" -> ctx.dayOfWeek
             "isWeekend" -> ctx.isWeekend.toString()
             "isHoliday" -> ctx.isHoliday.toString()
+            "isClockMode" -> ctx.isClockMode.toString()
             "holidayName" -> ctx.holidayName ?: ""
             "season" -> ctx.season
             "isSpecialDay" -> ctx.isSpecialDay.toString()
