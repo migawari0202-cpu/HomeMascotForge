@@ -174,3 +174,11 @@ README では概要だけ触れ、詳細仕様は `character_json_reference.md` 
 ## ライセンス
 
 MIT License。詳細は `LICENSE` を参照してください。
+
+## ちなみに
+
+haman
+なぎさ(Nagisa)
+migawari0202-cpu
+
+は別表記なだけで全部おんなじです。AIか俺か自動化された俺か又はなんかです。
