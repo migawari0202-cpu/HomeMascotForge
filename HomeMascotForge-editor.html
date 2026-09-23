@@ -175,6 +175,7 @@ const TRIGGERS = [
 // 標準変数カタログ。expr:false は emotions の条件式では使えない（SpeechContext のヘルパー専用）。
 const CATALOG = [
   { key: 'timeSlot', label: '時間帯', kind: 'select', values: TIME_SLOTS },
+  { key: 'isClockMode', label: '時計モード', kind: 'bool' },
   { key: 'hour', label: '時刻', kind: 'hour' },
   { key: 'day', label: '日にち', kind: 'day' },
   { key: 'dayOfWeek', label: '曜日', kind: 'select', values: ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'].map(v => [v, v]) },
@@ -207,6 +208,7 @@ const CATALOG = [
 // {変数名} としてセリフへ差し込める標準変数（DynamicCharacter.expandVariables の一覧）
 const EXPANDABLE = [
   'userName', 'hour', 'minute', 'month', 'day', 'dayOfWeek', 'timeSlot', 'season', 'weatherCode', 'weatherEmoji',
+  'isClockMode',
   'temperature', 'temperatureFeeling', 'batteryLevel', 'batteryStatus', 'consecutiveDays', 'launchCount',
   'touchCountToday', 'pettingLevel', 'holidayName', 'specialDayName',
 ];

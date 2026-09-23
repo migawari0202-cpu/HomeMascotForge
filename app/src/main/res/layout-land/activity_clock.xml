@@ -13,6 +13,16 @@
         android:layout_gravity="top|start"
         android:text="設定" />
 
+    <!-- OLED画面の消費電力を抑えるためのダーク表示切替 -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_dark_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="時計画面のダークモードを切り替え"
+        android:text="ダークモード" />
+
     <!-- 日付(曜日) / 時刻。設定ボタンの移動分は右上に配置 -->
     <TextView
         android:id="@+id/text_clock"
@@ -34,6 +44,7 @@
         android:id="@+id/character_area"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="64dp"
         android:layout_marginTop="72dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
