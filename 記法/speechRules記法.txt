@@ -84,6 +84,7 @@ conditions / anyOf が両方空のルールはデフォルト（フォールバ�
     "temperatureFeeling": "寒い"
     "isCharging": "true"   /  "isCharging": "false"
     "isWeekend": "true"
+    "isClockMode": "true"  （時計Activityで表示されている場合）
     "isLowBattery": "true"
     "isFirstLaunchToday": "true"
     "wasTouched": "true"

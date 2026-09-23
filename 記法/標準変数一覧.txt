@@ -19,6 +19,7 @@ speechRules の conditions / anyOf でも多くのキーが使えるが、
   day                   int       1〜31
   dayOfWeek             string    "月曜日" / "火曜日" ... "日曜日"
   timeSlot              string    "morning" / "afternoon" / "evening" / "night" / "midnight"
+  isClockMode           boolean   時計Activity由来のコンテキストなら true
   season                string    "春" / "梅雨" / "夏" / "秋" / "冬"
   isWeekend             boolean   土日が true
   isHoliday             boolean   祝日が true
