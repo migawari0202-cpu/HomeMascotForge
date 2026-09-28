@@ -894,7 +894,8 @@ async function unzip(bytes) {
     const size = view.getUint32(at + 24, true);
     const nameLength = view.getUint16(at + 28, true);
     const local = view.getUint32(at + 42, true);
-    const name = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLength));
+    // Windows 製 ZIP の "speeches\foo.txt" を "speeches/foo.txt" に正規化（ZipSecurityValidator.kt と同じ）
+    const name = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLength)).replace(/\\/g, '/');
     at += 46 + nameLength + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
     if (name.endsWith('/')) continue;
     if (size > LIMITS.file) throw new Error(`1ファイルは10 MiBまでです：${name}`);
