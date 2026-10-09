@@ -5,14 +5,18 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.BroadcastReceiver
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import com.example.mascotforge.R
+import com.example.mascotforge.CharacterManager
 import com.example.mascotforge.WeatherUpdateWorker
 import com.example.mascotforge.character.CharacterStateManager
 import com.example.mascotforge.character.DynamicCharacter
 import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.speech.SpeechContextFactory
+import com.example.mascotforge.widget.cache.UserWeatherCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,6 +51,9 @@ class TimeWidgetProvider : AppWidgetProvider() {
 
         // カスタムアクション
         const val ACTION_RECORD_TOUCH = "ACTION_RECORD_TOUCH"
+        const val ACTION_RECORD_WEATHER_TOUCH = "ACTION_RECORD_WEATHER_TOUCH"
+        private const val TOUCH_WINDOW_MS = 150L
+        private val pendingTouches = mutableMapOf<Int, MutableList<WidgetTouchEvent>>()
 
         // コルーチンスコープ
         private var scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -168,7 +175,8 @@ class TimeWidgetProvider : AppWidgetProvider() {
         Log.d(TAG, "onReceive: action=${intent.action}")
 
         when (intent.action) {
-            ACTION_RECORD_TOUCH -> handleTouchAction(context, intent)
+            ACTION_RECORD_TOUCH -> enqueueTouch(context, intent, WidgetTouchTarget.CHARACTER, goAsync())
+            ACTION_RECORD_WEATHER_TOUCH -> enqueueTouch(context, intent, WidgetTouchTarget.WEATHER, goAsync())
         }
     }
 
@@ -261,66 +269,79 @@ class TimeWidgetProvider : AppWidgetProvider() {
     // プライベートメソッド
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    /**
-     * タッチアクション処理（キャラクターID別に状態管理）
-     *
-     * 処理フロー:
-     * 1. Intent から characterId と appWidgetId を取得
-     * 2. キャラクター別に状態を取得
-     * 3. タッチを記録
-     * 4. 状態を保存（キー: {characterId}_{property}）
-     * 5. このウィジェットのみ更新
-     */
-    private fun handleTouchAction(context: Context, intent: Intent) {
-        // 1. パラメータ取得
-        val characterId = intent.getStringExtra("CHARACTER_ID")
-        val appWidgetId = intent.getIntExtra(
-            AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APPWIDGET_ID
-        )
-
-        // 2. バリデーション
-        if (characterId == null) {
-            Log.e(TAG, "CHARACTER_ID missing in Intent for ACTION_RECORD_TOUCH")
+    /** ウィジェットごとの近接タップを受信順のタイムスタンプでまとめる。 */
+    private fun enqueueTouch(
+        context: Context, intent: Intent, target: WidgetTouchTarget,
+        pendingResult: BroadcastReceiver.PendingResult
+    ) {
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            pendingResult.finish()
             return
         }
-
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.e(TAG, "Invalid APPWIDGET_ID in Intent for ACTION_RECORD_TOUCH")
-            return
+        // BroadcastReceiver は短命なので、イベントをプロセス内のスコープに保持して近接タップをまとめる。
+        synchronized(pendingTouches) {
+            val events = pendingTouches.getOrPut(widgetId) { mutableListOf() }
+            events.add(WidgetTouchEvent(target, SystemClock.elapsedRealtimeNanos()))
         }
+        ensureScopeActive()
+        scope.launch {
+            try {
+                delay(TOUCH_WINDOW_MS)
+                val events = synchronized(pendingTouches) { pendingTouches.remove(widgetId)?.toList().orEmpty() }
+                if (events.isEmpty()) return@launch
+                val characterId = CharacterManager(context).getCharacterIdForWidget(widgetId)
+                val firstEvent = events.minByOrNull { it.timestamp } ?: return@launch
+                val selected = if (events.any { it.timestamp == firstEvent.timestamp && it.target != firstEvent.target }) {
+                    val character = CharacterRegistry.getCharacterById(context, characterId)
+                    if (character is DynamicCharacter) {
+                        val base = SpeechContextFactory.create(context, characterId)
+                        selectWidgetTouchEvent(
+                            events,
+                            character.matchingSpeechPriority(base.copy(wasTouched = true, weatherTouched = false)),
+                            character.matchingSpeechPriority(base.copy(wasTouched = false, weatherTouched = true))
+                        ) ?: firstEvent
+                    } else selectWidgetTouchEvent(events, 0, 0) ?: firstEvent
+                } else firstEvent
+                handleTouchAction(context, widgetId, characterId, selected.target)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to handle touch for widget $widgetId", e)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
 
-        // 3. キャラクター別に状態を管理
-        val stateManager = CharacterStateManager(context)
+    private fun handleTouchAction(context: Context, appWidgetId: Int, characterId: String, target: WidgetTouchTarget) {
+        if (target == WidgetTouchTarget.CHARACTER) {
+            val stateManager = CharacterStateManager(context)
+            val currentState = stateManager.getState(characterId)
+            stateManager.recordTouch(currentState)
+            stateManager.saveState(characterId, currentState)
 
-        // キャラIDで状態を取得（他のキャラとは独立）
-        val currentState = stateManager.getState(characterId)
-
-        // このキャラの状態を更新
-        stateManager.recordTouch(currentState)
-
-        // 状態を保存（キー: "neko_touch_count" など）
-        stateManager.saveState(characterId, currentState)
-
-        Log.d(TAG, "Touch recorded: character=$characterId, widget=$appWidgetId, " +
+            Log.d(TAG, "Touch recorded: character=$characterId, widget=$appWidgetId, " +
                 "count=${currentState.touchCount}, today=${currentState.touchCountToday}, " +
                 "consecutive=${currentState.consecutiveTouchCount}")
 
-        // 4. ON_TOUCH カスタム変数ルールを発火（updateSingleWidget より前に実行し、
-        //    変数値を更新してからセリフ再生成が走るようにする）
-        try {
-            val character = CharacterRegistry.getCharacterById(context, characterId)
-            if (character is DynamicCharacter) {
-                val ctx = SpeechContextFactory.create(context, characterId)
-                character.triggerTouchRules(ctx)
-                Log.d(TAG, "ON_TOUCH rules fired for character $characterId")
+            // セリフを再生成する前にキャラの ON_TOUCH ルールを発火。
+            try {
+                val character = CharacterRegistry.getCharacterById(context, characterId)
+                if (character is DynamicCharacter) {
+                    val ctx = SpeechContextFactory.create(context, characterId)
+                    character.triggerTouchRules(ctx)
+                    Log.d(TAG, "ON_TOUCH rules fired for character $characterId")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fire ON_TOUCH rules for $characterId", e)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to fire ON_TOUCH rules for $characterId", e)
         }
 
-        // 5. このウィジェットのみ更新（他のウィジェットは触らない）
-        updateSingleWidget(context, appWidgetId, characterId)
+        // 天気タップではキャラのタッチ回数や ON_TOUCH ルールを変更しない。
+        updateSingleWidget(context, appWidgetId, characterId, target)
+        if (target == WidgetTouchTarget.WEATHER && UserWeatherCache(context).getCurrentWeather() == null) {
+            // 取得前・期限切れ・取得失敗時は、セリフ更新と並行して既存の天気取得を依頼する。
+            WeatherUpdateWorker.enqueueImmediateUpdate(context, tag = "weather_touch")
+        }
     }
 
     /**
@@ -329,7 +350,7 @@ class TimeWidgetProvider : AppWidgetProvider() {
      * @param appWidgetId 更新対象のウィジェットID
      * @param characterId キャラクターID
      */
-    private fun updateSingleWidget(context: Context, appWidgetId: Int, characterId: String) {
+    private fun updateSingleWidget(context: Context, appWidgetId: Int, characterId: String, target: WidgetTouchTarget) {
         ensureScopeActive()
         scope.launch {
             try {
@@ -337,7 +358,7 @@ class TimeWidgetProvider : AppWidgetProvider() {
 
                 val coordinator = WidgetUpdateCoordinator(context)
                 // このキャラのこのウィジェットのみ更新
-                coordinator.updateSpeechForWidget(appWidgetId, characterId)
+                coordinator.updateSpeechForWidget(appWidgetId, characterId, target)
 
                 Log.d(TAG, "Widget $appWidgetId updated for character $characterId")
 

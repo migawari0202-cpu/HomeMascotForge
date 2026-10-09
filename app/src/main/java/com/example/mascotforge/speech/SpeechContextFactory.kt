@@ -218,6 +218,7 @@ object SpeechContextFactory {
             consecutiveTouchCount = consecutiveTouchCount,
             pettingLevel = pettingLevel,
             isBeingPetted = isBeingPetted,
+            weatherTouched = false,
             characterState = charState,
             isClockMode = isClockMode,
         )

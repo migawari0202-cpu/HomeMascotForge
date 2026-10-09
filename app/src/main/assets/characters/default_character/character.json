@@ -66,6 +66,21 @@
   },
   "speechRules": [
     {
+      "file": "speeches/weather_loading.txt",
+      "conditions": {
+        "weatherTouched": "true",
+        "weatherCode": "不明"
+      },
+      "priority": 110
+    },
+    {
+      "file": "speeches/weather_touched.txt",
+      "conditions": {
+        "weatherTouched": "true"
+      },
+      "priority": 110
+    },
+    {
       "file": "speeches/petting.txt",
       "conditions": {
         "isBeingPetted": "true",

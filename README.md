@@ -38,6 +38,18 @@ HomeMascot は、Android のホーム画面に「キャラクター付きデス�
 - 連続起動日数
 - タップ操作による状態変化
 
+キャラクターのセリフ条件には `weatherTouched`（天気表示をタップした時だけ `true`）と `weatherCode`（天気が未取得・期限切れなら `"不明"`）を利用できます。両方を条件にすると、天気を確認できない時だけの反応を作れます。
+
+```json
+{
+  "file": "speeches/weather_loading.txt",
+  "conditions": { "weatherTouched": "true", "weatherCode": "不明" },
+  "priority": 110
+}
+```
+
+天気が不明な状態で表示をタップすると、キャラクターのセリフを更新し、既存の天気取得処理を依頼します。取得できた場合はウィジェットも更新されます。ネットワークや API キーなどの条件で取得できない場合は「不明」のままです。天気が判明しているときのタップは `weatherTouched=true` の条件で別のセリフに分岐できます。詳細な利用可能変数は [`character_json_reference.md`](character_json_reference.md#利用可能な標準変数条件式セリフ共通) を参照してください。
+
 セリフは単純な固定文ではなく、条件付きルールやカスタム変数を使って変化させられます。
 
 ### 2. メモ表示

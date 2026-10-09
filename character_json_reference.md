@@ -121,13 +121,14 @@ mychar.zip
 | `dayOfWeek` | string | `"月曜日"`〜`"日曜日"` |
 | `timeSlot` | string | `"morning"` / `"afternoon"` / `"evening"` / `"night"` / `"midnight"` |
 | `isClockMode` | boolean | ClockActivity由来のコンテキストなら `true` |
+| `weatherTouched` | boolean | ウィジェットの天気表示をタップしてセリフを更新する時だけ `true` |
 | `season` | string | `"春"` / `"梅雨"` / `"夏"` / `"秋"` / `"冬"` |
 | `isWeekend` | boolean | `true` / `false` |
 | `isHoliday` | boolean | `true` / `false` |
 | `holidayName` | string | `"元日"` など |
 | `isSpecialDay` | boolean | |
 | `specialDayName` | string | |
-| `weatherCode` | string | 実行時は日本語に正規化される（下記エイリアス参照） |
+| `weatherCode` | string | 実行時は日本語に正規化される。未取得・期限切れ時は `"不明"`（下記エイリアス参照） |
 | `weatherEmoji` | string | `"☀️"` など |
 | `temperature` | int | 摂氏 |
 | `temperatureFeeling` | string | `"暑い"` / `"少し暑い"` / `"ちょうどいい"` / `"少し寒い"` / `"寒い"` |
@@ -152,6 +153,8 @@ mychar.zip
 | `isNearBedtime` | boolean | 21:00〜翌1:59 で true |
 | `isNearWakeup` | boolean | 6:00〜8:59 で true |
 | `moonPhase` | string | 未実装（`null` / 展開は空文字） |
+
+天気が分からない時のタップだけに反応するには、`conditions` に `"weatherTouched": "true"` と `"weatherCode": "不明"` を指定します。新たなタップ変数は不要です。天気キャッシュがないときは即時取得が依頼されます（成功するかは通信・設定次第）。
 
 ---
 
