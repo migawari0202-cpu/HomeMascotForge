@@ -72,6 +72,7 @@ data class SpeechContext(
     val consecutiveTouchCount: Int,    // 短時間に続けてタッチされた回数
     val pettingLevel: Int,             // 撫で段階 0..3
     val isBeingPetted: Boolean,        // 短時間の連続タッチ中
+    val weatherTouched: Boolean = false, // 天気のボタンをクリックされた
 
     // === キャラクター状態（追加） ===
     val characterState: CharacterState,  // カスタム変数を含む状態
@@ -398,6 +399,7 @@ data class SpeechContext(
             "launchCount" -> checkNumberCondition(launchCount, value)
             "isFirstLaunchToday" -> isFirstLaunchToday == value.toBoolean()
             "wasTouched" -> wasTouched == value.toBoolean()
+            "weatherTouched" -> weatherTouched == value.toBoolean()
             "touchCount" -> checkNumberCondition(touchCount, value)
             "touchCountToday" -> checkNumberCondition(touchCountToday, value)
             "lastTouchMinutesAgo" -> checkNumberCondition(lastTouchMinutesAgo, value)

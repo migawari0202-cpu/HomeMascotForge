@@ -106,4 +106,18 @@ class SafeExpressionEvaluatorTest {
         assertFalse(SafeExpressionEvaluator(widgetContext).evaluate("isClockMode"))
         assertTrue(SafeExpressionEvaluator(widgetContext).evaluate("!isClockMode"))
     }
+
+    @Test
+    fun weatherTouchedCanBeUsedInExpressions() {
+        val weather = createDummySpeechContext().copy(weatherTouched = true)
+        assertTrue(SafeExpressionEvaluator(weather).evaluate("weatherTouched && !wasTouched"))
+        assertFalse(SafeExpressionEvaluator(createDummySpeechContext()).evaluate("weatherTouched"))
+    }
+
+    @Test
+    fun unknownWeatherAndWeatherTapCanBeUsedInEmotionRules() {
+        val ctx = createDummySpeechContext(weatherCode = "不明").copy(weatherTouched = true)
+        assertTrue(SafeExpressionEvaluator(ctx).evaluate("weatherTouched && weatherCode == \"不明\""))
+        assertFalse(SafeExpressionEvaluator(ctx.copy(weatherTouched = false)).evaluate("weatherTouched && weatherCode == \"不明\""))
+    }
 }

@@ -105,6 +105,25 @@ class SpeechContextTest {
     }
 
     @Test
+    fun weatherTouchedMatchesSpeechRules() {
+        val weather = createSpeechContext().copy(weatherTouched = true)
+        assertTrue(weather.matches("weatherTouched", "true"))
+        assertFalse(weather.matches("weatherTouched", "false"))
+        assertTrue(weather.matchesAll(mapOf("weatherTouched" to "true", "wasTouched" to "false")))
+        assertTrue(createSpeechContext().matches("weatherTouched", "false"))
+    }
+
+    @Test
+    fun unknownWeatherCanBeCombinedWithWeatherTouchWithoutExtraVariable() {
+        val unknown = createSpeechContext(weatherCode = "不明").copy(weatherTouched = true)
+        val loadingRule = mapOf("weatherTouched" to "true", "weatherCode" to "不明")
+
+        assertTrue(unknown.matchesAll(loadingRule))
+        assertFalse(createSpeechContext(weatherCode = "不明").matchesAll(loadingRule))
+        assertFalse(createSpeechContext(weatherCode = "雨").copy(weatherTouched = true).matchesAll(loadingRule))
+    }
+
+    @Test
     fun matchesAny_matchesAnyValueForTheSameKey() {
         val conditions = mapOf("weatherCode" to listOf("雨", "小雨"))
 

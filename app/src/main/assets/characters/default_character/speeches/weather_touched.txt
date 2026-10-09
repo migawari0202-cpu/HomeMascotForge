@@ -1,0 +1,2 @@
+今日の天気は {weatherEmoji}、{weatherCode} です。港の空も、こんな感じかな？[emotion:happy]
+いまの気温は {temperature}℃ です。お出かけするなら、気をつけてくださいね。

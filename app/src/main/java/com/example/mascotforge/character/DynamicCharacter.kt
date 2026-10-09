@@ -269,6 +269,16 @@ class DynamicCharacter(
         return null
     }
 
+    /** 同時タップ時、各イベントで実際に適合するセリフルールの優先度。 */
+    fun matchingSpeechPriority(context: SpeechContext): Int {
+        val customValues = variableManager.getAllValues(metadata.customVariables)
+        return metadata.speechRules.asSequence()
+            .filter { it.files.isNotEmpty() }
+            .filter { it.conditions.isEmpty() || context.matchesAll(it.conditions, customValues) }
+            .filter { it.anyOf.isEmpty() || context.matchesAny(it.anyOf, customValues) }
+            .maxOfOrNull { it.priority } ?: Int.MIN_VALUE
+    }
+
     private fun applyVariableOperations(operations: List<VariableOperation>) {
         operations.forEach { op ->
 
@@ -533,6 +543,7 @@ class DynamicCharacter(
             "lastLaunchHoursAgo" to (ctx.lastLaunchHoursAgo?.toString() ?: "0"),
             "isFirstLaunchToday" to ctx.isFirstLaunchToday.toString(),
             "wasTouched" to ctx.wasTouched.toString(),
+            "weatherTouched" to ctx.weatherTouched.toString(),
             "touchCount" to ctx.touchCount.toString(),
             "touchCountToday" to ctx.touchCountToday.toString(),
             "lastTouchMinutesAgo" to ctx.lastTouchMinutesAgo.toString(),

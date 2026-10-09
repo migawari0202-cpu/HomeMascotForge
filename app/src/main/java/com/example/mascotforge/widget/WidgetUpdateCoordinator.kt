@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import com.example.mascotforge.CharacterManager
 import com.example.mascotforge.R
 import com.example.mascotforge.character.SafeCharacterLoader
+import com.example.mascotforge.speech.SpeechContext
 import com.example.mascotforge.widget.cache.UserWeatherCache
 import com.example.mascotforge.widget.database.MemoRepository
 import kotlinx.coroutines.flow.first
@@ -152,11 +153,14 @@ class WidgetUpdateCoordinator(private val context: Context) {
         viewUpdater.updateMemoViews(views, memoTexts, memoTextSize, layoutId)
     }
 
-    private suspend fun updateCharacter(views: RemoteViews, layoutType: WidgetLayoutType, widgetId: Int) {
+    private suspend fun updateCharacter(
+        views: RemoteViews, layoutType: WidgetLayoutType, widgetId: Int,
+        touchTarget: WidgetTouchTarget? = null
+    ) {
         try {
             val characterId = characterManager.getCharacterIdForWidget(widgetId)
             val provider = characterManager.getProviderForWidget(widgetId)
-            val speechContext = contextLoader.getCurrentContext(characterId)
+            val speechContext = contextLoader.getCurrentContext(characterId).forTouchTarget(touchTarget)
             val updaterLayoutType = layoutType.toUpdaterLayoutType()
 
             Log.d(TAG, "updateCharacter: widgetId=$widgetId, layoutType=$layoutType, characterId=$characterId")
@@ -214,11 +218,11 @@ class WidgetUpdateCoordinator(private val context: Context) {
         }
     }
 
-    suspend fun updateSpeechForWidget(appWidgetId: Int, characterId: String) {
+    internal suspend fun updateSpeechForWidget(appWidgetId: Int, characterId: String, touchTarget: WidgetTouchTarget? = null) {
         try {
             val ctx = createWidgetContext(appWidgetId)
 
-            updateCharacter(ctx.views, ctx.layoutType, appWidgetId)
+            updateCharacter(ctx.views, ctx.layoutType, appWidgetId, touchTarget)
             setupButtonClickListeners(ctx.views, appWidgetId, ctx.layoutType)
 
             appWidgetManager.partiallyUpdateAppWidget(appWidgetId, ctx.views)
@@ -226,6 +230,12 @@ class WidgetUpdateCoordinator(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error updating speech for single widget $appWidgetId", e)
         }
+    }
+
+    private fun SpeechContext.forTouchTarget(target: WidgetTouchTarget?): SpeechContext = when (target) {
+        WidgetTouchTarget.CHARACTER -> copy(wasTouched = true, weatherTouched = false)
+        WidgetTouchTarget.WEATHER -> copy(wasTouched = false, weatherTouched = true)
+        null -> this
     }
 
     suspend fun updateWeatherOnly() {
@@ -275,6 +285,24 @@ class WidgetUpdateCoordinator(private val context: Context) {
         Log.d(TAG, "Touch listener set for widget $widgetId on char $characterId (Image ID: $characterImageId)")
     }
 
+    private fun setupWeatherTouchListener(views: RemoteViews, widgetId: Int, layoutType: WidgetLayoutType) {
+        val weatherAreaId = when (layoutType) {
+            WidgetLayoutType.NORMAL -> R.id.weather_area_normal
+            WidgetLayoutType.COMPACT -> R.id.weather_area_compact
+        }
+        val intent = Intent(context, TimeWidgetProvider::class.java).apply {
+            action = TimeWidgetProvider.ACTION_RECORD_WEATHER_TOUCH
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+        }
+        views.setOnClickPendingIntent(
+            weatherAreaId,
+            PendingIntent.getBroadcast(
+                context, widgetId, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        )
+    }
+
     private fun setupActivityButton(
         views: RemoteViews,
         buttonId: Int?,
@@ -311,5 +339,6 @@ class WidgetUpdateCoordinator(private val context: Context) {
         }
 
         setupActivityButton(views, memoButtonId, com.example.mascotforge.MemoFindActivity::class.java, 2100 + widgetId)
+        setupWeatherTouchListener(views, widgetId, layoutType)
     }
 }

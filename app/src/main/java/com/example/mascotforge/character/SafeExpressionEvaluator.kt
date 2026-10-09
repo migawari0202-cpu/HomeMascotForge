@@ -250,6 +250,7 @@ class SafeExpressionEvaluator(
             "isFirstLaunchToday" -> ctx.isFirstLaunchToday.toString()
             "consecutiveDays" -> ctx.consecutiveDays.toString()
             "wasTouched" -> ctx.wasTouched.toString()
+            "weatherTouched" -> ctx.weatherTouched.toString()
             "touchCount" -> ctx.touchCount.toString()
             "touchCountToday" -> ctx.touchCountToday.toString()
             "lastTouchMinutesAgo" -> ctx.lastTouchMinutesAgo.toString()

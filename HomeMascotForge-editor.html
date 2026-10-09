@@ -182,7 +182,7 @@ const CATALOG = [
   { key: 'season', label: '季節', kind: 'select', values: ['春', '梅雨', '夏', '秋', '冬'].map(v => [v, v]) },
   { key: 'isWeekend', label: '週末', kind: 'bool' },
   { key: 'isHoliday', label: '祝日', kind: 'bool' },
-  { key: 'weatherCode', label: '天気', kind: 'select', values: ['晴れ', '晴れ時々曇り', '曇り', '雨', '小雨', '雷雨', '雪', '霧', '嵐'].map(v => [v, v]) },
+  { key: 'weatherCode', label: '天気（未取得・期限切れは「不明」）', kind: 'select', values: ['晴れ', '晴れ時々曇り', '曇り', '雨', '小雨', '雷雨', '雪', '霧', '嵐', '不明'].map(v => [v, v]) },
   { key: 'temperatureFeeling', label: '気温の感じ方', kind: 'select', values: ['暑い', '少し暑い', 'ちょうどいい', '少し寒い', '寒い'].map(v => [v, v]) },
   { key: 'temperature', label: '気温（℃）', kind: 'number' },
   { key: 'isRaining', label: '雨が降っている', kind: 'bool', expr: false },
@@ -197,6 +197,7 @@ const CATALOG = [
   { key: 'launchCount', label: '今日の起動回数', kind: 'number' },
   { key: 'lastLaunchHoursAgo', label: '前回の起動からの時間', kind: 'number' },
   { key: 'wasTouched', label: 'さっき触られた', kind: 'bool' },
+  { key: 'weatherTouched', label: '天気表示をタップした（不明時は天気取得を依頼）', kind: 'bool' },
   { key: 'touchCountToday', label: '今日のタッチ回数', kind: 'number' },
   { key: 'consecutiveTouchCount', label: '連続タッチ回数', kind: 'number' },
   { key: 'pettingLevel', label: 'なで段階（0〜3）', kind: 'number' },
@@ -211,6 +212,7 @@ const EXPANDABLE = [
   'isClockMode',
   'temperature', 'temperatureFeeling', 'batteryLevel', 'batteryStatus', 'consecutiveDays', 'launchCount',
   'touchCountToday', 'pettingLevel', 'holidayName', 'specialDayName',
+  'weatherTouched',
 ];
 
 function catalogEntry(key) { return CATALOG.find(e => e.key === key) ?? null; }
