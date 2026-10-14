@@ -20,6 +20,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.example.mascotforge.isDaytime
 import com.example.mascotforge.weather.WeatherRepository
 import com.example.mascotforge.widget.TimeWidgetProvider
 import com.example.mascotforge.widget.cache.UserWeatherCache
@@ -92,12 +93,12 @@ class WeatherUpdateWorker(
         return try {
             val location = locationResolver.resolveLocation()
             val weather = weatherRepository.getCurrentWeather(location.latitude, location.longitude)
-            val emoji = getWeatherEmoji(weather.weatherId)
-            val code = getWeatherCode(weather.weatherId)
+            val emoji = getWeatherEmoji(weather.weatherCode)
+            val code = getWeatherCode(weather.weatherCode)
 
             Log.d(
                 TAG,
-                "Weather fetched: $emoji ($code) ${weather.temperature}C at ${weather.cityName} (${location.source})"
+                "Weather fetched: $emoji ($code) ${weather.temperature}C (${location.source})"
             )
 
             UserWeatherCache(applicationContext).updateFromWorker(
@@ -112,26 +113,41 @@ class WeatherUpdateWorker(
         }
     }
 
-    private fun getWeatherEmoji(weatherId: Int): String = when (weatherId) {
-        800 -> if (isDaytime()) "☀️" else "🌙"
-        in 801..804 -> "☁️"
-        in 500..531 -> "🌧️"
-        in 200..232 -> "⛈️"
-        in 600..622 -> "❄️"
-        in 701..781 -> "🌫️"
-        in 300..321 -> "🌦️"
-        else ->  "?"
+    private fun getWeatherEmoji(wmoCode: Int): String = when (wmoCode) {
+        0 -> if (isDaytime()) "☀️" else "🌙"           // Clear sky
+        1 -> if (isDaytime()) "🌤️" else "🌙"          // Mainly clear
+        2 -> "⛅"                                       // Partly cloudy
+        3 -> "☁️"                                       // Overcast
+        45, 48 -> "🌫️"                                // Fog / Depositing rime fog
+        51, 53, 55 -> "🌦️"                           // Drizzle (light, moderate, dense)
+        56, 57 -> "🌧️"                                // Freezing drizzle
+        61, 63, 65 -> "🌧️"                           // Rain (slight, moderate, heavy)
+        66, 67 -> "🌧️"                                // Freezing rain
+        71, 73, 75 -> "❄️"                            // Snow fall (slight, moderate, heavy)
+        77 -> "❄️"                                     // Snow grains
+        80, 81, 82 -> "🌦️"                           // Rain showers (slight, moderate, violent)
+        85, 86 -> "❄️"                                // Snow showers (slight, heavy)
+        95 -> "⛈️"                                     // Thunderstorm
+        96, 99 -> "⛈️"                                // Thunderstorm with hail
+        else -> "?"
     }
-    private fun getWeatherCode(weatherId: Int): String = when (weatherId) {
-        in 200..232 -> "thunder"
-        in 300..321 -> "drizzle"
-        in 500..531 -> "rain"
-        in 600..622 -> "snow"
-        771, 781 -> "storm"
-        in 701..781 -> "fog"
-        800 -> "clear"
-        in 801..802 -> "partly_cloudy"
-        in 803..804 -> "cloudy"
+
+    private fun getWeatherCode(wmoCode: Int): String = when (wmoCode) {
+        0 -> "clear"
+        1 -> "partly_cloudy"
+        2 -> "partly_cloudy"
+        3 -> "cloudy"
+        45, 48 -> "fog"
+        51, 53, 55 -> "drizzle"
+        56, 57 -> "drizzle"
+        61, 63, 65 -> "rain"
+        66, 67 -> "rain"
+        71, 73, 75 -> "snow"
+        77 -> "snow"
+        80, 81, 82 -> "rain"
+        85, 86 -> "snow"
+        95 -> "thunder"
+        96, 99 -> "thunder"
         else -> "clear"
     }
 }

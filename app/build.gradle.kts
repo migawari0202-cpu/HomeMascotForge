@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,15 +18,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // APIキー読み込み: 優先順は local.properties の WEATHER_API_KEY -> 環境変数 WEATHER_API_KEY
-        val localProperties = rootProject.file("local.properties").takeIf { it.exists() }?.reader()?.use {
-            Properties().apply { load(it) }
-        }
-        val propKey = localProperties?.getProperty("WEATHER_API_KEY")?.takeIf { it.isNotBlank() }
-        val envKey = System.getenv("WEATHER_API_KEY") ?: ""
-        val apiKey = propKey ?: envKey
-        buildConfigField("String", "WEATHER_API_KEY", "\"$apiKey\"")
 
     }
 

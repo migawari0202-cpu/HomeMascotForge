@@ -61,7 +61,7 @@ HomeMascot は、Android のホーム画面に「キャラクター付きデス�
 ### 3. 天気連携
 
 - 現在地ベースで天気を取得
-- OpenWeatherMap API を利用
+- Open-Meteo API を利用（API キー不要）
 - WorkManager とアラームで定期更新
 
 ### 4. 追加キャラクターの導入
@@ -86,17 +86,7 @@ HomeMascot は、Android のホーム画面に「キャラクター付きデス�
 - `compileSdk = 36`
 
 ### API キー設定
-
-天気取得には OpenWeatherMap の API キーが必要です。  
-リポジトリ直下の `local.properties` に次を追加してください。
-
-```properties
-WEATHER_API_KEY=your_api_key_here
-```
-
-この値は `BuildConfig.WEATHER_API_KEY` として参照されます。
-
-代わりにビルド環境で環境変数 `WEATHER_API_KEY` を設定することもできます。優先順は `local.properties` の値が最優先で、見つからない場合は環境変数が使用されます。
+天気取得には **Open-Meteo API** を使用します。API キーは **不要** です。
 
 ### ビルド
 
