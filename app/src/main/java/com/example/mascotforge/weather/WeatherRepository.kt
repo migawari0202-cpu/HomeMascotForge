@@ -1,33 +1,32 @@
 package com.example.mascotforge.weather
 
-import com.example.mascotforge.BuildConfig
 import com.example.mascotforge.WeatherApiService
+import com.google.gson.annotations.SerializedName
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class WeatherRepository(
-    private val apiService: WeatherApiService = defaultApiService(),
-    private val apiKey: String = BuildConfig.WEATHER_API_KEY
+    private val apiService: WeatherApiService = defaultApiService()
 ) {
     suspend fun getCurrentWeather(latitude: Double, longitude: Double): CurrentWeather {
-        val response = apiService.getCurrentWeather(latitude, longitude, apiKey)
+        val response = apiService.getCurrentWeather(latitude, longitude)
         if (!response.isSuccessful) {
             throw WeatherApiException(response.code(), response.errorBody()?.string())
         }
 
         val body = response.body() ?: throw WeatherApiException(response.code(), "Empty body")
-        val weatherId = body.weather.firstOrNull()?.id
-            ?: throw WeatherApiException(response.code(), "Missing weather")
+        val currentWeather = body.currentWeather
+            ?: throw WeatherApiException(response.code(), "Missing current_weather")
 
         return CurrentWeather(
-            weatherId = weatherId,
-            temperature = body.main.temp,
-            cityName = body.name.ifBlank { "Tokyo" }
+            weatherCode = currentWeather.weatherCode,
+            temperature = currentWeather.temperature,
+            cityName = "" // OpenMeteo doesn't provide city name
         )
     }
 
     private companion object {
-        private const val BASE_URL = "https://api.openweathermap.org/data/2.5/"
+        private const val BASE_URL = "https://api.open-meteo.com/v1/"
 
         fun defaultApiService(): WeatherApiService {
             return Retrofit.Builder()
@@ -40,9 +39,27 @@ class WeatherRepository(
 }
 
 data class CurrentWeather(
-    val weatherId: Int,
+    val weatherCode: Int,
     val temperature: Double,
     val cityName: String
+)
+
+data class OpenMeteoResponse(
+    @SerializedName("current")
+    val currentWeather: CurrentWeatherData? = null
+)
+
+data class CurrentWeatherData(
+    @SerializedName("temperature_2m")
+    val temperature: Double,
+    @SerializedName("wind_speed_10m")
+    val windspeed: Double,
+    @SerializedName("wind_direction_10m")
+    val winddirection: Double,
+    @SerializedName("weather_code")
+    val weatherCode: Int,
+    @SerializedName("time")
+    val time: String
 )
 
 class WeatherApiException(
