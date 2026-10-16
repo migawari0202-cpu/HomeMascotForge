@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -67,6 +68,10 @@ class WeatherUpdateWorker(
             policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP
         ) {
             val work = OneTimeWorkRequestBuilder<WeatherUpdateWorker>()
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    15, TimeUnit.SECONDS
+                )
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -88,7 +93,7 @@ class WeatherUpdateWorker(
     private val locationResolver = WeatherLocationResolver(applicationContext)
 
     override suspend fun doWork(): Result {
-        Log.d(TAG, "Weather update started")
+        Log.d(TAG, "Weather update started (attempt ${runAttemptCount + 1})")
 
         return try {
             val location = locationResolver.resolveLocation()
@@ -108,8 +113,14 @@ class WeatherUpdateWorker(
 
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Weather update failed", e)
-            Result.retry()
+            Log.e(TAG, "Weather update failed (attempt ${runAttemptCount + 1})", e)
+            // 約10分で諦める（指数バックオフ: 15s, 30s, 1m, 2m, 4m → 5回リトライで約7.5分）
+            if (runAttemptCount >= 5) {
+                Log.e(TAG, "Giving up after ${runAttemptCount + 1} attempts")
+                Result.failure()
+            } else {
+                Result.retry()
+            }
         }
     }
 
