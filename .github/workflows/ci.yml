@@ -1,0 +1,58 @@
+name: CI
+
+# main への push と main 向け PR でビルド＋テストを回す。
+# 手動実行もできるようにしておく（workflow_dispatch）。
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# 読み取りのみ。CD で使う権限は別ワークフロー側で付ける。
+permissions:
+  contents: read
+
+# 同じブランチで連続 push したら古い実行をキャンセルする。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # gradlew の実行ビットが git に記録されていないため付与する。
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # syncCharacters は preBuild に紐づいているので、この時点で自動実行される。
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn

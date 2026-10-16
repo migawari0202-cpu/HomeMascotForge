@@ -1,9 +1,29 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// =============================================================================
+// リリース署名の受け口
+//   - 環境変数（CI / GitHub Actions 用）を優先
+//   - 無ければ key.properties（ローカル用・.gitignore 済み）を読む
+//   - どちらも無ければ「未署名」として扱い、ビルド自体は通る
+// キーを入れる場所は RELEASE.md を参照。
+// =============================================================================
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+fun keystoreValue(envName: String, propName: String): String? =
+    System.getenv(envName) ?: keystoreProps.getProperty(propName)
+
+val releaseStorePath: String? = keystoreValue("KEYSTORE_PATH", "storeFile")
+val hasReleaseSigning: Boolean = !releaseStorePath.isNullOrBlank()
 
 android {
 
@@ -21,6 +41,17 @@ android {
 
     }
 
+    signingConfigs {
+        create("release") {
+            releaseStorePath?.takeIf { it.isNotBlank() }?.let { path ->
+                storeFile = rootProject.file(path)
+                storePassword = keystoreValue("KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = keystoreValue("KEY_ALIAS", "keyAlias")
+                keyPassword = keystoreValue("KEY_PASSWORD", "keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -29,6 +60,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // 署名キーが揃っているときだけ署名する（未設定でもビルドは通る）
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

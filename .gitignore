@@ -11,6 +11,8 @@
 .DS_Store
 /build
 **/build/
+# ローカルの release ビルド出力（署名済みAPK等）
+/app/release/
 /captures
 .externalNativeBuild
 .cxx
@@ -19,5 +21,14 @@ local.properties
 /.claire/
 HISTORY.md
 
+# リリース署名情報（絶対にコミットしない）
+key.properties
+*.jks
+*.keystore
+
 # Local CodeGraph index (regenerated per checkout)
 .codegraph/
+
+# Local character-maker workspace
+/character-maker.code-workspace
+/character-workspace/
