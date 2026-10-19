@@ -29,8 +29,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # ci.yml と同じ理由で v3 は使えない（tools パッケージ廃止で即死）。
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4

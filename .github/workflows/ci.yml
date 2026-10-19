@@ -33,8 +33,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # setup-android@v3 の既定 packages は 'tools platform-tools'。
+      # しかし Google がレガシーな tools パッケージの配信を停止したため
+      # sdkmanager が "Failed to find package 'tools'" で exit 1 → 即死する。
+      # v4 は既定が 'platform-tools' のみ。compileSdk=36 に必要な分を明示する。
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
