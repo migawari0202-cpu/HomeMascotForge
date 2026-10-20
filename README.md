@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" alt="HomeMascot ホーム画面" src="https://github.com/user-attachments/assets/9eded8a7-0ecd-4721-a0a4-0b06ec89d77e" />
+  <img width="300" alt="HomeMascotのホーム画面ウィジェット。キャラクターとメモ、バッテリー残量、天気を表示" src="docs/images/home-mascot-widget.png" />
 </p>
 # HomeMascot
 
