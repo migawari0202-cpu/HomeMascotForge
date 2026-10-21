@@ -150,8 +150,6 @@ class ClockActivity : AppCompatActivity() {
             getDrawable(R.drawable.speech_bubble_bg)
         }
 
-        window.statusBarColor = backgroundColor
-        window.navigationBarColor = backgroundColor
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = !enabled
             isAppearanceLightNavigationBars = !enabled

@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,8 +36,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mascotforge.R
 import com.example.mascotforge.ui.components.CharacterCard
 import mascotforge.ui.components.InstallProgressDialog
 
@@ -92,7 +91,7 @@ fun CharacterInstallScreen(
                 title = { Text("キャラクター管理") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "戻る")
+                        Icon(painterResource(R.drawable.ic_arrow_back), "戻る")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -106,7 +105,7 @@ fun CharacterInstallScreen(
                 onClick = {
                     filePickerLauncher.launch("application/zip")
                 },
-                icon = { Icon(Icons.Default.Add, "追加") },
+                icon = { Icon(painterResource(R.drawable.ic_add), "追加") },
                 text = { Text("キャラ追加") }
             )
         }
