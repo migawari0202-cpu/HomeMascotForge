@@ -197,6 +197,9 @@ data class SpeechContext(
 
     // ===== 天気・体調 =====
 
+    /** 天気が不明な状態で天気表示がタップされたか */
+    fun shouldRefreshWeather(): Boolean = weatherTouched && weatherCode == "不明"
+
     /** 体調を気遣うべきか */
     fun shouldCareAboutHealth(): Boolean =
         temperatureFeeling in listOf("暑い", "寒い") || (humidity ?: 0) >= 80

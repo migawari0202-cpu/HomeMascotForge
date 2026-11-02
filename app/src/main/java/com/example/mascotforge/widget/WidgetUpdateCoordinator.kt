@@ -156,7 +156,7 @@ class WidgetUpdateCoordinator(private val context: Context) {
     private suspend fun updateCharacter(
         views: RemoteViews, layoutType: WidgetLayoutType, widgetId: Int,
         touchTarget: WidgetTouchTarget? = null
-    ) {
+    ): SpeechContext? {
         try {
             val characterId = characterManager.getCharacterIdForWidget(widgetId)
             val provider = characterManager.getProviderForWidget(widgetId)
@@ -176,8 +176,10 @@ class WidgetUpdateCoordinator(private val context: Context) {
             viewUpdater.updateCharacterImageViews(views, characterImage, updaterLayoutType)
 
             setupCharacterTouchListener(views, layoutType, widgetId, characterId)
+            return speechContext
         } catch (t: Throwable) {
             Log.e(TAG, "Failed to update character", t)
+            return null
         }
     }
 
@@ -218,17 +220,19 @@ class WidgetUpdateCoordinator(private val context: Context) {
         }
     }
 
-    internal suspend fun updateSpeechForWidget(appWidgetId: Int, characterId: String, touchTarget: WidgetTouchTarget? = null) {
+    internal suspend fun updateSpeechForWidget(appWidgetId: Int, characterId: String, touchTarget: WidgetTouchTarget? = null): Boolean {
         try {
             val ctx = createWidgetContext(appWidgetId)
 
-            updateCharacter(ctx.views, ctx.layoutType, appWidgetId, touchTarget)
+            val speechContext = updateCharacter(ctx.views, ctx.layoutType, appWidgetId, touchTarget)
             setupButtonClickListeners(ctx.views, appWidgetId, ctx.layoutType)
 
             appWidgetManager.partiallyUpdateAppWidget(appWidgetId, ctx.views)
             Log.d(TAG, "updateSpeechForWidget: Widget $appWidgetId updated for char $characterId")
+            return speechContext?.shouldRefreshWeather() == true
         } catch (e: Exception) {
             Log.e(TAG, "Error updating speech for single widget $appWidgetId", e)
+            return false
         }
     }
 

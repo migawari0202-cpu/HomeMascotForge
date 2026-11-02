@@ -124,6 +124,13 @@ class SpeechContextTest {
     }
 
     @Test
+    fun weatherRefreshRequiresUnknownWeatherAndWeatherTouch() {
+        assertTrue(createSpeechContext(weatherCode = "不明").copy(weatherTouched = true).shouldRefreshWeather())
+        assertFalse(createSpeechContext(weatherCode = "不明").shouldRefreshWeather())
+        assertFalse(createSpeechContext(weatherCode = "雨").copy(weatherTouched = true).shouldRefreshWeather())
+    }
+
+    @Test
     fun matchesAny_matchesAnyValueForTheSameKey() {
         val conditions = mapOf("weatherCode" to listOf("雨", "小雨"))
 

@@ -16,7 +16,6 @@ import com.example.mascotforge.character.CharacterStateManager
 import com.example.mascotforge.character.DynamicCharacter
 import com.example.mascotforge.characters.CharacterRegistry
 import com.example.mascotforge.speech.SpeechContextFactory
-import com.example.mascotforge.widget.cache.UserWeatherCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -338,10 +337,6 @@ class TimeWidgetProvider : AppWidgetProvider() {
 
         // 天気タップではキャラのタッチ回数や ON_TOUCH ルールを変更しない。
         updateSingleWidget(context, appWidgetId, characterId, target)
-        if (target == WidgetTouchTarget.WEATHER && UserWeatherCache(context).getCurrentWeather() == null) {
-            // 取得前・期限切れ・取得失敗時は、セリフ更新と並行して既存の天気取得を依頼する。
-            WeatherUpdateWorker.enqueueImmediateUpdate(context, tag = "weather_touch")
-        }
     }
 
     /**
@@ -358,7 +353,11 @@ class TimeWidgetProvider : AppWidgetProvider() {
 
                 val coordinator = WidgetUpdateCoordinator(context)
                 // このキャラのこのウィジェットのみ更新
-                coordinator.updateSpeechForWidget(appWidgetId, characterId, target)
+                val shouldRefreshWeather = coordinator.updateSpeechForWidget(appWidgetId, characterId, target)
+                if (shouldRefreshWeather) {
+                    // 天気不明の状態で天気表示がタップされた場合だけ再取得する。
+                    WeatherUpdateWorker.enqueueImmediateUpdate(context, tag = "weather_touch")
+                }
 
                 Log.d(TAG, "Widget $appWidgetId updated for character $characterId")
 
