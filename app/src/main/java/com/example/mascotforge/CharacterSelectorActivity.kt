@@ -291,7 +291,8 @@ class CharacterSelectorActivity : AppCompatActivity() {
                 thumbnailView.setImageDrawable(thumbnail)
             } else {
                 thumbnailView.setImageDrawable(null)
-                thumbnailView.setBackgroundColor(0xFFE0E0E0.toInt())
+                // 角丸プレースホルダを維持するため背景リソースを指定する
+                thumbnailView.setBackgroundResource(R.drawable.thumbnail_rounded_bg)
             }
 
             val checkMark = view.findViewById<TextView>(R.id.check_mark)

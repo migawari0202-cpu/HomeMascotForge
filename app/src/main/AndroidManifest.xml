@@ -51,7 +51,7 @@
         <activity
             android:name="com.example.mascotforge.CharacterSelectorActivity"
             android:label="キャラクター選択"
-            android:theme="@style/Theme.Homemascot.NoActionBar"
+            android:theme="@style/Theme.Homemascot.Settings"
             android:exported="false" />
 
         <!-- キャラクター管理画面 -->

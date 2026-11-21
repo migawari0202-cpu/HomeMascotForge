@@ -20,4 +20,16 @@
         <item name="colorOnSurface">#000000</item>
         <item name="colorOnSurfaceVariant">#666666</item>
     </style>
+
+    <!-- 設定画面専用：Material 3 ニュートラル（白 + グレー黒） -->
+    <style name="Theme.Homemascot.Settings" parent="Theme.Homemascot.NoActionBar">
+        <item name="colorPrimary">#2B2B2B</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#5F6368</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#1A1A1A</item>
+        <item name="colorOnSurfaceVariant">#666666</item>
+        <item name="colorOutline">#CCCCCC</item>
+    </style>
 </resources>

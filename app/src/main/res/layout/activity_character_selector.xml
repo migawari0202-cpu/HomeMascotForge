@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,17 +8,17 @@
     android:background="#F5F5F5"
     android:fitsSystemWindows="false">
 
-    <!-- ヘッダー -->
+    <!-- ヘッダー：白いサーフェス + ニュートラルな文字色 -->
     <LinearLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#6200EE"
+        android:background="@drawable/settings_header_background"
         android:paddingStart="20dp"
         android:paddingTop="8dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="20dp">
 
         <!-- タイトル + 管理ボタン -->
         <LinearLayout
@@ -32,7 +33,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="キャラクター選択"
-                android:textColor="#FFFFFF"
+                android:textColor="#1A1A1A"
                 android:textStyle="bold"
                 android:textSize="24sp" />
 
@@ -44,9 +45,12 @@
                 android:text="管理"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#7C4DFF"
+                android:textSize="15sp"
+                android:textColor="#1A1A1A"
+                android:background="@drawable/settings_button_background"
+                android:backgroundTint="@null"
+                app:backgroundTint="@null"
+                android:stateListAnimator="@null"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp" />
 
@@ -58,26 +62,23 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="使いたいキャラクターを選んでね"
-            android:textColor="#E8E8E8"
+            android:textColor="#666666"
             android:textSize="14sp" />
 
     </LinearLayout>
 
-    <!-- 区切り線 -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#DDDDDD" />
-
-    <!-- キャラクター一覧 -->
+    <!-- キャラクター一覧：区切り線を廃し、角丸カード間の余白で区切る -->
     <ListView
         android:id="@+id/character_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"
-        android:divider="#E0E0E0"
-        android:dividerHeight="1dp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:clipToPadding="false"
         android:scrollbarStyle="outsideOverlay" />
 
